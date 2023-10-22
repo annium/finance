@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Finance.Providers.Crypto.Binance.Spot.Tests</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Finance.Providers.Crypto.Binance.Spot.Tests</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../../base/tests/Annium.Finance.Providers.Tests.Shared/Annium.Finance.Providers.Tests.Shared.csproj" />
+        <ProjectReference Include="../../src/Annium.Finance.Providers.Crypto.Binance.Spot/Annium.Finance.Providers.Crypto.Binance.Spot.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="xunit" Version="2.5.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    </ItemGroup>
+</Project>

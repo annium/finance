@@ -1,0 +1,125 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "providers", "providers", "{CC02F63F-E24A-430E-BA06-33068EEC6451}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "base", "base", "{60332846-0909-41B4-8D8D-AABB919D4B0B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2E7368D7-61A8-42E0-A647-4181FA8B093F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Abstractions.Connectors", "providers\base\src\Annium.Finance.Providers.Abstractions.Connectors\Annium.Finance.Providers.Abstractions.Connectors.csproj", "{E8563EEC-A876-4827-9915-C0E47FE8FBEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Abstractions.Domain", "providers\base\src\Annium.Finance.Providers.Abstractions.Domain\Annium.Finance.Providers.Abstractions.Domain.csproj", "{FF88A8F0-C39F-4214-952E-21D5A38FA130}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{72B672D2-B65E-4A9A-B0F5-77E2AF228922}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Abstractions.Domain.Tests", "providers\base\tests\Annium.Finance.Providers.Abstractions.Domain.Tests\Annium.Finance.Providers.Abstractions.Domain.Tests.csproj", "{0D175D0F-9635-4AFE-A96A-8DC42A89F275}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "crypto", "crypto", "{5A4832B4-FACE-40FA-B755-9148AE94DCED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "binance", "binance", "{77A2FE2F-7263-4FA4-AA6C-2385B8924DC7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0A0EB811-1331-4BC5-8FE7-9DA9BDA17501}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.Base", "providers\crypto\binance\src\Annium.Finance.Providers.Crypto.Binance.Base\Annium.Finance.Providers.Crypto.Binance.Base.csproj", "{35BDC001-2D31-4110-9AA5-6150277244C2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9027162A-2BCA-41AA-9E53-062059EA75FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.Base.Tests", "providers\crypto\binance\tests\Annium.Finance.Providers.Crypto.Binance.Base.Tests\Annium.Finance.Providers.Crypto.Binance.Base.Tests.csproj", "{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.Spot", "providers\crypto\binance\src\Annium.Finance.Providers.Crypto.Binance.Spot\Annium.Finance.Providers.Crypto.Binance.Spot.csproj", "{1EDCEA83-3DF1-4864-8722-3DCB94BAE590}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.Spot.Tests", "providers\crypto\binance\tests\Annium.Finance.Providers.Crypto.Binance.Spot.Tests\Annium.Finance.Providers.Crypto.Binance.Spot.Tests.csproj", "{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.UsdFutures", "providers\crypto\binance\src\Annium.Finance.Providers.Crypto.Binance.UsdFutures\Annium.Finance.Providers.Crypto.Binance.UsdFutures.csproj", "{97D92A40-F536-438F-9EB5-A88BA17FFAC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests", "providers\crypto\binance\tests\Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests\Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.csproj", "{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Shared", "providers\base\src\Annium.Finance.Providers.Shared\Annium.Finance.Providers.Shared.csproj", "{8F466F58-965F-46CD-8ABB-39E1CA42408E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Tests.Lib", "providers\base\tests\Annium.Finance.Providers.Tests.Lib\Annium.Finance.Providers.Tests.Lib.csproj", "{49870CC1-9210-4396-862B-52E4313C21B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Finance.Providers.Tests.Shared", "providers\base\tests\Annium.Finance.Providers.Tests.Shared\Annium.Finance.Providers.Tests.Shared.csproj", "{ABF2EC04-A7D0-4434-A728-1A3B440B8F53}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8563EEC-A876-4827-9915-C0E47FE8FBEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8563EEC-A876-4827-9915-C0E47FE8FBEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8563EEC-A876-4827-9915-C0E47FE8FBEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8563EEC-A876-4827-9915-C0E47FE8FBEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF88A8F0-C39F-4214-952E-21D5A38FA130}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF88A8F0-C39F-4214-952E-21D5A38FA130}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF88A8F0-C39F-4214-952E-21D5A38FA130}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF88A8F0-C39F-4214-952E-21D5A38FA130}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D175D0F-9635-4AFE-A96A-8DC42A89F275}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D175D0F-9635-4AFE-A96A-8DC42A89F275}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D175D0F-9635-4AFE-A96A-8DC42A89F275}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D175D0F-9635-4AFE-A96A-8DC42A89F275}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35BDC001-2D31-4110-9AA5-6150277244C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35BDC001-2D31-4110-9AA5-6150277244C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35BDC001-2D31-4110-9AA5-6150277244C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35BDC001-2D31-4110-9AA5-6150277244C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EDCEA83-3DF1-4864-8722-3DCB94BAE590}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EDCEA83-3DF1-4864-8722-3DCB94BAE590}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EDCEA83-3DF1-4864-8722-3DCB94BAE590}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EDCEA83-3DF1-4864-8722-3DCB94BAE590}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97D92A40-F536-438F-9EB5-A88BA17FFAC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97D92A40-F536-438F-9EB5-A88BA17FFAC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97D92A40-F536-438F-9EB5-A88BA17FFAC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97D92A40-F536-438F-9EB5-A88BA17FFAC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F466F58-965F-46CD-8ABB-39E1CA42408E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F466F58-965F-46CD-8ABB-39E1CA42408E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F466F58-965F-46CD-8ABB-39E1CA42408E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F466F58-965F-46CD-8ABB-39E1CA42408E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49870CC1-9210-4396-862B-52E4313C21B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49870CC1-9210-4396-862B-52E4313C21B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49870CC1-9210-4396-862B-52E4313C21B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49870CC1-9210-4396-862B-52E4313C21B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABF2EC04-A7D0-4434-A728-1A3B440B8F53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABF2EC04-A7D0-4434-A728-1A3B440B8F53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABF2EC04-A7D0-4434-A728-1A3B440B8F53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABF2EC04-A7D0-4434-A728-1A3B440B8F53}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{60332846-0909-41B4-8D8D-AABB919D4B0B} = {CC02F63F-E24A-430E-BA06-33068EEC6451}
+		{2E7368D7-61A8-42E0-A647-4181FA8B093F} = {60332846-0909-41B4-8D8D-AABB919D4B0B}
+		{E8563EEC-A876-4827-9915-C0E47FE8FBEE} = {2E7368D7-61A8-42E0-A647-4181FA8B093F}
+		{FF88A8F0-C39F-4214-952E-21D5A38FA130} = {2E7368D7-61A8-42E0-A647-4181FA8B093F}
+		{72B672D2-B65E-4A9A-B0F5-77E2AF228922} = {60332846-0909-41B4-8D8D-AABB919D4B0B}
+		{0D175D0F-9635-4AFE-A96A-8DC42A89F275} = {72B672D2-B65E-4A9A-B0F5-77E2AF228922}
+		{5A4832B4-FACE-40FA-B755-9148AE94DCED} = {CC02F63F-E24A-430E-BA06-33068EEC6451}
+		{77A2FE2F-7263-4FA4-AA6C-2385B8924DC7} = {5A4832B4-FACE-40FA-B755-9148AE94DCED}
+		{0A0EB811-1331-4BC5-8FE7-9DA9BDA17501} = {77A2FE2F-7263-4FA4-AA6C-2385B8924DC7}
+		{35BDC001-2D31-4110-9AA5-6150277244C2} = {0A0EB811-1331-4BC5-8FE7-9DA9BDA17501}
+		{9027162A-2BCA-41AA-9E53-062059EA75FD} = {77A2FE2F-7263-4FA4-AA6C-2385B8924DC7}
+		{ACC804B5-F0B7-4ADD-BF23-F9FCD98CFE12} = {9027162A-2BCA-41AA-9E53-062059EA75FD}
+		{1EDCEA83-3DF1-4864-8722-3DCB94BAE590} = {0A0EB811-1331-4BC5-8FE7-9DA9BDA17501}
+		{6FF93C03-9EF1-4E78-B85E-ED4D6C328BA4} = {9027162A-2BCA-41AA-9E53-062059EA75FD}
+		{97D92A40-F536-438F-9EB5-A88BA17FFAC4} = {0A0EB811-1331-4BC5-8FE7-9DA9BDA17501}
+		{C86D7E7A-F950-4FF6-81F0-F2B42BAA6257} = {9027162A-2BCA-41AA-9E53-062059EA75FD}
+		{8F466F58-965F-46CD-8ABB-39E1CA42408E} = {2E7368D7-61A8-42E0-A647-4181FA8B093F}
+		{49870CC1-9210-4396-862B-52E4313C21B9} = {72B672D2-B65E-4A9A-B0F5-77E2AF228922}
+		{ABF2EC04-A7D0-4434-A728-1A3B440B8F53} = {72B672D2-B65E-4A9A-B0F5-77E2AF228922}
+	EndGlobalSection
+EndGlobal
