@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <PackageId>Annium.Finance.Providers.Abstractions.Domain</PackageId>
         <PackageVersion>0.1.0</PackageVersion>
@@ -11,4 +11,8 @@
         <IsPackable>true</IsPackable>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Annium.Core.Mapper" Version="0.1.0" />
+        <PackageReference Include="NodaTime" Version="3.1.9" />
+    </ItemGroup>
 </Project>
