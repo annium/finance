@@ -36,7 +36,8 @@ public sealed record Position(
     public byte Leverage { get; private set; } = Leverage;
     public decimal LeveragedPart { get; } = 1m / Leverage;
     public bool IsActive => OrientationType is not null;
-    public Orientation Orientation => OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");
+    public Orientation Orientation =>
+        OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");
     public OrientationType? OrientationType { get; private set; }
     public PositionState State { get; private set; } = State;
     public Instant UpdatedAt { get; private set; } = UpdatedAt;
@@ -168,7 +169,8 @@ public sealed record Position(
         return this;
     }
 
-    public override string ToString() => $"{State} ({OrientationType?.ToString() ?? "inactive"}) {Instrument} with {_orders.Count} order(s) [id:{Id}]";
+    public override string ToString() =>
+        $"{State} ({OrientationType?.ToString() ?? "inactive"}) {Instrument} with {_orders.Count} order(s) [id:{Id}]";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SyncState(Instant updatedAt)
@@ -192,9 +194,10 @@ public sealed record Position(
             return;
 
         // as far as orientation type is null - order is open, thus orientation type can be resolved
-        OrientationType = side is OrderSide.Buy
-            ? Abstractions.Domain.Enums.OrientationType.Long
-            : Abstractions.Domain.Enums.OrientationType.Short;
+        OrientationType =
+            side is OrderSide.Buy
+                ? Abstractions.Domain.Enums.OrientationType.Long
+                : Abstractions.Domain.Enums.OrientationType.Short;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

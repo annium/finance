@@ -11,28 +11,29 @@ public static class Helper
 
     public static Position CreatePosition(byte leverage) => CreatePosition(DefaultInstrument, leverage);
 
-    public static Position CreatePosition(Instrument instrument, byte leverage) => new(
-        Guid.NewGuid(),
-        instrument,
-        Instant.MinValue,
-        OrientationRange.Both,
-        MarginType.Cross,
-        leverage,
-        PositionState.Blank,
-        Instant.MinValue,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero,
-        decimal.Zero
-    );
+    public static Position CreatePosition(Instrument instrument, byte leverage) =>
+        new(
+            Guid.NewGuid(),
+            instrument,
+            Instant.MinValue,
+            OrientationRange.Both,
+            MarginType.Cross,
+            leverage,
+            PositionState.Blank,
+            Instant.MinValue,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero,
+            decimal.Zero
+        );
 
     public static Instrument CreateInstrument(string resource, string currency, decimal lotSize, decimal tickSize) =>
         new(

@@ -102,11 +102,11 @@ public static class OrderValidationExtensions
 
         return order.Status switch
         {
-            OrderStatus.New             => order.ValidateNewQtyAndPrice(),
+            OrderStatus.New => order.ValidateNewQtyAndPrice(),
             OrderStatus.PartiallyFilled => order.ValidatePartiallyFilledQtyAndPrice(),
-            OrderStatus.Filled          => order.ValidateFilledQtyAndPrice(),
-            OrderStatus.Canceled        => order.ValidateCanceledQtyAndPrice(),
-            _                           => throw new InvalidOperationException($"Order {order} has unexpected status")
+            OrderStatus.Filled => order.ValidateFilledQtyAndPrice(),
+            OrderStatus.Canceled => order.ValidateCanceledQtyAndPrice(),
+            _ => throw new InvalidOperationException($"Order {order} has unexpected status")
         };
     }
 

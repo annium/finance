@@ -16,10 +16,14 @@ public static class PositionHelper
     )
     {
         if (openingQty + openedQty > totalQty)
-            throw new InvalidOperationException($"Too much opens: openingQty {openingQty} + openedQty {openedQty} > TotalQty {totalQty}.");
+            throw new InvalidOperationException(
+                $"Too much opens: openingQty {openingQty} + openedQty {openedQty} > TotalQty {totalQty}."
+            );
 
         if (closingQty + closedQty > openedQty)
-            throw new InvalidOperationException($"Too much closes: closingQty {closingQty} + closedQty {closedQty} > openingQty {openingQty} + openedQty {openedQty}.");
+            throw new InvalidOperationException(
+                $"Too much closes: closingQty {closingQty} + closedQty {closedQty} > openingQty {openingQty} + openedQty {openedQty}."
+            );
 
         if (totalQty == 0m)
             return PositionState.Blank;
@@ -37,7 +41,12 @@ public static class PositionHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal ResolvePrice(decimal currentQty, decimal currentPrice, decimal executedQty, decimal executedPrice)
+    public static decimal ResolvePrice(
+        decimal currentQty,
+        decimal currentPrice,
+        decimal executedQty,
+        decimal executedPrice
+    )
     {
         var totalQty = currentQty + executedQty;
         if (totalQty == 0)

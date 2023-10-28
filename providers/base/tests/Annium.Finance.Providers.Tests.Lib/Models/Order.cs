@@ -30,13 +30,7 @@ public sealed record Order(
     public decimal Fee { get; private set; } = Fee;
     public Instant UpdatedAt { get; private set; } = UpdatedAt;
 
-    public Order Update(
-        OrderStatus status,
-        decimal executedQty,
-        decimal executedPrice,
-        decimal fee,
-        Instant now
-    )
+    public Order Update(OrderStatus status, decimal executedQty, decimal executedPrice, decimal fee, Instant now)
     {
         this.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled);
 
@@ -51,7 +45,17 @@ public sealed record Order(
 
         this.ValidateQtyAndPrice();
 
-        Position.UpdateOrder(Id, Side, ExecutedQty, ExecutedPrice, this.CancellableQty(), Fee, prevExecutedQty, prevFee, UpdatedAt);
+        Position.UpdateOrder(
+            Id,
+            Side,
+            ExecutedQty,
+            ExecutedPrice,
+            this.CancellableQty(),
+            Fee,
+            prevExecutedQty,
+            prevFee,
+            UpdatedAt
+        );
 
         return this;
     }

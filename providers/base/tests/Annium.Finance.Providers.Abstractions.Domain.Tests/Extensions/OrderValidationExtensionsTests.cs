@@ -21,8 +21,7 @@ public class OrderValidationExtensionsTests
 
         // assert
         order.ValidateSide(OrderSide.Buy);
-        Wrap.It(() => order.ValidateSide(OrderSide.Sell))
-            .Throws<InvalidOperationException>();
+        Wrap.It(() => order.ValidateSide(OrderSide.Sell)).Throws<InvalidOperationException>();
     }
 
     [Fact]
@@ -46,30 +45,166 @@ public class OrderValidationExtensionsTests
             .Reports("total qty is invalid");
 
         // assert - level price
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 1, 1, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.Limit,
+                        1,
+                        1,
+                        1,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("level price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 1, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.Market,
+                        1,
+                        1,
+                        1,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("level price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.TakeProfitMarket, 1, 0, 0, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.TakeProfitMarket,
+                        1,
+                        0,
+                        0,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("level price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.StopLossMarket, 1, 0, 0, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.StopLossMarket,
+                        1,
+                        0,
+                        0,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("level price is invalid");
 
         // assert - price
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 0, 0, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.Limit,
+                        1,
+                        0,
+                        0,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("target price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 0, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.Market,
+                        1,
+                        1,
+                        0,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("target price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.TakeProfitMarket, 1, 1, 1, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.TakeProfitMarket,
+                        1,
+                        1,
+                        1,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("target price is invalid");
-        Wrap.It(() => new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.StopLossMarket, 1, 1, 1, Instant.MinValue, OrderStatus.New, 0, 0, 0, Instant.MinValue).ValidateQtyAndPrice())
+        Wrap.It(
+                () =>
+                    new Order(
+                        Guid.NewGuid(),
+                        _position,
+                        OrderSide.Buy,
+                        OrderType.StopLossMarket,
+                        1,
+                        1,
+                        1,
+                        Instant.MinValue,
+                        OrderStatus.New,
+                        0,
+                        0,
+                        0,
+                        Instant.MinValue
+                    ).ValidateQtyAndPrice()
+            )
             .Throws<InvalidOperationException>()
             .Reports("target price is invalid");
 
@@ -122,8 +257,7 @@ public class OrderValidationExtensionsTests
         var order = _position.AddLimitBuyOrder(2, 1);
 
         // assert
-        Wrap.It(() => order.ValidateIsExecuted())
-            .Throws<InvalidOperationException>();
+        Wrap.It(() => order.ValidateIsExecuted()).Throws<InvalidOperationException>();
         order.FillPartially(1).ValidateIsExecuted();
     }
 }

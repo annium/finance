@@ -27,7 +27,13 @@ public static class OrderTestExtensions
     {
         order.ValidateIsLimit();
 
-        return order.Update(OrderStatus.Filled, order.TotalQty, order.Price, order.TotalQty * order.Price.Fee(), Instant.MaxValue);
+        return order.Update(
+            OrderStatus.Filled,
+            order.TotalQty,
+            order.Price,
+            order.TotalQty * order.Price.Fee(),
+            Instant.MaxValue
+        );
     }
 
     public static Order Fill(this Order order, decimal price)
@@ -41,14 +47,26 @@ public static class OrderTestExtensions
     {
         order.ValidateIsLimit();
 
-        return order.Update(OrderStatus.Canceled, order.ExecutedQty, order.ExecutedQty == 0 ? 0 : order.Price, order.Fee, Instant.MaxValue);
+        return order.Update(
+            OrderStatus.Canceled,
+            order.ExecutedQty,
+            order.ExecutedQty == 0 ? 0 : order.Price,
+            order.Fee,
+            Instant.MaxValue
+        );
     }
 
     public static Order Cancel(this Order order, decimal price)
     {
         order.ValidateIsMarket();
 
-        return order.Update(OrderStatus.Canceled, order.ExecutedQty, order.ExecutedQty == 0 ? 0 : price, order.Fee, Instant.MaxValue);
+        return order.Update(
+            OrderStatus.Canceled,
+            order.ExecutedQty,
+            order.ExecutedQty == 0 ? 0 : price,
+            order.Fee,
+            Instant.MaxValue
+        );
     }
 
     public static Order AddToPosition(this Order order)

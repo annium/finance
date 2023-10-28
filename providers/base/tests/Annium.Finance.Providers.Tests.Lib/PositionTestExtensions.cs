@@ -19,7 +19,21 @@ public static class PositionTestExtensions
         position.NewLimitOrder(OrderSide.Sell, totalQty, price);
 
     public static Order NewLimitOrder(this Position position, OrderSide side, decimal totalQty, decimal price) =>
-        new(Guid.NewGuid(), position, side, OrderType.Limit, totalQty, price, 0, Now, OrderStatus.New, 0, 0, 0, NodaConstants.UnixEpoch);
+        new(
+            Guid.NewGuid(),
+            position,
+            side,
+            OrderType.Limit,
+            totalQty,
+            price,
+            0,
+            Now,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            NodaConstants.UnixEpoch
+        );
 
     #endregion
 
@@ -32,7 +46,21 @@ public static class PositionTestExtensions
         position.NewMarketOrder(OrderSide.Sell, totalQty);
 
     public static Order NewMarketOrder(this Position position, OrderSide side, decimal totalQty) =>
-        new(Guid.NewGuid(), position, side, OrderType.Market, totalQty, 0, 0, Now, OrderStatus.New, 0, 0, 0, NodaConstants.UnixEpoch);
+        new(
+            Guid.NewGuid(),
+            position,
+            side,
+            OrderType.Market,
+            totalQty,
+            0,
+            0,
+            Now,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            NodaConstants.UnixEpoch
+        );
 
     #endregion
 
@@ -44,8 +72,27 @@ public static class PositionTestExtensions
     public static Order NewTakeProfitMarketSellOrder(this Position position, decimal totalQty, decimal levelPrice) =>
         position.NewTakeProfitMarketOrder(OrderSide.Sell, totalQty, levelPrice);
 
-    public static Order NewTakeProfitMarketOrder(this Position position, OrderSide side, decimal totalQty, decimal levelPrice) =>
-        new(Guid.NewGuid(), position, side, OrderType.TakeProfitMarket, totalQty, 0, levelPrice, Now, OrderStatus.New, 0, 0, 0, NodaConstants.UnixEpoch);
+    public static Order NewTakeProfitMarketOrder(
+        this Position position,
+        OrderSide side,
+        decimal totalQty,
+        decimal levelPrice
+    ) =>
+        new(
+            Guid.NewGuid(),
+            position,
+            side,
+            OrderType.TakeProfitMarket,
+            totalQty,
+            0,
+            levelPrice,
+            Now,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            NodaConstants.UnixEpoch
+        );
 
     #endregion
 
@@ -57,8 +104,27 @@ public static class PositionTestExtensions
     public static Order NewStopLossMarketSellOrder(this Position position, decimal totalQty, decimal levelPrice) =>
         position.NewStopLossMarketOrder(OrderSide.Sell, totalQty, levelPrice);
 
-    public static Order NewStopLossMarketOrder(this Position position, OrderSide side, decimal totalQty, decimal levelPrice) =>
-        new(Guid.NewGuid(), position, side, OrderType.StopLossMarket, totalQty, 0, levelPrice, Now, OrderStatus.New, 0, 0, 0, NodaConstants.UnixEpoch);
+    public static Order NewStopLossMarketOrder(
+        this Position position,
+        OrderSide side,
+        decimal totalQty,
+        decimal levelPrice
+    ) =>
+        new(
+            Guid.NewGuid(),
+            position,
+            side,
+            OrderType.StopLossMarket,
+            totalQty,
+            0,
+            levelPrice,
+            Now,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            NodaConstants.UnixEpoch
+        );
 
     #endregion
 
@@ -96,8 +162,12 @@ public static class PositionTestExtensions
     public static Order AddTakeProfitMarketSellOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewTakeProfitMarketSellOrder(totalQty, price).AddToPosition();
 
-    public static Order AddTakeProfitMarketOrder(this Position position, OrderSide side, decimal totalQty, decimal price) =>
-        position.NewTakeProfitMarketOrder(side, totalQty, price).AddToPosition();
+    public static Order AddTakeProfitMarketOrder(
+        this Position position,
+        OrderSide side,
+        decimal totalQty,
+        decimal price
+    ) => position.NewTakeProfitMarketOrder(side, totalQty, price).AddToPosition();
 
     #endregion
 
@@ -109,15 +179,28 @@ public static class PositionTestExtensions
     public static Order AddStopLossMarketSellOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewStopLossMarketSellOrder(totalQty, price).AddToPosition();
 
-    public static Order AddStopLossMarketOrder(this Position position, OrderSide side, decimal totalQty, decimal price) =>
-        position.NewStopLossMarketOrder(side, totalQty, price).AddToPosition();
+    public static Order AddStopLossMarketOrder(
+        this Position position,
+        OrderSide side,
+        decimal totalQty,
+        decimal price
+    ) => position.NewStopLossMarketOrder(side, totalQty, price).AddToPosition();
 
     #endregion
 
     #region helpers
 
     public static Position RemoveOrder(this Position position, Order order) =>
-        position.RemoveOrder(order.Id, order.Side, order.TotalQty, order.PotentialQty(), order.ExecutedQty, order.ExecutedPrice, order.Fee, order.UpdatedAt);
+        position.RemoveOrder(
+            order.Id,
+            order.Side,
+            order.TotalQty,
+            order.PotentialQty(),
+            order.ExecutedQty,
+            order.ExecutedPrice,
+            order.Fee,
+            order.UpdatedAt
+        );
 
     #endregion
 }
