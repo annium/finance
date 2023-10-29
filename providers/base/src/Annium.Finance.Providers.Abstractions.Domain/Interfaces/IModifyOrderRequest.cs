@@ -8,7 +8,7 @@ public interface IModifyOrderRequest
     OrderDto Order { get; }
     OrderSide Side { get; }
     OrderType Type { get; }
-    decimal TotalQty { get; }
+    decimal Qty { get; }
     decimal Price { get; }
     decimal LevelPrice { get; }
 }

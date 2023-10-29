@@ -10,7 +10,8 @@ internal class InitOrderRequest : IInitOrderRequest
     public required string Symbol { get; init; }
     public required OrderSide Side { get; init; }
     public required OrderType Type { get; init; }
-    public required decimal TotalQty { get; init; }
+    public required decimal Qty { get; init; }
     public required decimal Price { get; init; }
     public required decimal LevelPrice { get; init; }
+    public required bool ReduceOnly { get; init; }
 }

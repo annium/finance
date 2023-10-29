@@ -1,3 +1,5 @@
+using System;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Internal.Models;
@@ -7,8 +9,8 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 public static class RequestBuilder
 {
     public static IInitOrderRequest InitLimitOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
         decimal price,
@@ -17,19 +19,20 @@ public static class RequestBuilder
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.Limit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
+            LevelPrice = 0m,
             ReduceOnly = reduceOnly,
         };
     }
 
     public static IInitOrderRequest InitMarketOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
         bool reduceOnly = false
@@ -37,131 +40,143 @@ public static class RequestBuilder
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.Market,
-            Quantity = quantity,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = 0m,
             ReduceOnly = reduceOnly,
         };
     }
 
     public static IInitOrderRequest InitStopLossMarketOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
-        decimal triggerPrice,
+        decimal levelPrice,
         bool reduceOnly = false
     )
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.StopLossMarket,
-            Quantity = quantity,
-            TriggerPrice = triggerPrice,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = levelPrice,
             ReduceOnly = reduceOnly,
         };
     }
 
     public static IInitOrderRequest InitTakeProfitMarketOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
-        decimal triggerPrice,
+        decimal levelPrice,
         bool reduceOnly = false
     )
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.TakeProfitMarket,
-            Quantity = quantity,
-            TriggerPrice = triggerPrice,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = levelPrice,
             ReduceOnly = reduceOnly,
         };
     }
 
     public static IInitOrderRequest InitStopLossLimitOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal triggerPrice,
+        decimal levelPrice,
         bool reduceOnly = false
     )
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.StopLossLimit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
-            TriggerPrice = triggerPrice,
+            LevelPrice = levelPrice,
             ReduceOnly = reduceOnly,
         };
     }
 
     public static IInitOrderRequest InitTakeProfitLimitOrder(
-        string clientOrderId,
-        ISecurityKey securityKey,
+        Guid id,
+        string symbol,
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal triggerPrice,
+        decimal levelPrice,
         bool reduceOnly = false
     )
     {
         return new InitOrderRequest
         {
-            ClientOrderId = clientOrderId,
-            SecurityKey = securityKey,
+            Id = id,
+            Symbol = symbol,
             Side = side,
             Type = OrderType.TakeProfitLimit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
-            TriggerPrice = triggerPrice,
+            LevelPrice = levelPrice,
             ReduceOnly = reduceOnly,
         };
     }
 
-    public static IModifyOrderRequest ModifyToLimitOrder(IOrder order, OrderSide side, decimal quantity, decimal price)
+    public static IModifyOrderRequest ModifyToLimitOrder(
+        OrderDto order,
+        OrderSide side,
+        decimal quantity,
+        decimal price
+    )
     {
         return new ModifyOrderRequest
         {
             Order = order,
             Side = side,
             Type = OrderType.Limit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
+            LevelPrice = 0m,
         };
     }
 
-    public static IModifyOrderRequest ModifyToMarketOrder(IOrder order, OrderSide side, decimal quantity)
+    public static IModifyOrderRequest ModifyToMarketOrder(OrderDto order, OrderSide side, decimal quantity)
     {
         return new ModifyOrderRequest
         {
             Order = order,
             Side = side,
             Type = OrderType.Market,
-            Quantity = quantity,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = 0m,
         };
     }
 
     public static IModifyOrderRequest ModifyToStopLossMarketOrder(
-        IOrder order,
+        OrderDto order,
         OrderSide side,
         decimal quantity,
-        decimal triggerPrice
+        decimal levelPrice
     )
     {
         return new ModifyOrderRequest
@@ -169,16 +184,17 @@ public static class RequestBuilder
             Order = order,
             Side = side,
             Type = OrderType.StopLossMarket,
-            Quantity = quantity,
-            TriggerPrice = triggerPrice,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = levelPrice,
         };
     }
 
     public static IModifyOrderRequest ModifyToTakeProfitMarketOrder(
-        IOrder order,
+        OrderDto order,
         OrderSide side,
         decimal quantity,
-        decimal triggerPrice
+        decimal levelPrice
     )
     {
         return new ModifyOrderRequest
@@ -186,17 +202,18 @@ public static class RequestBuilder
             Order = order,
             Side = side,
             Type = OrderType.TakeProfitMarket,
-            Quantity = quantity,
-            TriggerPrice = triggerPrice,
+            Qty = quantity,
+            Price = 0m,
+            LevelPrice = levelPrice,
         };
     }
 
     public static IModifyOrderRequest ModifyToStopLossLimitOrder(
-        IOrder order,
+        OrderDto order,
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal triggerPrice
+        decimal levelPrice
     )
     {
         return new ModifyOrderRequest
@@ -204,18 +221,18 @@ public static class RequestBuilder
             Order = order,
             Side = side,
             Type = OrderType.StopLossLimit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
-            TriggerPrice = triggerPrice,
+            LevelPrice = levelPrice,
         };
     }
 
     public static IModifyOrderRequest ModifyToTakeProfitLimitOrder(
-        IOrder order,
+        OrderDto order,
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal triggerPrice
+        decimal levelPrice
     )
     {
         return new ModifyOrderRequest
@@ -223,9 +240,9 @@ public static class RequestBuilder
             Order = order,
             Side = side,
             Type = OrderType.TakeProfitLimit,
-            Quantity = quantity,
+            Qty = quantity,
             Price = price,
-            TriggerPrice = triggerPrice,
+            LevelPrice = levelPrice,
         };
     }
 }
