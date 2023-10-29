@@ -1,0 +1,15 @@
+using System.Threading.Tasks;
+using Annium.Data.Tables;
+using Annium.Finance.Providers.Abstractions.Connectors.Sync;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+
+namespace Annium.Finance.Providers.Shared.Internal.Sync;
+
+internal class NoopMarketSynchronizer : IMarketSynchronizer
+{
+    public Task ExecuteAsync(IMarketConfig config, ITable<ResourceDto> resources, ITable<InstrumentDto> instruments)
+    {
+        return Task.CompletedTask;
+    }
+}

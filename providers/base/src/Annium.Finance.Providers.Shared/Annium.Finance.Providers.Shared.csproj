@@ -14,4 +14,8 @@
     <ItemGroup>
         <ProjectReference Include="../Annium.Finance.Providers.Abstractions.Connectors/Annium.Finance.Providers.Abstractions.Connectors.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Annium.Extensions.Jobs" Version="0.1.0" />
+        <PackageReference Include="Annium.Extensions.Pooling" Version="0.1.0" />
+    </ItemGroup>
 </Project>
