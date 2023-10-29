@@ -14,4 +14,8 @@
     <ItemGroup>
         <ProjectReference Include="../Annium.Finance.Providers.Crypto.Binance.Base/Annium.Finance.Providers.Crypto.Binance.Base.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Annium.Net.Http" Version="0.1.0" />
+        <PackageReference Include="Annium.Serialization.Json" Version="0.1.0" />
+    </ItemGroup>
 </Project>
