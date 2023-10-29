@@ -5,10 +5,10 @@ using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.User.Modules;
 
-public interface IQueryProcessor
+internal interface IQueryProcessor
 {
-    Result<UserOperationStatus, Dictionary<string, string>> BuildInitOrderQuery(IInitOrderRequest request);
-    Result<UserOperationStatus, Dictionary<string, string>> BuildModifyOrderQuery(IModifyOrderRequest request);
-    Result<UserOperationStatus, Dictionary<string, string>> BuildCancelOrderQuery(OrderDto order);
-    Result<UserOperationStatus, Dictionary<string, string>> BuildCancelAllOrdersQuery(string symbol);
+    UserResult<Dictionary<string, string>> BuildInitOrderQuery(IInitOrderRequest request);
+    UserResult<Dictionary<string, string>> BuildModifyOrderQuery(IModifyOrderRequest request);
+    UserResult<Dictionary<string, string>> BuildCancelOrderQuery(OrderDto order);
+    UserResult<Dictionary<string, string>> BuildCancelAllOrdersQuery(string symbol);
 }
