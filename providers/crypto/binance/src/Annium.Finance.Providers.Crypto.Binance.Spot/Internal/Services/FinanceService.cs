@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -9,12 +10,12 @@ internal class FinanceService : IFinanceService
 {
     public ValueTask InitAsync(ProviderEnvironment env)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public ValueTask DisposeAsync()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public decimal GetResult(
@@ -28,26 +29,26 @@ internal class FinanceService : IFinanceService
         decimal fee
     )
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public decimal GetCost(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public decimal GetBorrowedSum(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public decimal GetValue(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public decimal GetQty(InstrumentDto instrument, byte leverage, OrderSide side, decimal sum, decimal price)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 }

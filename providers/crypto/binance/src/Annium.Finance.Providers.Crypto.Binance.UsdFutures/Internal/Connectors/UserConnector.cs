@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
@@ -10,43 +11,42 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors
 internal class UserConnector : IUserConnector
 {
     public IUserConfig Config { get; }
-
-    public ValueTask InitAsync(IUserConfig config)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        throw new System.NotImplementedException();
-    }
-
     public ITableView<AssetDto> Assets { get; }
     public ITableView<PositionDto> Positions { get; }
     public ITableView<OrderDto> Orders { get; }
 
-    public Task<Result<UserOperationStatus>> SetLeverage(PositionDto position, byte leverage)
+    public ValueTask InitAsync(IUserConfig config)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
-    public Task<Result<UserOperationStatus, OrderDto>> InitOrder(IInitOrderRequest order)
+    public ValueTask DisposeAsync()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
-    public Task<Result<UserOperationStatus, OrderDto>> ModifyOrder(IModifyOrderRequest order)
+    public Task<UserResult> SetLeverage(PositionDto position, byte leverage)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
-    public Task<Result<UserOperationStatus>> CancelOrder(OrderDto order)
+    public Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
-    public Task<Result<UserOperationStatus>> CancelAllOrders(string symbol)
+    public Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
+    }
+
+    public Task<UserResult> CancelOrder(OrderDto order)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<UserResult> CancelAllOrders(string symbol)
+    {
+        throw new NotImplementedException();
     }
 }

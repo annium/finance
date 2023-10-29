@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
@@ -13,12 +14,12 @@ internal class MarketConnector : IMarketConnector
 
     public ValueTask InitAsync(IMarketConfig config)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public ValueTask DisposeAsync()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public ITableView<ResourceDto> Resources { get; }

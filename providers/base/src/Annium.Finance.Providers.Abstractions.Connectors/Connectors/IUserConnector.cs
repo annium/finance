@@ -12,9 +12,9 @@ public interface IUserConnector : IConnectorBase<IUserConfig>, IAsyncDisposable
     ITableView<AssetDto> Assets { get; }
     ITableView<PositionDto> Positions { get; }
     ITableView<OrderDto> Orders { get; }
-    Task<Result<UserOperationStatus>> SetLeverage(PositionDto position, byte leverage);
-    Task<Result<UserOperationStatus, OrderDto>> InitOrder(IInitOrderRequest order);
-    Task<Result<UserOperationStatus, OrderDto>> ModifyOrder(IModifyOrderRequest order);
-    Task<Result<UserOperationStatus>> CancelOrder(OrderDto order);
-    Task<Result<UserOperationStatus>> CancelAllOrders(string symbol);
+    Task<UserResult> SetLeverage(PositionDto position, byte leverage);
+    Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order);
+    Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order);
+    Task<UserResult> CancelOrder(OrderDto order);
+    Task<UserResult> CancelAllOrders(string symbol);
 }

@@ -45,7 +45,7 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
 
         // act - load instruments
         this.Trace("load resources and instruments");
-        var marketResult = await provider.LoadResourcesAndInstrumentsAsync(providerKey.Environment);
+        var marketResult = await provider.LoadContextAsync(providerKey.Environment);
         marketResult.Status.Is(MarketOperationStatus.Ok);
         var (resources, instruments) = marketResult.Data;
 

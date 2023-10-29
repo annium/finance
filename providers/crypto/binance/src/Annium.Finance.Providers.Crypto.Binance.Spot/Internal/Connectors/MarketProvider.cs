@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,14 +12,12 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
 internal class MarketProvider : IMarketProvider
 {
-    public Task<
-        Result<MarketOperationStatus, (IReadOnlyCollection<ResourceDto>, IReadOnlyCollection<InstrumentDto>)>
-    > LoadResourcesAndInstrumentsAsync(ProviderEnvironment env)
+    public Task<MarketResult<MarketContext>> LoadContextAsync(ProviderEnvironment env)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
-    public IAsyncEnumerable<Result<MarketOperationStatus, IReadOnlyCollection<CandleDto>>> LoadCandlesAsync(
+    public IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleDto>>> LoadCandlesAsync(
         string instrument,
         ProviderEnvironment env,
         Instant start,
@@ -26,6 +25,6 @@ internal class MarketProvider : IMarketProvider
         CancellationToken ct
     )
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 }
