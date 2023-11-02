@@ -16,6 +16,7 @@
         <ProjectReference Include="../Annium.Finance.Providers.Tests.Lib/Annium.Finance.Providers.Tests.Lib.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Annium.Serialization.Abstractions" Version="0.1.0" />
         <PackageReference Include="Annium.Testing" Version="0.1.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.0" />
     </ItemGroup>
