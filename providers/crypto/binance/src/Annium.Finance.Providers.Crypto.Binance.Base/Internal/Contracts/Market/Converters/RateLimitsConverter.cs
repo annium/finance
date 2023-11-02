@@ -7,7 +7,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.Market.Dom
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.Market.Converters;
 
-internal class RatesLimitsConverter : JsonConverter<RateLimits?>
+internal class RateLimitsConverter : JsonConverter<RateLimits?>
 {
     public override RateLimits? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
