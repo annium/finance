@@ -19,19 +19,19 @@ internal class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
 
         var currentDepth = reader.CurrentDepth;
 
-        var rateLimits = default(RateLimits);
+        var rateLimits = default(RateLimits?);
         var instruments = default(IReadOnlyCollection<InstrumentDto>);
 
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                if (rateLimits == default || instruments is null)
+                if (rateLimits is null || instruments is null)
                 {
                     return default;
                 }
 
-                return new ExchangeInfo(rateLimits, instruments);
+                return new ExchangeInfo(rateLimits.Value, instruments);
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
@@ -43,7 +43,7 @@ internal class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
                 switch (propertyName)
                 {
                     case "rateLimits":
-                        rateLimits = JsonSerializer.Deserialize<RateLimits>(ref reader, options);
+                        rateLimits = JsonSerializer.Deserialize<RateLimits?>(ref reader, options);
                         break;
                     case "symbols":
                         var allInstruments = JsonSerializer.Deserialize<IReadOnlyCollection<InstrumentDto?>>(
