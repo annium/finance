@@ -53,7 +53,6 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         instruments.Count.IsGreater(0);
         this.Trace<string>("resolve instrument for symbol {symbol}", _symbol);
         var instrument = instruments.Single(x => x.Symbol == _symbol);
-        instrument.Provider.IsNullOrWhiteSpace().IsFalse();
         instrument.Target.IsNotDefault();
         resources.Contains(instrument.Target).IsTrue();
         instrument.Target.Code.IsNullOrWhiteSpace().IsFalse();
@@ -64,27 +63,31 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         resources.Contains(instrument.Currency).IsTrue();
         instrument.Currency.Code.IsNullOrWhiteSpace().IsFalse();
         instrument.Symbol.IsNullOrWhiteSpace().IsFalse();
-        instrument.LotSize.IsNotDefault();
-        instrument.TickSize.IsNotDefault();
         instrument.MinQty.IsNotDefault();
         instrument.MaxQty.IsNotDefault();
+        instrument.LotSize.IsNotDefault();
+        instrument.MinPrice.IsNotDefault();
+        instrument.MaxPrice.IsNotDefault();
+        instrument.TickSize.IsNotDefault();
         instrument.MinSum.IsNotDefault();
+        instrument.MaxSum.IsNotDefault();
+        instrument.MaxOrders.IsNotDefault();
 
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();
         var start = end - Duration.FromDays(10);
         var candles = new List<CandleDto>();
         this.Trace(
-            "load candles in for {symbol} ({environment}) in {start} - {end}",
+            "load candles in for {symbol} ({key}) in {start} - {end}",
             instrument.Symbol,
-            instrument.Environment,
+            providerKey,
             start,
             end
         );
         await foreach (
             var chunkResult in provider.LoadCandlesAsync(
                 instrument.Symbol,
-                instrument.Environment,
+                providerKey.Environment,
                 start,
                 end,
                 CancellationToken.None

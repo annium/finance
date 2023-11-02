@@ -44,7 +44,6 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         market.Instruments.Count.IsGreater(0);
         this.Trace<string>("resolve instrument for symbol {symbol}", _symbol);
         var instrument = market.Instruments.Single(x => x.Symbol == _symbol);
-        instrument.Provider.IsNullOrWhiteSpace().IsFalse();
         instrument.Target.IsNotDefault();
         instrument.Target.Code.IsNullOrWhiteSpace().IsFalse();
         market.Resources.Contains(instrument.Target).IsTrue();
@@ -55,11 +54,15 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         instrument.Currency.Code.IsNullOrWhiteSpace().IsFalse();
         market.Resources.Contains(instrument.Currency).IsTrue();
         instrument.Symbol.IsNullOrWhiteSpace().IsFalse();
-        instrument.LotSize.IsNotDefault();
-        instrument.TickSize.IsNotDefault();
         instrument.MinQty.IsNotDefault();
         instrument.MaxQty.IsNotDefault();
+        instrument.LotSize.IsNotDefault();
+        instrument.MinPrice.IsNotDefault();
+        instrument.MaxPrice.IsNotDefault();
+        instrument.TickSize.IsNotDefault();
         instrument.MinSum.IsNotDefault();
+        instrument.MaxSum.IsNotDefault();
+        instrument.MaxOrders.IsNotDefault();
 
         // assert - tickers
         this.Trace("ensure tickers are loaded");
