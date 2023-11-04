@@ -10,7 +10,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market
 internal class InstrumentConverter : JsonConverter<InstrumentDto>
 {
     private const string RequiredStatus = "TRADING";
-    private const string RequiredPermssion = "SPOT";
+    private const string RequiredPermission = "SPOT";
 
     public override InstrumentDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -34,7 +34,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                if (!permissions.Contains(RequiredPermssion) || status != RequiredStatus || filters is null)
+                if (!permissions.Contains(RequiredPermission) || status != RequiredStatus || filters is null)
                 {
                     return default;
                 }
