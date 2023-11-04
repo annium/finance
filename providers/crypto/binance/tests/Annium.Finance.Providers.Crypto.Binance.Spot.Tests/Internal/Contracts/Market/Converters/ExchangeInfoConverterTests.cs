@@ -7,7 +7,7 @@ using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Contracts.Market.Converters;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.Market.Converters;
 
 public class ExchangeInfoConverterTests : ConnectorTestBase
 {

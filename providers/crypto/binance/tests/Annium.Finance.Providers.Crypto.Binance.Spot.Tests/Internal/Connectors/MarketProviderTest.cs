@@ -4,12 +4,12 @@ using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Connectors;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors;
 
 public class MarketProviderTest : MarketProviderTestBase
 {
     public MarketProviderTest(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceUsdFutures(), "BTCUSDT", outputHelper) { }
+        : base(ctx => ctx.WithBinanceSpot(), "BTCUSDT", outputHelper) { }
 
     [Theory]
     [ClassData(typeof(ProviderMarketEnvironments))]
