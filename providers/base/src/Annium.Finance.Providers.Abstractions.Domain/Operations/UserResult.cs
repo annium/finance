@@ -6,18 +6,21 @@ public sealed record UserResult
 {
     public static UserResult Ok() => new(UserOperationStatus.Ok, string.Empty);
 
-    public static UserResult New(UserOperationStatus code) => new(code, string.Empty);
+    public static UserResult New(UserOperationStatus status) => new(status, string.Empty);
 
-    public static UserResult New(UserOperationStatus code, string message) => new(code, message);
+    public static UserResult New(UserOperationStatus status, string message) => new(status, message);
 
     public static UserResult<T> Ok<T>(T data)
         where T : notnull => new(UserOperationStatus.Ok, data, string.Empty);
 
-    public static UserResult<T> New<T>(UserOperationStatus code, T data)
-        where T : notnull => new(code, data, string.Empty);
+    public static UserResult<T> New<T>(UserOperationStatus status, T data)
+        where T : notnull => new(status, data, string.Empty);
 
-    public static UserResult<T> New<T>(UserOperationStatus code, T data, string error)
-        where T : notnull => new(code, data, error);
+    public static UserResult<T> New<T>(UserOperationStatus status, T data, string error)
+        where T : notnull => new(status, data, error);
+
+    public static UserResult<T> From<T>(UserResult result, T data)
+        where T : notnull => new(result.Status, data, result.Message);
 
     public bool IsSuccess { get; }
     public bool IsFailure { get; }
