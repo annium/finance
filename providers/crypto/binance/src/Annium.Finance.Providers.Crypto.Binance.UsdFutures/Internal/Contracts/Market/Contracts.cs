@@ -22,4 +22,7 @@ internal class Contracts
             .ResetConverters()
             .AddConverter<InstrumentTickerConverter>()
             .AddConverter<StreamDataConverter<InstrumentTicker>>();
+
+    public JsonSerializerOptions Candle { get; } =
+        new JsonSerializerOptions().ResetConverters().AddConverter<CandleConverter>();
 }
