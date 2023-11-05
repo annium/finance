@@ -21,7 +21,7 @@ internal class RateLimitsConverter : JsonConverter<RateLimits?>
         var items = new List<RateLimit>();
 
         var type = string.Empty;
-        var limit = 0;
+        var limit = 0u;
 
         while (reader.Read())
         {
@@ -62,7 +62,7 @@ internal class RateLimitsConverter : JsonConverter<RateLimits?>
                         type = reader.GetString();
                         break;
                     case "limit":
-                        limit = reader.GetInt32();
+                        limit = reader.GetUInt32();
                         break;
 
                     default:
@@ -81,4 +81,4 @@ internal class RateLimitsConverter : JsonConverter<RateLimits?>
     }
 }
 
-file record RateLimit(string Type, int Limit);
+file record RateLimit(string Type, uint Limit);
