@@ -6,7 +6,7 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
 
-internal static class HttpRequestRateExtensions
+internal static class HttpRequestRateBaseExtensions
 {
     public static IHttpRequest WithRateDelayBase(this IHttpRequest request, string interval, int watermark) =>
         request.Intercept(async next =>
