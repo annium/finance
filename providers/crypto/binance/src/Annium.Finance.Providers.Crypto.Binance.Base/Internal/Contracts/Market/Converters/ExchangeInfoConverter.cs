@@ -31,7 +31,7 @@ internal class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
                     return default;
                 }
 
-                return new ExchangeInfo(rateLimits.Value, instruments);
+                return new ExchangeInfo(rateLimits, instruments);
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
