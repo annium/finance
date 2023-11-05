@@ -135,7 +135,7 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
         }";
 
         // act - deserialize
-        var serializer = this.GetJsonSerializer(Constants.ExchangeInfoSerializerKey);
+        var serializer = this.GetJsonSerializer(Constants.ExchangeInfoKey);
         var deserialized = serializer.Deserialize<ExchangeInfo?>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization
@@ -171,7 +171,7 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
         }";
 
         // act - deserialize
-        var serializer = this.GetJsonSerializer(Constants.ExchangeInfoSerializerKey);
+        var serializer = this.GetJsonSerializer(Constants.ExchangeInfoKey);
         var deserialized = serializer.Deserialize<ExchangeInfo?>(Encoding.UTF8.GetBytes(raw));
 
         // assert - deserialization

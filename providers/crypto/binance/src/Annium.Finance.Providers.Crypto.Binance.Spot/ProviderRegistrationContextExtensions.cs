@@ -1,9 +1,9 @@
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared;
+using Annium.Finance.Providers.Shared.Internal;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;
@@ -19,11 +19,8 @@ public static class ProviderRegistrationContextExtensions
         );
 
         // provider-specific components
-        ctx.Container.AddSerializers(ExchangeInfoSerializerKey).WithJson(Contracts.Market.ExchangeInfo);
-        ctx.Container.AddHttpRequestFactory(ExchangeInfoSerializerKey);
-
-        ctx.Container.AddSerializers(InstrumentTickerSerializerKey).WithJson(Contracts.Market.InstrumentTicker);
-        ctx.Container.AddHttpRequestFactory(InstrumentTickerSerializerKey);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ExchangeInfoKey, Contracts.Market.ExchangeInfo);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(InstrumentTickerKey, Contracts.Market.InstrumentTicker);
 
         return ctx;
     }

@@ -27,6 +27,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
         byte baseAssetPrecision = 0;
         var quoteAsset = string.Empty;
         byte quoteAssetPrecision = 0;
+        var isSpotTradingAllowed = false;
         var filters = default(InstrumentFilters);
         var permissions = new HashSet<string>();
 
@@ -34,7 +35,12 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                if (!permissions.Contains(RequiredPermission) || status != RequiredStatus || filters is null)
+                if (
+                    status != RequiredStatus
+                    || !isSpotTradingAllowed
+                    || filters is null
+                    || !permissions.Contains(RequiredPermission)
+                )
                 {
                     return default;
                 }
@@ -86,6 +92,9 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
                         break;
                     case "quoteAssetPrecision":
                         quoteAssetPrecision = reader.GetByte();
+                        break;
+                    case "isSpotTradingAllowed":
+                        isSpotTradingAllowed = reader.GetBoolean();
                         break;
                     case "filters":
                         filters = JsonSerializer.Deserialize<InstrumentFilters>(ref reader, options);

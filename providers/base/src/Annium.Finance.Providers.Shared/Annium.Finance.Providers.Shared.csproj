@@ -17,5 +17,7 @@
     <ItemGroup>
         <PackageReference Include="Annium.Extensions.Jobs" Version="0.1.0" />
         <PackageReference Include="Annium.Extensions.Pooling" Version="0.1.0" />
+        <PackageReference Include="Annium.Net.Http" Version="0.1.0" />
+        <PackageReference Include="Annium.Serialization.Json" Version="0.1.0" />
     </ItemGroup>
 </Project>

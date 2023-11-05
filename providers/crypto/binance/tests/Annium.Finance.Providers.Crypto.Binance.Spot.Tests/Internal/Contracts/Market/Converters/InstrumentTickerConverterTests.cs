@@ -28,7 +28,7 @@ public class InstrumentTickerConverterTests : ConnectorTestBase
         }";
 
         // act
-        var serializer = this.GetJsonSerializer(Constants.InstrumentTickerSerializerKey);
+        var serializer = this.GetJsonSerializer(Constants.InstrumentTickerKey);
         var deserialized = serializer.Deserialize<InstrumentTicker>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
@@ -47,7 +47,7 @@ public class InstrumentTickerConverterTests : ConnectorTestBase
         }";
 
         // act - deserialize
-        var serializer = this.GetJsonSerializer(Constants.InstrumentTickerSerializerKey);
+        var serializer = this.GetJsonSerializer(Constants.InstrumentTickerKey);
         var deserialized = serializer.Deserialize<InstrumentTicker>(Encoding.UTF8.GetBytes(raw));
 
         // assert - deserialization
