@@ -13,6 +13,7 @@ public abstract class ConnectorTestBase : TestBase
     {
         Register(container =>
         {
+            // todo: use server time
             container.AddTime().WithRealTime().SetDefault();
             container.AddScheduler();
             container.AddTables();
