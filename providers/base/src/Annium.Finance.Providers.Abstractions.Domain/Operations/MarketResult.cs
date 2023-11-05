@@ -10,17 +10,17 @@ public sealed record MarketResult
 
     public static MarketResult New(MarketOperationStatus status, string message) => new(status, message);
 
-    public static MarketResult<T> Ok<T>(T data)
-        where T : notnull => new(MarketOperationStatus.Ok, data, string.Empty);
+    public static MarketResult<T> Ok<T>(T data) => new(MarketOperationStatus.Ok, data, string.Empty);
 
-    public static MarketResult<T> New<T>(MarketOperationStatus status, T data)
-        where T : notnull => new(status, data, string.Empty);
+    public static MarketResult<T> New<T>(MarketOperationStatus status, T data) => new(status, data, string.Empty);
 
-    public static MarketResult<T> New<T>(MarketOperationStatus status, T data, string error)
-        where T : notnull => new(status, data, error);
+    public static MarketResult<T> New<T>(MarketOperationStatus status, T data, string error) =>
+        new(status, data, error);
 
-    public static MarketResult<T> From<T>(MarketResult result, T data)
-        where T : notnull => new(result.Status, data, result.Message);
+    public static MarketResult<T> From<T>(MarketResult result, T data) => new(result.Status, data, result.Message);
+
+    public static MarketResult<T> From<TS, T>(MarketResult<TS> result, T data) =>
+        new(result.Status, data, result.Message);
 
     public bool IsSuccess { get; }
     public bool IsFailure { get; }
