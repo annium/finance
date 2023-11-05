@@ -1,4 +1,3 @@
-using System;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,12 +16,12 @@ internal class SignatureService
         _secret = apiSecret.AsSecureString();
     }
 
-    public ReadOnlySpan<char> GetKey()
+    public string GetKey()
     {
-        return Encoding.UTF8.GetChars(_key.AsBytes());
+        return Encoding.UTF8.GetString(_key.AsBytes());
     }
 
-    public ReadOnlySpan<char> GetSignature(string data)
+    public string GetSignature(string data)
     {
         using var hash = new HMACSHA256(_secret.AsBytes());
 
