@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
@@ -12,6 +13,9 @@ internal class MarketConnector : IMarketConnector
 {
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public IMarketConfig Config { get; }
+    public ITableView<ResourceDto> Resources { get; }
+    public ITableView<InstrumentDto> Instruments { get; }
+    public ITableView<InstrumentTicker> Tickers { get; }
 
     public ValueTask InitAsync(IMarketConfig config)
     {
@@ -23,7 +27,13 @@ internal class MarketConnector : IMarketConnector
         throw new NotImplementedException();
     }
 
-    public ITableView<ResourceDto> Resources { get; }
-    public ITableView<InstrumentDto> Instruments { get; }
-    public ITableView<InstrumentTicker> Tickers { get; }
+    public void SubscribeTickers(IReadOnlyCollection<string> symbols)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void UnsubscribeTickers(IReadOnlyCollection<string> symbols)
+    {
+        throw new NotImplementedException();
+    }
 }

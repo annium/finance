@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
@@ -11,4 +12,6 @@ public interface IMarketConnector : IConnectorBase<IMarketConfig>, IAsyncDisposa
     ITableView<ResourceDto> Resources { get; }
     ITableView<InstrumentDto> Instruments { get; }
     ITableView<InstrumentTicker> Tickers { get; }
+    void SubscribeTickers(IReadOnlyCollection<string> symbols);
+    void UnsubscribeTickers(IReadOnlyCollection<string> symbols);
 }
