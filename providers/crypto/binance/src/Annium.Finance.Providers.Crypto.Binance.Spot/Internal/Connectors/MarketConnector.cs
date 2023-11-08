@@ -10,6 +10,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
 internal class MarketConnector : IMarketConnector
 {
+    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public IMarketConfig Config { get; }
 
     public ValueTask InitAsync(IMarketConfig config)

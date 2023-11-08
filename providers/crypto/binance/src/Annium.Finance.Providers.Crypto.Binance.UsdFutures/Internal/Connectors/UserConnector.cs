@@ -10,6 +10,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors
 
 internal class UserConnector : IUserConnector
 {
+    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public IUserConfig Config { get; }
     public ITableView<AssetDto> Assets { get; }
     public ITableView<PositionDto> Positions { get; }
