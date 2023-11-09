@@ -1,4 +1,4 @@
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Services;
+using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Tests.Internal.Services;

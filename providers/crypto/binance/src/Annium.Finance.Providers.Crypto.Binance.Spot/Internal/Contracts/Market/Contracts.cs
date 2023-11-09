@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.Market.Converters;
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.Shared.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Converters;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market;

@@ -1,4 +1,4 @@
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;

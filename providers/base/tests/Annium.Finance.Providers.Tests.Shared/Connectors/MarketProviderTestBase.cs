@@ -7,7 +7,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared;
 using Annium.Logging;
 using Annium.NodaTime.Extensions;
@@ -46,8 +45,8 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         // act - load instruments
         this.Trace("load resources and instruments");
         var marketResult = await provider.LoadContextAsync(providerKey.Environment);
-        marketResult.Status.Is(MarketOperationStatus.Ok);
-        var (resources, instruments) = marketResult.Data;
+        marketResult.IsSuccess.IsTrue();
+        var (resources, instruments) = marketResult.Data.NotNull();
 
         // assert - instruments
         instruments.Count.IsGreater(0);
@@ -94,8 +93,8 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
             )
         )
         {
-            chunkResult.Status.Is(MarketOperationStatus.Ok);
-            candles.AddRange(chunkResult.Data);
+            chunkResult.IsSuccess.IsTrue();
+            candles.AddRange(chunkResult.Data.NotNull());
         }
 
         // assert - candles

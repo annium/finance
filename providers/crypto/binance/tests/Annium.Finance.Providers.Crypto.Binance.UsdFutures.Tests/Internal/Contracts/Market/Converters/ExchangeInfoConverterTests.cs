@@ -1,6 +1,6 @@
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Contracts.Market.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
