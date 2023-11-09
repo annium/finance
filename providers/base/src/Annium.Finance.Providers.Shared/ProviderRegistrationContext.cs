@@ -43,13 +43,13 @@ public readonly struct ProviderRegistrationContext
             var providerKey = ProviderKey.Create(provider, env);
             Container.Add(providerKey).AsSelf().Singleton();
             Container
-                .Add<Func<TMarketConnector>>(sp => sp.Resolve<TMarketConnector>)
-                .AsKeyed<Func<IMarketConnector>, ProviderKey>(providerKey)
-                .In(_lifetime);
+                .Add<Func<IServiceProvider, TMarketConnector>>(sp => sp.Resolve<TMarketConnector>())
+                .AsKeyed<Func<IServiceProvider, IMarketConnector>, ProviderKey>(providerKey)
+                .Singleton();
             Container
-                .Add<Func<TUserConnector>>(sp => sp.Resolve<TUserConnector>)
-                .AsKeyed<Func<IUserConnector>, ProviderKey>(providerKey)
-                .In(_lifetime);
+                .Add<Func<IServiceProvider, TUserConnector>>(sp => sp.Resolve<TUserConnector>())
+                .AsKeyed<Func<IServiceProvider, IUserConnector>, ProviderKey>(providerKey)
+                .Singleton();
             Container
                 .Add<Func<TFinanceService>>(sp => sp.Resolve<TFinanceService>)
                 .AsKeyed<Func<IFinanceService>, ProviderKey>(providerKey)

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
@@ -16,29 +18,73 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
     where TConnector : IConnectorBase<TConfig>
 {
     public ILogger Logger { get; }
-    private readonly IIndex<ProviderKey, Func<TConnector>> _connectorFactories;
+    private readonly IServiceProvider _sp;
+    private readonly IIndex<ProviderKey, Func<IServiceProvider, TConnector>> _connectorFactories;
+    private readonly ConcurrentDictionary<TConfig, Entry> _scopes = new();
 
-    public ConnectorCacheProvider(IIndex<ProviderKey, Func<TConnector>> connectorFactories, ILogger logger)
+    public ConnectorCacheProvider(
+        IServiceProvider sp,
+        IIndex<ProviderKey, Func<IServiceProvider, TConnector>> connectorFactories,
+        ILogger logger
+    )
     {
         Logger = logger;
+        _sp = sp;
         _connectorFactories = connectorFactories;
     }
 
     public override async Task<OneOf<TConnector, IDisposableReference<TConnector>>> CreateAsync(
-        TConfig config,
+        TConfig key,
         CancellationToken ct
     )
     {
-        var provider = config.Provider;
-        var env = config.Environment;
-        var providerKey = ProviderKey.Create(provider, env);
+        var providerKey = key.GetProviderKey();
+
+        this.Trace("{key} - resolve entry for {config}", providerKey, key);
+        var entry = _scopes.GetOrAdd(key, CreateEntry);
+
+        this.Trace("{key} - init {key} connector for {config}", providerKey, key);
+        await entry.Connector.InitAsync(key); // this must not be called twice by design
+
+        return entry.Connector;
+    }
+
+    public override async Task DisposeAsync(TConfig key, TConnector value)
+    {
+        var providerKey = key.GetProviderKey();
+
+        this.Trace("resolve {key} entry for {config}", providerKey, key);
+        if (!_scopes.TryGetValue(key, out var entry))
+        {
+            this.Warn("resolved no {key} entry for {config}", providerKey, key);
+            return;
+        }
+
+        this.Warn("dispose no {key} entry for {config}", providerKey, key);
+        await entry.DisposeAsync();
+
+        this.Warn("resolved no {key} entry for {config}", providerKey, key);
+    }
+
+    private Entry CreateEntry(TConfig config)
+    {
+        var providerKey = ProviderKey.Create(config.Provider, config.Environment);
+
+        this.Trace("create new {key} scope for {config}", providerKey, config);
+        var scope = _sp.CreateAsyncScope();
 
         this.Trace("create new {key} connector for {config}", providerKey, config);
-        var connector = _connectorFactories[providerKey]();
+        var factory = _connectorFactories[providerKey];
+        var connector = factory(scope.ServiceProvider);
 
-        this.Trace("init {key} connector for {config}", providerKey, config);
-        await connector.InitAsync(config);
+        return new Entry(scope, connector);
+    }
 
-        return connector;
+    private record Entry(IAsyncServiceScope Scope, TConnector Connector) : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync()
+        {
+            return Scope.DisposeAsync();
+        }
     }
 }
