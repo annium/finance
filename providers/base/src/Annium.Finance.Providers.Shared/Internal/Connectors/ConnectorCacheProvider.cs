@@ -7,6 +7,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
+using OneOf;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
@@ -15,8 +16,6 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
     where TConnector : IConnectorBase<TConfig>
 {
     public ILogger Logger { get; }
-    public override bool HasCreate => true;
-    public override bool HasExternalCreate => false;
     private readonly IIndex<ProviderKey, Func<TConnector>> _connectorFactories;
 
     public ConnectorCacheProvider(IIndex<ProviderKey, Func<TConnector>> connectorFactories, ILogger logger)
@@ -25,7 +24,10 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         _connectorFactories = connectorFactories;
     }
 
-    public override async Task<TConnector> CreateAsync(TConfig config, CancellationToken ct)
+    public override async Task<OneOf<TConnector, IDisposableReference<TConnector>>> CreateAsync(
+        TConfig config,
+        CancellationToken ct
+    )
     {
         var provider = config.Provider;
         var env = config.Environment;
