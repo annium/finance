@@ -9,6 +9,7 @@
         <LangVersion>11.0</LangVersion>
         <WarningsAsErrors>true</WarningsAsErrors>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
@@ -19,5 +20,8 @@
         <PackageReference Include="Annium.Serialization.Abstractions" Version="0.1.0" />
         <PackageReference Include="Annium.Testing" Version="0.1.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="xunit" Version="2.5.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
     </ItemGroup>
 </Project>
