@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
+using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Internal.Sync;
@@ -13,7 +14,13 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static ProviderRegistrationContext AddProviders(this IServiceContainer container, ServiceLifetime lifetime)
+    public static ProviderRegistrationContext AddProvidersSingleton(this IServiceContainer container) =>
+        container.AddProviders(ServiceLifetime.Singleton);
+
+    public static ProviderRegistrationContext AddProvidersScoped(this IServiceContainer container) =>
+        container.AddProviders(ServiceLifetime.Scoped);
+
+    private static ProviderRegistrationContext AddProviders(this IServiceContainer container, ServiceLifetime lifetime)
     {
         // market
         container.AddObjectCache<
