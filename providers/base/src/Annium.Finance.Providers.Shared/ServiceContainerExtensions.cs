@@ -36,6 +36,10 @@ public static class ServiceContainerExtensions
         );
         container.Add<IUserSynchronizer, NoopUserSynchronizer>().In(lifetime);
 
+        // shared
+        container.Add<StatusMonitor>().AsSelf().AsInterfaces().Scoped();
+        container.Add<StatusReporter>().AsSelf().AsInterfaces().Transient();
+
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
 
