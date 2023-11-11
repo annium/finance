@@ -10,22 +10,34 @@ internal class StatusReporter : IStatusReporter, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly StatusMonitor _monitor;
-    private string _subjectId = string.Empty;
+    private string _target = string.Empty;
 
     public StatusReporter(StatusMonitor monitor, ILogger logger)
     {
         Logger = logger;
         _monitor = monitor;
+        this.Trace<string>("reports to {monitor}", monitor.GetFullId());
     }
 
-    public void Bind(object subject)
+    public void Bind(object component)
     {
-        var currentSubjectId = Interlocked.CompareExchange(ref _subjectId, subject.GetFullId(), string.Empty);
-        if (currentSubjectId != string.Empty)
-            throw new InvalidOperationException($"{this.GetFullId()} is already bound to {currentSubjectId}");
+        var target = component.GetFullId();
+        var current = Interlocked.CompareExchange(ref _target, target, string.Empty);
+        if (current != string.Empty)
+            throw new InvalidOperationException($"{this.GetFullId()} is already bound to {current}");
 
-        this.Trace<string, string>("{monitor} - register {subject}", _monitor.GetFullId(), _subjectId);
-        _monitor.Register(_subjectId);
+        this.Trace<string>("register {target}", target);
+        _monitor.Register(target);
+    }
+
+    public void Unbind()
+    {
+        var target = Interlocked.Exchange(ref _target, string.Empty);
+        if (target == string.Empty)
+            throw new InvalidOperationException($"{this.GetFullId()} is already unbound");
+
+        this.Trace<string>("unregister {target}", target);
+        _monitor.Unregister(target);
     }
 
     public void Connecting() => ReportStatus(ConnectorStatus.Connecting);
@@ -36,10 +48,11 @@ internal class StatusReporter : IStatusReporter, ILogSubject
 
     private void ReportStatus(ConnectorStatus status)
     {
-        if (_subjectId == string.Empty)
-            throw new InvalidOperationException($"{this.GetFullId()} is not bound to any subject");
+        var target = _target;
+        if (target == string.Empty)
+            throw new InvalidOperationException($"{this.GetFullId()} is not bound to any target");
 
-        this.Trace("{monitor} - set {subject} status to {status}", _monitor.GetFullId(), _subjectId, status);
-        _monitor.TrackStatus(_subjectId, status);
+        this.Trace("set {target} status to {status}", target, status);
+        _monitor.TrackStatus(target, status);
     }
 }

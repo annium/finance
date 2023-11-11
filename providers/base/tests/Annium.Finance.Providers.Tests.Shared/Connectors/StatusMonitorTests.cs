@@ -27,26 +27,29 @@ public class StatusMonitorTests : TestBase
     }
 
     [Fact]
-    public void UnboundReporter_Throws()
+    public void SingleReporter()
     {
         var reporter = Get<IStatusReporter>();
+        var target = new A();
 
         Wrap.It(() => reporter.Connecting()).Throws<InvalidOperationException>().Reports("not bound");
         Wrap.It(() => reporter.Connected()).Throws<InvalidOperationException>().Reports("not bound");
         Wrap.It(() => reporter.Disconnected()).Throws<InvalidOperationException>().Reports("not bound");
-    }
 
-    [Fact]
-    public void SingleReporter()
-    {
-        var reporter = Get<IStatusReporter>();
-        reporter.Bind(new A());
+        reporter.Bind(target);
+        Wrap.It(() => reporter.Bind(new B())).Throws<InvalidOperationException>().Reports("already bound");
 
         _statuses.IsEmpty();
 
         reporter.Connecting();
 
         _statuses.IsEqual(new[] { Connecting });
+
+        reporter.Unbind();
+        Wrap.It(() => reporter.Unbind()).Throws<InvalidOperationException>().Reports("already unbound");
+        Wrap.It(() => reporter.Connecting()).Throws<InvalidOperationException>().Reports("not bound");
+        Wrap.It(() => reporter.Connected()).Throws<InvalidOperationException>().Reports("not bound");
+        Wrap.It(() => reporter.Disconnected()).Throws<InvalidOperationException>().Reports("not bound");
     }
 
     [Fact]
@@ -76,6 +79,12 @@ public class StatusMonitorTests : TestBase
 
         reporterB.Disconnected();
         _statuses.IsEqual(new[] { Connecting, Connected, Connecting, Disconnected });
+
+        reporterA.Connected();
+        _statuses.IsEqual(new[] { Connecting, Connected, Connecting, Disconnected, Connecting });
+
+        reporterB.Unbind();
+        _statuses.IsEqual(new[] { Connecting, Connected, Connecting, Disconnected, Connecting, Connected });
     }
 }
 

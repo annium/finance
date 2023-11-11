@@ -13,7 +13,7 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
     public ILogger Logger { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     private readonly object _locker = new();
-    private readonly Dictionary<string, ConnectorStatus> _subjects = new();
+    private readonly Dictionary<string, ConnectorStatus> _targets = new();
     private ConnectorStatus _status;
 
     public StatusMonitor(ILogger logger)
@@ -21,39 +21,57 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
         Logger = logger;
     }
 
-    public void Register(string subjectId)
+    public void Register(string target)
     {
         lock (_locker)
         {
-            _subjects.Add(subjectId, ConnectorStatus.Disconnected);
+            this.Trace<string>("add {target}", target);
+            _targets.Add(target, ConnectorStatus.Disconnected);
+
+            UpdateStatus();
         }
     }
 
-    public void TrackStatus(string subjectId, ConnectorStatus status)
+    public void Unregister(string target)
     {
         lock (_locker)
         {
-            this.Trace("{subject} - {status}", subjectId, status);
+            this.Trace<string>("remove {target}", target);
+            if (!_targets.Remove(target))
+                throw new InvalidOperationException($"Target {target} was not registered");
 
-            this.Trace<string>("current state: {statuses}", GetStateDescription(_subjects));
-            _subjects[subjectId] = status;
-            this.Trace<string>("new state: {statuses}", GetStateDescription(_subjects));
-
-            var newStatus = ResolveStatus(_subjects.Values);
-
-            if (newStatus == _status)
-            {
-                this.Trace("same resolved status - {status}", newStatus);
-                return;
-            }
-
-            this.Trace("update status {oldStatus} -> {newStatus}", _status, newStatus);
-            OnStatusChanged(_status = newStatus);
+            UpdateStatus();
         }
     }
 
-    private static string GetStateDescription(IReadOnlyDictionary<string, ConnectorStatus> subjects) =>
-        subjects.Select(x => $"{x.Key} - {x.Value}").Join("; ");
+    public void TrackStatus(string target, ConnectorStatus status)
+    {
+        lock (_locker)
+        {
+            this.Trace("{target} - {status}", target, status);
+            _targets[target] = status;
+
+            UpdateStatus();
+        }
+    }
+
+    private void UpdateStatus()
+    {
+        this.Trace<string>("state: {statuses}", GetStateDescription(_targets));
+        var newStatus = ResolveStatus(_targets.Values);
+
+        if (newStatus == _status)
+        {
+            this.Trace("same resolved status - {status}", newStatus);
+            return;
+        }
+
+        this.Trace("update status {oldStatus} -> {newStatus}", _status, newStatus);
+        OnStatusChanged(_status = newStatus);
+    }
+
+    private static string GetStateDescription(IReadOnlyDictionary<string, ConnectorStatus> targets) =>
+        targets.Select(x => $"{x.Key} - {x.Value}").Join("; ");
 
     private static ConnectorStatus ResolveStatus(IReadOnlyCollection<ConnectorStatus> statuses)
     {
