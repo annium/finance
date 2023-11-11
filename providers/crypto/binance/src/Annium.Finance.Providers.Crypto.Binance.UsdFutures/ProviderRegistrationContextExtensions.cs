@@ -3,7 +3,6 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared;
-using Annium.Finance.Providers.Shared.Internal;
 using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures;

@@ -17,10 +17,10 @@ public class SignatureServiceTests
             "symbol=LTCBTC&side=BUY&type=LIMIT&timeInForce=GTC&quantity=1&price=0.1&recvWindow=5000&timestamp=1499827319559";
 
         // act
-        var signature = service.GetSignature(query).ToString();
+        var signature = service.GetSignature(query);
 
         // assert
-        Assert.Equal(apiKey, service.GetKey().ToString());
+        Assert.Equal(apiKey, service.GetKey());
         Assert.Equal(expectedSignature, signature);
     }
 }

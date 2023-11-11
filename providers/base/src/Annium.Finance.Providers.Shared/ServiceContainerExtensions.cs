@@ -4,7 +4,6 @@ using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Internal.Sync;

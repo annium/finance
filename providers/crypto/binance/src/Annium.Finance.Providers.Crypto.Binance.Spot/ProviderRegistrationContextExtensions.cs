@@ -3,7 +3,6 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared;
-using Annium.Finance.Providers.Shared.Internal;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;

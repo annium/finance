@@ -12,7 +12,6 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Shared.Connectors;
-using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;
 using NodaTime;
