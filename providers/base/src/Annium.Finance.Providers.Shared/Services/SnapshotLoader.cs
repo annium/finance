@@ -1,0 +1,185 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Annium.Data.Operations;
+using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Logging;
+using Annium.Threading;
+
+namespace Annium.Finance.Providers.Shared.Services;
+
+public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
+
+public class SnapshotLoader<T> : IDisposable, ILogSubject
+{
+    public ILogger Logger { get; }
+    public event Action<T> OnFetched = delegate { };
+    private readonly SnapshotLoaderConfig _cfg;
+    private readonly Func<CancellationToken, Task<IResult<T>>> _load;
+    private readonly IStatusReporter _statusReporter;
+    private readonly AsyncTimer _timer;
+    private readonly object _locker = new();
+    private State _state;
+    private CancellationTokenSource _cts = new();
+    private int _requestCounter;
+
+    public SnapshotLoader(
+        SnapshotLoaderConfig cfg,
+        Func<CancellationToken, Task<IResult<T>>> load,
+        IStatusReporter statusReporter,
+        ILogger logger
+    )
+    {
+        Logger = logger;
+        _cfg = cfg;
+        _load = load;
+        _statusReporter = statusReporter;
+        _statusReporter.Bind(this);
+        _timer = AsyncTimer.Create(FetchSnapshotAsync, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+    }
+
+    public void Dispose()
+    {
+        this.Trace("start");
+
+        lock (_locker)
+        {
+            if (_state is State.Disposed)
+            {
+                this.Trace("already {state}", _state);
+                return;
+            }
+
+            this.Trace("set is disposed");
+            _state = State.Disposed;
+
+            this.Trace("cancel cts");
+            _cts.Cancel();
+
+            this.Trace("dispose timer");
+            _timer.Dispose();
+
+            this.Trace("signal disconnected status");
+            _statusReporter.Disconnected();
+        }
+
+        this.Trace("done");
+    }
+
+    public void Start()
+    {
+        this.Trace("start");
+
+        lock (_locker)
+        {
+            if (_state is not State.Inactive)
+            {
+                this.Trace("can't start from {state} state", _state);
+                return;
+            }
+
+            _state = State.Active;
+            _cts = new();
+            _requestCounter = 0;
+
+            this.Trace("signal connecting state");
+            _statusReporter.Connecting();
+
+            _timer.Change(0, _cfg.FastInterval);
+        }
+
+        this.Trace("done");
+    }
+
+    public void Stop()
+    {
+        this.Trace("start");
+
+        lock (_locker)
+        {
+            if (_state is not State.Active)
+            {
+                this.Trace("can't stop from {state} state", _state);
+                return;
+            }
+
+            if (_cts.IsCancellationRequested)
+            {
+                this.Trace("already stopped");
+                return;
+            }
+
+            this.Trace("cancel cts");
+            _cts.Cancel();
+
+            this.Trace("signal disconnected status");
+            _statusReporter.Disconnected();
+
+            this.Trace("stop timer");
+            _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
+
+        this.Trace("done");
+    }
+
+    private async ValueTask FetchSnapshotAsync()
+    {
+        this.Trace("start");
+
+        // try to load snapshot - timer is not expected to be switched off at this moment
+        var result = await _load(_cts.Token);
+
+        lock (_locker)
+        {
+            if (_cts.IsCancellationRequested)
+            {
+                this.Trace("already canceled");
+                return;
+            }
+
+            // increment request counter if response is being processed
+            _requestCounter++;
+
+            if (result.IsOk)
+            {
+                // signal connected state always
+                // this won't trigger invalid connector state, but will correctly handle case,
+                // when snapshot load fails without socket disconnect
+                this.Trace("signal connected state");
+                _statusReporter.Connected();
+
+                this.Trace("send data");
+                OnFetched(result.Data);
+
+                this.Trace("cancel cts");
+                _cts.Cancel();
+
+                this.Trace("stop timer");
+                _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            }
+            else
+            {
+                this.Trace("signal connecting state");
+                _statusReporter.Connecting();
+
+                this.Trace("write error");
+                this.Error(result.PlainError);
+
+                if (_requestCounter >= _cfg.FastRequestsLimit)
+                {
+                    this.Trace("switch to long-delayed snapshot requests");
+                    _timer.Change(_cfg.SlowInterval, _cfg.SlowInterval);
+                }
+            }
+        }
+
+        this.Trace("done");
+    }
+
+    private enum State
+    {
+        Inactive,
+        Active,
+        Disposed
+    }
+}
