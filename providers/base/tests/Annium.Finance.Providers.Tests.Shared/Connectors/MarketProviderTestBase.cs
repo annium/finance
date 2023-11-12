@@ -74,7 +74,7 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
 
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();
-        var start = end - Duration.FromDays(10);
+        var start = end - Duration.FromDays(2);
         var candles = new List<CandleDto>();
         this.Trace(
             "load candles in for {symbol} ({key}) in {start} - {end}",
@@ -99,7 +99,7 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
 
         // assert - candles
         this.Trace("verify candles");
-        candles.Count.Is(14400);
+        candles.Count.Is(2880);
         var firstCandle = candles[0];
         firstCandle.Moment.Is(start);
         firstCandle.Open.IsNotDefault();

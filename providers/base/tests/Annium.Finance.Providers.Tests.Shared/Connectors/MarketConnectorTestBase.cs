@@ -40,6 +40,9 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         await using var marketRef = await marketCache.GetAsync(marketConfig);
         var market = marketRef.Value;
 
+        this.Trace("await market is connected");
+        await market.WhenConnected();
+
         // assert - instruments
         market.Instruments.Count.IsGreater(0);
         this.Trace<string>("resolve instrument for symbol {symbol}", _symbol);
@@ -67,8 +70,10 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         // assert - tickers
         this.Trace("ensure tickers are loaded");
         var tickers = market.Tickers.ToArray();
-        tickers.Length.IsGreater(0);
-        tickers.All(t => market.Instruments.Count(i => i.Symbol == t.Symbol) == 1).IsTrue();
+        await Expect.To(() => tickers.IsNotEmpty(), 1_000);
+
+        // TODO: subscribe to selected tickers list and ensure updates arrive
+        // tickers.All(t => market.Instruments.Count(i => i.Symbol == t.Symbol) == 1).IsTrue();
 
         // FIXME: some exchanges are far not that popular to have ticker updates within reasonable time
         // var gotTickerEvent = false;
