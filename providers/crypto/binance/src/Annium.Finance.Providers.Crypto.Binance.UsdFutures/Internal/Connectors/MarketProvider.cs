@@ -37,7 +37,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         // load exchange info
         var result = await _exchangeInfoRequestFactory
-            .New(Endpoints.GetHttpApiEndpoint(env))
+            .New(Endpoints.GetHttpApi(env))
             .Get("fapi/v1/exchangeInfo")
             .WithLogFrom(this)
             .WithRateDelay1M()
@@ -77,7 +77,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         Task<MarketResult<List<CandleDto>>> Fetch(string symbol, Instant from, int count) =>
             _candleRequestFactory
-                .New(Endpoints.GetHttpApiEndpoint(env))
+                .New(Endpoints.GetHttpApi(env))
                 .Get("fapi/v1/klines")
                 .Param("symbol", instrument)
                 .Param("interval", "1m")

@@ -5,19 +5,19 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal;
 
 internal static class Endpoints
 {
-    public static string GetHttpApiEndpoint(ProviderEnvironment env) =>
+    public static Uri GetHttpApi(ProviderEnvironment env) =>
         env switch
         {
-            ProviderEnvironment.Real => "https://api.binance.com",
-            ProviderEnvironment.Test => "https://testnet.binance.vision",
+            ProviderEnvironment.Real => new Uri("https://api.binance.com"),
+            ProviderEnvironment.Test => new Uri("https://testnet.binance.vision"),
             _ => throw new ArgumentException($"Unsupported {env} environment")
         };
 
-    public static string GetWsApiEndpoint(ProviderEnvironment env) =>
+    public static Uri GetWsApi(ProviderEnvironment env) =>
         env switch
         {
-            ProviderEnvironment.Real => "wss://stream.binance.com:9443",
-            ProviderEnvironment.Test => "wss://testnet.binance.vision",
+            ProviderEnvironment.Real => new Uri("wss://stream.binance.com:9443"),
+            ProviderEnvironment.Test => new Uri("wss://testnet.binance.vision"),
             _ => throw new ArgumentException($"Unsupported {env} environment")
         };
 }
