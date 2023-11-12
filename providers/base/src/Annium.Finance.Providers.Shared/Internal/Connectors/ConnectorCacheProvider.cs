@@ -15,7 +15,7 @@ namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
 internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider<TConfig, TConnector>, ILogSubject
     where TConfig : class, IConnectorConfig
-    where TConnector : IConnectorBase<TConfig>
+    where TConnector : IConnectorBase
 {
     public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
@@ -48,7 +48,7 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         injected.Init(key);
 
         this.Trace("{key} - init {key} connector for {config}", providerKey, key);
-        await entry.Connector.InitAsync(key); // this must not be called twice by design
+        await entry.Connector.InitAsync(); // this must not be called twice by design
 
         return entry.Connector;
     }

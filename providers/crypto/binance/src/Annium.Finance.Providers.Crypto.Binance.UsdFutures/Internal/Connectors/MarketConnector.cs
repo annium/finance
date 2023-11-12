@@ -12,12 +12,11 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors
 internal class MarketConnector : IMarketConnector
 {
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
-    public IMarketConfig Config { get; }
     public ITableView<ResourceDto> Resources { get; }
     public ITableView<InstrumentDto> Instruments { get; }
     public ITableView<InstrumentTicker> Tickers { get; }
 
-    public ValueTask InitAsync(IMarketConfig config)
+    public ValueTask InitAsync()
     {
         throw new NotImplementedException();
     }

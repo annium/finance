@@ -11,12 +11,11 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 internal class UserConnector : IUserConnector
 {
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
-    public IUserConfig Config { get; }
     public ITableView<AssetDto> Assets { get; }
     public ITableView<PositionDto> Positions { get; }
     public ITableView<OrderDto> Orders { get; }
 
-    public ValueTask InitAsync(IUserConfig config)
+    public ValueTask InitAsync()
     {
         throw new NotImplementedException();
     }

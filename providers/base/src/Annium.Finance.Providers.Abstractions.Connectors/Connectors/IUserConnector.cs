@@ -7,7 +7,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
 namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
-public interface IUserConnector : IConnectorBase<IUserConfig>, IAsyncDisposable
+public interface IUserConnector : IConnectorBase
 {
     ITableView<AssetDto> Assets { get; }
     ITableView<PositionDto> Positions { get; }
