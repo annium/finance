@@ -27,12 +27,14 @@ public static class ServiceContainerExtensions
             IMarketConnector,
             ConnectorCacheProvider<IMarketConfig, IMarketConnector>
         >(lifetime);
+        container.Add<Injected<IMarketConfig>>().AsSelf().Scoped();
         container.Add<IMarketSynchronizer, NoopMarketSynchronizer>().In(lifetime);
 
         // user
         container.AddObjectCache<IUserConfig, IUserConnector, ConnectorCacheProvider<IUserConfig, IUserConnector>>(
             lifetime
         );
+        container.Add<Injected<IUserConfig>>().AsSelf().Scoped();
         container.Add<IUserSynchronizer, NoopUserSynchronizer>().In(lifetime);
 
         // shared

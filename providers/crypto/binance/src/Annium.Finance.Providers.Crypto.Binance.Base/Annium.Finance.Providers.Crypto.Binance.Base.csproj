@@ -14,8 +14,4 @@
     <ItemGroup>
         <ProjectReference Include="../../../../base/src/Annium.Finance.Providers.Shared/Annium.Finance.Providers.Shared.csproj" />
     </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Annium.Net.Http" Version="0.1.0" />
-        <PackageReference Include="Annium.Serialization.Json" Version="0.1.0" />
-    </ItemGroup>
 </Project>

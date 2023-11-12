@@ -14,7 +14,7 @@ using OneOf;
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
 internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider<TConfig, TConnector>, ILogSubject
-    where TConfig : IConnectorConfig
+    where TConfig : class, IConnectorConfig
     where TConnector : IConnectorBase<TConfig>
 {
     public ILogger Logger { get; }
@@ -42,6 +42,10 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
 
         this.Trace("{key} - resolve entry for {config}", providerKey, key);
         var entry = _scopes.GetOrAdd(key, CreateEntry);
+
+        this.Trace("{key} - provide {config} into scope", providerKey, key);
+        var injected = entry.Scope.ServiceProvider.Resolve<Injected<TConfig>>();
+        injected.Init(key);
 
         this.Trace("{key} - init {key} connector for {config}", providerKey, key);
         await entry.Connector.InitAsync(key); // this must not be called twice by design
