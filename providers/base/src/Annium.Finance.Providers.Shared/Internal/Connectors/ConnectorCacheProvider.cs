@@ -43,10 +43,6 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         this.Trace("{key} - resolve entry for {config}", providerKey, key);
         var entry = _scopes.GetOrAdd(key, CreateEntry);
 
-        this.Trace("{key} - provide {config} into scope", providerKey, key);
-        var injected = entry.Scope.ServiceProvider.Resolve<Injected<TConfig>>();
-        injected.Init(key);
-
         this.Trace("{key} - init {key} connector for {config}", providerKey, key);
         await entry.Connector.InitAsync(); // this must not be called twice by design
 
@@ -76,6 +72,10 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
 
         this.Trace("create new {key} scope for {config}", providerKey, config);
         var scope = _sp.CreateAsyncScope();
+
+        this.Trace("{key} - provide {config} into scope", providerKey, config);
+        var injected = scope.ServiceProvider.Resolve<Injected<TConfig>>();
+        injected.Init(config);
 
         this.Trace("create new {key} connector for {config}", providerKey, config);
         var factory = _connectorFactories[providerKey];
