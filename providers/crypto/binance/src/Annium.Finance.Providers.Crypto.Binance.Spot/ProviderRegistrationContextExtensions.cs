@@ -1,4 +1,9 @@
+using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
@@ -17,10 +22,27 @@ public static class ProviderRegistrationContextExtensions
             ProviderEnvironment.Real | ProviderEnvironment.Test
         );
 
-        // provider-specific components
+        // settings
+        ctx.Container
+            .Add(sp =>
+            {
+                var cfg = sp.Resolve<Injected<IMarketConfig>>().Value;
+
+                var httpApi = Endpoints.GetHttpApi(cfg.Environment);
+                var wsApi = Endpoints.GetWsApi(cfg.Environment);
+
+                return new BaseSettings(httpApi, wsApi, "/stream");
+            })
+            .AsSelf()
+            .Scoped();
+
+        // serializers and http factories
         ctx.AddHttpRequestFactoryWithJsonSerializer(ExchangeInfoKey, Contracts.Market.ExchangeInfo);
         ctx.AddHttpRequestFactoryWithJsonSerializer(CandleKey, Contracts.Market.Candle);
         ctx.AddHttpRequestFactoryWithJsonSerializer(InstrumentTickerKey, Contracts.Market.InstrumentTicker);
+
+        // services
+        ctx.Container.Add<BookTickerService>().AsSelf().Scoped();
 
         return ctx;
     }

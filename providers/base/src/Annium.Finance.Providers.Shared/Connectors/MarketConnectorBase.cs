@@ -1,0 +1,66 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Annium.Data.Tables;
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Logging;
+
+namespace Annium.Finance.Providers.Shared.Connectors;
+
+public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
+{
+    public ILogger Logger { get; }
+    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
+    public ITableView<ResourceDto> Resources => ResourcesTable;
+    public ITableView<InstrumentDto> Instruments => InstrumentsTable;
+    public ITableView<InstrumentTicker> Tickers => TickersTable;
+    protected readonly ITable<ResourceDto> ResourcesTable;
+    protected readonly ITable<InstrumentDto> InstrumentsTable;
+    protected readonly ITable<InstrumentTicker> TickersTable;
+    protected AsyncDisposableBox Disposable;
+    private int _isDisposed;
+
+    protected MarketConnectorBase(ITableFactory tableFactory, IStatusMonitor monitor, ILogger logger)
+    {
+        Logger = logger;
+        Disposable = Annium.Disposable.AsyncBox(logger);
+
+        monitor.OnStatusChanged += HandleStatusChanged;
+        Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;
+
+        Disposable += ResourcesTable = tableFactory
+            .New<ResourceDto>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Code)
+            .Build();
+        Disposable += InstrumentsTable = tableFactory
+            .New<InstrumentDto>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Symbol)
+            .Build();
+        Disposable += TickersTable = tableFactory
+            .New<InstrumentTicker>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Symbol)
+            .Build();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        this.Trace("start");
+        if (Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
+        {
+            this.Trace("already disposed");
+            return;
+        }
+
+        this.Trace("run");
+        await Disposable.DisposeAsync();
+
+        this.Trace("done");
+    }
+
+    private void HandleStatusChanged(ConnectorStatus status) => OnStatusChanged(status);
+}

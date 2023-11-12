@@ -16,7 +16,7 @@ internal static class Endpoints
     public static Uri GetWsApi(ProviderEnvironment env) =>
         env switch
         {
-            ProviderEnvironment.Real => new Uri("wss://stream.binance.com:9443"),
+            ProviderEnvironment.Real => new Uri("wss://stream.binance.com"),
             ProviderEnvironment.Test => new Uri("wss://testnet.binance.vision"),
             _ => throw new ArgumentException($"Unsupported {env} environment")
         };
