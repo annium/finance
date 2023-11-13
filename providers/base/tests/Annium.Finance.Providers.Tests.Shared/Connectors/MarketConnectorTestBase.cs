@@ -43,6 +43,9 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         this.Trace("await market is connected");
         await market.WhenConnected();
 
+        this.Trace("subscribe to instrument tickers");
+        market.SubscribeTickers(new[] { _symbol });
+
         // assert - instruments
         market.Instruments.Count.IsGreater(0);
         this.Trace<string>("resolve instrument for symbol {symbol}", _symbol);
@@ -69,18 +72,8 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
 
         // assert - tickers
         this.Trace("ensure tickers are loaded");
-        var tickers = market.Tickers.ToArray();
-        await Expect.To(() => tickers.IsNotEmpty(), 1_000);
-
-        // TODO: subscribe to selected tickers list and ensure updates arrive
-        // tickers.All(t => market.Instruments.Count(i => i.Symbol == t.Symbol) == 1).IsTrue();
-
-        // FIXME: some exchanges are far not that popular to have ticker updates within reasonable time
-        // var gotTickerEvent = false;
-        // using var _ = Observable.Where(market.Tickers, x => x is not InitEvent<InstrumentTicker>)
-        //     .Subscribe(_ => gotTickerEvent = true);
-        // await Wait.UntilAsync(() => gotTickerEvent, 30000);
-        // gotTickerEvent.IsTrue();
+        await Expect.To(() => market.Tickers.Has(1));
+        market.Tickers.At(0).Symbol.Is(_symbol);
 
         this.Trace("done");
     }

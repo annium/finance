@@ -43,7 +43,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
             .WithRateDelay1M()
             .AsMarketResultAsync<ExchangeInfo?>(null);
 
-        if (result.IsFailure)
+        if (result.IsFailure || result.Data is null)
         {
             this.Trace("exchange info load failed");
 

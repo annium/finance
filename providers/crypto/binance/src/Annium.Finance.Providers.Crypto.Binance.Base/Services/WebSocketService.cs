@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Linq;
 using Annium.Logging;
 using Annium.Net.WebSockets;
 
@@ -49,32 +50,70 @@ public abstract class WebSocketService : IDisposable, ILogSubject
 
     protected void SubscribeTopics(IEnumerable<string> topics)
     {
-        var targets = new List<string>(topics.Where(topic => _topics.Add(topic)));
-        var request = new Request { Method = "SUBSCRIBE", Params = targets };
+        this.Trace("start");
 
+        var targets = new List<string>(topics.Where(topic => _topics.Add(topic)));
+        if (targets.Count == 0)
+        {
+            this.Trace("skip - no topics to subscribe");
+            return;
+        }
+
+        this.Trace<string>("subscribe to {topics}", targets.Join(","));
+        var request = new Request { Method = "SUBSCRIBE", Params = targets };
         _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+
+        this.Trace("done");
     }
 
     protected void UnsubscribeTopics(IEnumerable<string> topics)
     {
-        var targets = new List<string>(topics.Where(topic => _topics.Remove(topic)));
-        var request = new Request { Method = "UNSUBSCRIBE", Params = targets };
+        this.Trace("start");
 
+        var targets = new List<string>(topics.Where(topic => _topics.Remove(topic)));
+        if (targets.Count == 0)
+        {
+            this.Trace("skip - no topics to unsubscribe");
+            return;
+        }
+
+        this.Trace<string>("unsubscribe from {topics}", targets.Join(","));
+        var request = new Request { Method = "UNSUBSCRIBE", Params = targets };
         _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+
+        this.Trace("done");
     }
 
     protected abstract void HandleData(ReadOnlyMemory<byte> raw);
 
     private void HandleConnected()
     {
-        this.Trace("connected");
+        this.Trace("start");
+
+        this.Trace("signal connected");
         _statusReporter.Connected();
+
+        if (_topics.Count == 0)
+        {
+            this.Trace("skip - no topics to subscribe");
+            return;
+        }
+
+        this.Trace<string>("subscribe to {topics}", _topics.Join(","));
+        var request = new Request { Method = "SUBSCRIBE", Params = _topics };
+        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+
+        this.Trace("done");
     }
 
     private void HandleDisconnected(WebSocketCloseStatus status)
     {
-        this.Trace("disconnected: {status}", status);
+        this.Trace("start");
+
+        this.Trace("signal disconnected: {status}", status);
         _statusReporter.Connecting();
+
+        this.Trace("done");
     }
 
     private record Request

@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
@@ -14,13 +16,25 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     private readonly BookTickerService _bookTickerService;
 
     public MarketConnector(
+        BaseSettings settings,
         ITableFactory tableFactory,
+        MarketProvider marketProvider,
+        SnapshotLoaderFactory snapshotLoaderFactory,
         BookTickerService bookTickerService,
         IStatusMonitor monitor,
         ILogger logger
     )
         : base(tableFactory, monitor, logger)
     {
+        var exchangeInfoLoader = snapshotLoaderFactory.Create<MarketContext>(
+            new SnapshotLoaderConfig(3000, 10000, 5),
+            async _ => await marketProvider.LoadContextAsync(settings.Env)
+        );
+        Disposable += exchangeInfoLoader;
+        exchangeInfoLoader.OnData += HandleMarketContext;
+        Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
+        exchangeInfoLoader.Start();
+
         _bookTickerService = bookTickerService;
         _bookTickerService.OnData += HandleTicker;
         Disposable += () => _bookTickerService.OnData -= HandleTicker;
@@ -41,5 +55,26 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         _bookTickerService.Unsubscribe(symbols);
     }
 
-    private void HandleTicker(InstrumentTicker ticker) => TickersTable.Set(ticker);
+    private void HandleMarketContext(MarketContext ctx)
+    {
+        this.Trace("start");
+
+        this.Trace("init {count} resources", ctx.Resources.Count);
+        ResourcesTable.Init(ctx.Resources);
+
+        this.Trace("init {count} instruments", ctx.Instruments.Count);
+        InstrumentsTable.Init(ctx.Instruments);
+
+        this.Trace("done");
+    }
+
+    private void HandleTicker(InstrumentTicker ticker)
+    {
+        this.Trace("start");
+
+        this.Trace("set {ticker}", ticker);
+        TickersTable.Set(ticker);
+
+        this.Trace("done");
+    }
 }
