@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Operations;
 
-public sealed record UserResult
+public sealed record UserResult : IBaseResult
 {
     public static UserResult Ok() => new(UserOperationStatus.Ok, string.Empty);
 
@@ -36,7 +36,7 @@ public sealed record UserResult
     public override string ToString() => $"{Status} ({Message})";
 }
 
-public sealed record UserResult<T>
+public sealed record UserResult<T> : IBaseResult<T>
 {
     [MemberNotNullWhen(true, nameof(Data))]
     public bool IsSuccess { get; }
