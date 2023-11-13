@@ -56,7 +56,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         this.Trace("resolve resources");
         var resources = ResolveResources(result.Data.Instruments);
 
-        this.Trace("update watermark (can change over time");
+        this.Trace("update watermark (can change over time)");
         HttpRequestRateExtensions.UpdateRequestWeightLimit(result.Data.RateLimits.RequestWeightLimit);
 
         this.Trace("done");
