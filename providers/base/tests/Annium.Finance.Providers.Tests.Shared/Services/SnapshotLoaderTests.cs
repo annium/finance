@@ -2,8 +2,8 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
-using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Testing;
@@ -36,16 +36,18 @@ public class SnapshotLoaderTests : TestBase
         var cfg = new SnapshotLoaderConfig(1, 2, 5);
         var attempt = 0;
         var log = Get<TestLog<int>>();
-        async Task<IResult<int>> Load(CancellationToken ct)
+        async Task<MarketResult<int>> Load()
         {
             attempt++;
 
             await Task.Delay(5, CancellationToken.None);
 
-            return attempt < 10 ? Result.New(0).Error($"No data at {attempt}") : Result.New(attempt++);
+            return attempt < 10
+                ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
+                : MarketResult.Ok(attempt++);
         }
-        using var loader = new SnapshotLoader<int>(cfg, Load, Get<IStatusReporter>(), Logger);
-        loader.OnFetched += log.Add;
+        using var loader = Get<SnapshotLoaderFactory>().Create<int>(cfg, async _ => await Load());
+        loader.OnData += log.Add;
 
         loader.Start();
 

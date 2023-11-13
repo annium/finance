@@ -7,6 +7,7 @@ using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Internal.Sync;
+using Annium.Finance.Providers.Shared.Services;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
@@ -37,12 +38,13 @@ public static class ServiceContainerExtensions
         container.Add<Injected<IUserConfig>>().AsSelf().Scoped();
         container.Add<IUserSynchronizer, NoopUserSynchronizer>().In(lifetime);
 
-        // shared
+        // status
         container.Add<StatusMonitor>().AsSelf().AsInterfaces().Scoped();
         container.Add<StatusReporter>().AsSelf().AsInterfaces().Transient();
 
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
+        container.Add<SnapshotLoaderFactory>().AsSelf().Scoped();
 
         // common
         container.AddScheduler();

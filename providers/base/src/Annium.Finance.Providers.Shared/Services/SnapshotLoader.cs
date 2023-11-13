@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Data.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Threading;
@@ -10,12 +10,12 @@ namespace Annium.Finance.Providers.Shared.Services;
 
 public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
 
-public class SnapshotLoader<T> : IDisposable, ILogSubject
+public class SnapshotLoader<TData> : IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<T> OnFetched = delegate { };
+    public event Action<TData> OnData = delegate { };
     private readonly SnapshotLoaderConfig _cfg;
-    private readonly Func<CancellationToken, Task<IResult<T>>> _load;
+    private readonly Func<CancellationToken, Task<IBaseResult<TData>>> _load;
     private readonly IStatusReporter _statusReporter;
     private readonly AsyncTimer _timer;
     private readonly object _locker = new();
@@ -25,7 +25,7 @@ public class SnapshotLoader<T> : IDisposable, ILogSubject
 
     public SnapshotLoader(
         SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IResult<T>>> load,
+        Func<CancellationToken, Task<IBaseResult<TData>>> load,
         IStatusReporter statusReporter,
         ILogger logger
     )
@@ -140,16 +140,16 @@ public class SnapshotLoader<T> : IDisposable, ILogSubject
             // increment request counter if response is being processed
             _requestCounter++;
 
-            if (result.IsOk)
+            if (result.IsSuccess)
             {
+                this.Trace("send data");
+                OnData(result.Data);
+
                 // signal connected state always
                 // this won't trigger invalid connector state, but will correctly handle case,
                 // when snapshot load fails without socket disconnect
                 this.Trace("signal connected state");
                 _statusReporter.Connected();
-
-                this.Trace("send data");
-                OnFetched(result.Data);
 
                 this.Trace("cancel cts");
                 _cts.Cancel();
@@ -163,7 +163,7 @@ public class SnapshotLoader<T> : IDisposable, ILogSubject
                 _statusReporter.Connecting();
 
                 this.Trace("write error");
-                this.Error(result.PlainError);
+                this.Error(result.Message);
 
                 if (_requestCounter >= _cfg.FastRequestsLimit)
                 {
