@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Threading;
@@ -21,21 +19,14 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
     private readonly object _locker = new();
     private State _state;
 
-    public CompositeLoader(
-        SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load,
-        IStatusReporter statusReporter,
-        int intervalPeriod,
-        int debouncePeriod,
-        ILogger logger
-    )
+    public CompositeLoader(ISnapshotLoader<T> loader, int intervalPeriod, int debouncePeriod, ILogger logger)
     {
         Logger = logger;
         _intervalPeriod = intervalPeriod;
         _debouncePeriod = debouncePeriod;
 
-        _loader = new SnapshotLoader<T>(cfg, load, statusReporter, logger);
-        _loader.OnData += data => OnData(data);
+        _loader = loader;
+        _loader.OnData += HandleData;
 
         if (intervalPeriod != Timeout.Infinite)
         {
@@ -74,6 +65,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             _state = State.Disposed;
 
             this.Trace("dispose loader");
+            _loader.OnData -= HandleData;
             _loader.Dispose();
 
             if (_intervalTimer is not null)
@@ -223,6 +215,8 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 
         return ValueTask.CompletedTask;
     }
+
+    private void HandleData(T data) => OnData(data);
 
     private enum State
     {

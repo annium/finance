@@ -37,8 +37,8 @@ internal class LoaderFactory : ILoaderFactory
         int debouncePeriod
     )
     {
-        var reporter = _sp.Resolve<IStatusReporter>();
+        var loader = CreateSnapshotLoader(cfg, load);
 
-        return new CompositeLoader<T>(cfg, load, reporter, intervalPeriod, debouncePeriod, _logger);
+        return new CompositeLoader<T>(loader, intervalPeriod, debouncePeriod, _logger);
     }
 }
