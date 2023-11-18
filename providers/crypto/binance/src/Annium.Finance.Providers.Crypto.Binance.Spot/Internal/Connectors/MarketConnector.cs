@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
@@ -22,13 +23,14 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         SnapshotLoaderFactory snapshotLoaderFactory,
         BookTickerService bookTickerService,
         IStatusMonitor monitor,
+        IMarketSynchronizer synchronizer,
         ILogger logger
     )
-        : base(tableFactory, monitor, logger)
+        : base(settings.Config, tableFactory, monitor, synchronizer, logger)
     {
         var exchangeInfoLoader = snapshotLoaderFactory.Create<MarketContext>(
             new SnapshotLoaderConfig(3000, 10000, 5),
-            async _ => await marketProvider.LoadContextAsync(settings.Env)
+            async _ => await marketProvider.LoadContextAsync(settings.Config.Environment)
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
@@ -64,6 +66,8 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
 
         this.Trace("init {count} instruments", ctx.Instruments.Count);
         InstrumentsTable.Init(ctx.Instruments);
+
+        ScheduleSync();
 
         this.Trace("done");
     }

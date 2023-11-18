@@ -2,8 +2,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
+using Annium.Execution.Background;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
 
@@ -20,11 +23,23 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     protected readonly ITable<InstrumentDto> InstrumentsTable;
     protected readonly ITable<InstrumentTicker> TickersTable;
     protected AsyncDisposableBox Disposable;
+    private readonly IExecutor _executor;
+    private readonly IMarketConfig _config;
+    private readonly IMarketSynchronizer _synchronizer;
     private int _isDisposed;
 
-    protected MarketConnectorBase(ITableFactory tableFactory, IStatusMonitor monitor, ILogger logger)
+    protected MarketConnectorBase(
+        IMarketConfig config,
+        ITableFactory tableFactory,
+        IStatusMonitor monitor,
+        IMarketSynchronizer synchronizer,
+        ILogger logger
+    )
     {
         Logger = logger;
+        _config = config;
+        _synchronizer = synchronizer;
+
         Disposable = Annium.Disposable.AsyncBox(logger);
 
         monitor.OnStatusChanged += HandleStatusChanged;
@@ -45,6 +60,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
             .Allow(TablePermission.All)
             .Key(x => x.Symbol)
             .Build();
+
+        Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
     }
 
     public async ValueTask DisposeAsync()
@@ -60,6 +77,20 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         await Disposable.DisposeAsync();
 
         this.Trace("done");
+    }
+
+    protected void ScheduleSync()
+    {
+        this.Trace("start");
+
+        var scheduled = _executor.TrySchedule(async () =>
+        {
+            this.Trace("start sync");
+            await _synchronizer.ExecuteAsync(_config, ResourcesTable, InstrumentsTable);
+            this.Trace("done sync");
+        });
+
+        this.Trace("done, result: {result}", scheduled);
     }
 
     private void HandleStatusChanged(ConnectorStatus status) => OnStatusChanged(status);

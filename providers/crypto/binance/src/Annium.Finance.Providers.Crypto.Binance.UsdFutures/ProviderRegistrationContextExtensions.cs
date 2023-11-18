@@ -31,7 +31,7 @@ public static class ProviderRegistrationContextExtensions
                 var httpApi = Endpoints.GetHttpApi(cfg.Environment);
                 var wsApi = Endpoints.GetWsApi(cfg.Environment);
 
-                return new BaseSettings(cfg.Environment, httpApi, wsApi, "/stream");
+                return new BaseSettings(cfg, httpApi, wsApi, "/stream");
             })
             .AsSelf()
             .Scoped();
