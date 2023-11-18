@@ -1,6 +1,5 @@
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
@@ -29,14 +28,12 @@ public static class ServiceContainerExtensions
             ConnectorCacheProvider<IMarketConfig, IMarketConnector>
         >(lifetime);
         container.Add<Injected<IMarketConfig>>().AsSelf().Scoped();
-        container.Add<IMarketSynchronizer, NoopMarketSynchronizer>().In(lifetime);
 
         // user
         container.AddObjectCache<IUserConfig, IUserConnector, ConnectorCacheProvider<IUserConfig, IUserConnector>>(
             lifetime
         );
         container.Add<Injected<IUserConfig>>().AsSelf().Scoped();
-        container.Add<IUserSynchronizer, NoopUserSynchronizer>().In(lifetime);
 
         // status
         container.Add<StatusMonitor>().AsSelf().AsInterfaces().Scoped();
@@ -50,6 +47,11 @@ public static class ServiceContainerExtensions
         container.AddScheduler();
         container.AddTables();
 
-        return new(container, lifetime);
+        var ctx = new ProviderRegistrationContext(container, lifetime);
+
+        ctx.WithMarketSynchronizer<NoopMarketSynchronizer>();
+        ctx.WithUserSynchronizer<NoopUserSynchronizer>();
+
+        return ctx;
     }
 }
