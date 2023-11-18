@@ -4,11 +4,12 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Internal.Services;
 
-public class LoaderFactory
+internal class LoaderFactory : ILoaderFactory
 {
     private readonly IServiceProvider _sp;
     private readonly ILogger _logger;
@@ -19,7 +20,7 @@ public class LoaderFactory
         _logger = logger;
     }
 
-    public SnapshotLoader<T> CreateSnapshotLoader<T>(
+    public ISnapshotLoader<T> CreateSnapshotLoader<T>(
         SnapshotLoaderConfig cfg,
         Func<CancellationToken, Task<IBaseResult<T>>> load
     )
@@ -29,7 +30,7 @@ public class LoaderFactory
         return new SnapshotLoader<T>(cfg, load, reporter, _logger);
     }
 
-    public CompositeLoader<T> CreateCompositeLoader<T>(
+    public ICompositeLoader<T> CreateCompositeLoader<T>(
         SnapshotLoaderConfig cfg,
         Func<CancellationToken, Task<IBaseResult<T>>> load,
         int intervalPeriod,

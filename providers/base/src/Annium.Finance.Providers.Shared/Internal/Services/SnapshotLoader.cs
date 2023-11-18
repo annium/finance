@@ -3,14 +3,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Threading;
 
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Internal.Services;
 
 public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
 
-public class SnapshotLoader<T> : IDisposable, ILogSubject
+internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<T> OnData = delegate { };

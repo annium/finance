@@ -3,16 +3,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Threading;
 
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Internal.Services;
 
-public class CompositeLoader<T> : IDisposable, ILogSubject
+internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<T> OnData = _ => { };
-    private readonly SnapshotLoader<T> _loader;
+    private readonly ISnapshotLoader<T> _loader;
     private readonly IAsyncTimer? _intervalTimer;
     private readonly int _intervalPeriod;
     private readonly IDebounceTimer? _debounceTimer;

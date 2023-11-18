@@ -7,6 +7,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 
@@ -20,7 +21,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         BaseSettings settings,
         ITableFactory tableFactory,
         MarketProvider marketProvider,
-        LoaderFactory loaderFactory,
+        ILoaderFactory loaderFactory,
         BookTickerService bookTickerService,
         IStatusMonitor monitor,
         IMarketSynchronizer synchronizer,

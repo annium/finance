@@ -41,7 +41,7 @@ public static class ServiceContainerExtensions
 
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
-        container.Add<LoaderFactory>().AsSelf().Scoped();
+        container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // common
         container.AddScheduler();
