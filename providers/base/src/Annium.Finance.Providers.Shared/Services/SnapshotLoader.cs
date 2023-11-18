@@ -10,14 +10,14 @@ namespace Annium.Finance.Providers.Shared.Services;
 
 public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
 
-public class SnapshotLoader<TData> : IDisposable, ILogSubject
+public class SnapshotLoader<T> : IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<TData> OnData = delegate { };
+    public event Action<T> OnData = delegate { };
     private readonly SnapshotLoaderConfig _cfg;
-    private readonly Func<CancellationToken, Task<IBaseResult<TData>>> _load;
+    private readonly Func<CancellationToken, Task<IBaseResult<T>>> _load;
     private readonly IStatusReporter _statusReporter;
-    private readonly AsyncTimer _timer;
+    private readonly IAsyncTimer _timer;
     private readonly object _locker = new();
     private State _state;
     private CancellationTokenSource _cts = new();
@@ -25,7 +25,7 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
 
     public SnapshotLoader(
         SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<TData>>> load,
+        Func<CancellationToken, Task<IBaseResult<T>>> load,
         IStatusReporter statusReporter,
         ILogger logger
     )
@@ -35,7 +35,7 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
         _load = load;
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
-        _timer = AsyncTimer.Create(FetchSnapshotAsync, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _timer = Timers.Async(FetchSnapshotAsync, Timeout.Infinite, Timeout.Infinite);
     }
 
     public void Dispose()
@@ -66,7 +66,7 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
         this.Trace("done");
     }
 
-    public void Start()
+    public void Start(bool reportStatus)
     {
         this.Trace("start");
 
@@ -82,8 +82,11 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
             _cts = new();
             _requestCounter = 0;
 
-            this.Trace("signal connecting state");
-            _statusReporter.Connecting();
+            if (reportStatus)
+            {
+                this.Trace("signal connecting state");
+                _statusReporter.Connecting();
+            }
 
             _timer.Change(0, _cfg.FastInterval);
         }
@@ -116,7 +119,7 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
             _statusReporter.Disconnected();
 
             this.Trace("stop timer");
-            _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         this.Trace("done");
@@ -155,7 +158,7 @@ public class SnapshotLoader<TData> : IDisposable, ILogSubject
                 _cts.Cancel();
 
                 this.Trace("stop timer");
-                _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
             }
             else
             {

@@ -13,11 +13,11 @@ using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.Connect
 
 namespace Annium.Finance.Providers.Tests.Shared.Services;
 
-public class SnapshotLoaderTests : TestBase
+public class CompositeLoaderTests : TestBase
 {
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
-    public SnapshotLoaderTests(ITestOutputHelper outputHelper)
+    public CompositeLoaderTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(container =>
@@ -42,14 +42,16 @@ public class SnapshotLoaderTests : TestBase
 
             await Task.Delay(5, CancellationToken.None);
 
-            return attempt < 10
+            return attempt != 10
                 ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
                 : MarketResult.Ok(attempt++);
         }
-        using var loader = Get<LoaderFactory>().CreateSnapshotLoader<int>(cfg, async _ => await Load());
+        using var loader = Get<LoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load(), 20, 30);
         loader.OnData += log.Add;
 
-        loader.Start(true);
+        loader.Start();
+        for (var i = 0; i < 100; i++)
+            loader.Request();
 
         await Expect.To(() => log.Has(1));
         log.At(0).Is(10);

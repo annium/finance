@@ -20,7 +20,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         BaseSettings settings,
         ITableFactory tableFactory,
         MarketProvider marketProvider,
-        SnapshotLoaderFactory snapshotLoaderFactory,
+        LoaderFactory loaderFactory,
         BookTickerService bookTickerService,
         IStatusMonitor monitor,
         IMarketSynchronizer synchronizer,
@@ -28,14 +28,14 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     )
         : base(settings.Config, tableFactory, monitor, synchronizer, logger)
     {
-        var exchangeInfoLoader = snapshotLoaderFactory.Create<MarketContext>(
+        var exchangeInfoLoader = loaderFactory.CreateSnapshotLoader<MarketContext>(
             new SnapshotLoaderConfig(3000, 10000, 5),
             async _ => await marketProvider.LoadContextAsync(settings.Config.Environment)
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
         Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
-        exchangeInfoLoader.Start();
+        exchangeInfoLoader.Start(true);
 
         _bookTickerService = bookTickerService;
         _bookTickerService.OnData += HandleTicker;
