@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
@@ -16,7 +16,11 @@ internal class NoopMarketSynchronizer : IMarketSynchronizer, ILogSubject
         Logger = logger;
     }
 
-    public Task ExecuteAsync(IMarketConfig config, ITable<ResourceDto> resources, ITable<InstrumentDto> instruments)
+    public Task ExecuteAsync(
+        IMarketConfig config,
+        IReadOnlyCollection<ResourceDto> resources,
+        IReadOnlyCollection<InstrumentDto> instruments
+    )
     {
         this.Trace("run");
 
