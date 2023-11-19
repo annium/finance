@@ -9,15 +9,9 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IUserProvider
 {
-    Task<UserResult<UserContext>> LoadContextAsync(
+    Task<UserResult<IReadOnlyCollection<OrderDto>>> LoadOrdersAsync(
         IUserConfig config,
         IReadOnlyCollection<string> instruments,
-        Instant? loadOrdersSince
+        Instant? since
     );
 }
-
-public sealed record UserContext(
-    IReadOnlyCollection<AssetDto> Assets,
-    IReadOnlyCollection<PositionDto> Positions,
-    IReadOnlyCollection<OrderDto> Orders
-);
