@@ -29,14 +29,16 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     )
         : base(settings.Config, tableFactory, monitor, synchronizer, logger)
     {
-        var exchangeInfoLoader = loaderFactory.CreateSnapshotLoader<MarketContext>(
+        var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new SnapshotLoaderConfig(3000, 10000, 5),
-            async _ => await marketProvider.LoadContextAsync(settings.Config.Environment)
+            async _ => await marketProvider.LoadContextAsync(settings.Config.Environment),
+            600_000,
+            0
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
         Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
-        exchangeInfoLoader.Start(true);
+        exchangeInfoLoader.Start();
 
         _bookTickerService = bookTickerService;
         _bookTickerService.OnData += HandleTicker;
