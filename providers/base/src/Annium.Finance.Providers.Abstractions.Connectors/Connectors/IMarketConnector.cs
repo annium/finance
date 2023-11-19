@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;

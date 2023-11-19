@@ -1,5 +1,4 @@
 using System;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
