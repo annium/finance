@@ -10,8 +10,6 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IMarketProvider
 {
-    Task<MarketResult<MarketContext>> LoadContextAsync(ProviderEnvironment env);
-
     IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleDto>>> LoadCandlesAsync(
         string instrument,
         ProviderEnvironment env,
@@ -20,8 +18,3 @@ public interface IMarketProvider
         CancellationToken ct
     );
 }
-
-public sealed record MarketContext(
-    IReadOnlyCollection<ResourceDto> Resources,
-    IReadOnlyCollection<InstrumentDto> Instruments
-);

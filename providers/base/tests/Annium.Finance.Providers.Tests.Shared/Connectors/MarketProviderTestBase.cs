@@ -42,50 +42,14 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         this.Trace("resolve market provider");
         var provider = Get<IIndex<string, IMarketProvider>>()[providerKey.Provider];
 
-        // act - load instruments
-        this.Trace("load resources and instruments");
-        var marketResult = await provider.LoadContextAsync(providerKey.Environment);
-        marketResult.IsSuccess.IsTrue();
-        var (resources, instruments) = marketResult.Data.NotNull();
-
-        // assert - instruments
-        instruments.Count.IsGreater(0);
-        this.Trace<string>("resolve instrument for symbol {symbol}", _symbol);
-        var instrument = instruments.Single(x => x.Symbol == _symbol);
-        instrument.Target.IsNotDefault();
-        resources.Contains(instrument.Target).IsTrue();
-        instrument.Target.Code.IsNullOrWhiteSpace().IsFalse();
-        instrument.Quote.IsNotDefault();
-        resources.Contains(instrument.Quote).IsTrue();
-        instrument.Quote.Code.IsNullOrWhiteSpace().IsFalse();
-        instrument.Currency.IsNotDefault();
-        resources.Contains(instrument.Currency).IsTrue();
-        instrument.Currency.Code.IsNullOrWhiteSpace().IsFalse();
-        instrument.Symbol.IsNullOrWhiteSpace().IsFalse();
-        instrument.MinQty.IsNotDefault();
-        instrument.MaxQty.IsNotDefault();
-        instrument.LotSize.IsNotDefault();
-        instrument.MinPrice.IsNotDefault();
-        instrument.MaxPrice.IsNotDefault();
-        instrument.TickSize.IsNotDefault();
-        instrument.MinSum.IsNotDefault();
-        instrument.MaxSum.IsNotDefault();
-        instrument.MaxOrders.IsNotDefault();
-
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();
         var start = end - Duration.FromDays(2);
         var candles = new List<CandleDto>();
-        this.Trace(
-            "load candles in for {symbol} ({key}) in {start} - {end}",
-            instrument.Symbol,
-            providerKey,
-            start,
-            end
-        );
+        this.Trace("load candles in for {symbol} ({key}) in {start} - {end}", _symbol, providerKey, start, end);
         await foreach (
             var chunkResult in provider.LoadCandlesAsync(
-                instrument.Symbol,
+                _symbol,
                 providerKey.Environment,
                 start,
                 end,
