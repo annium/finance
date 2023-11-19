@@ -7,6 +7,7 @@ public static class Constants
     internal const string CandleKey = $"{Provider}_{nameof(CandleKey)}";
     internal const string InstrumentTickerKey = $"{Provider}_{nameof(InstrumentTickerKey)}";
     internal const string ServerTimeKey = $"{Provider}_{nameof(ServerTimeKey)}";
+    internal const string ListenKeyKey = $"{Provider}_{nameof(ListenKeyKey)}";
     internal const string InitOrderKey = $"{Provider}_{nameof(InitOrderKey)}";
     internal const string ModifyOrderKey = $"{Provider}_{nameof(ModifyOrderKey)}";
     internal const string CancelOrderKey = $"{Provider}_{nameof(CancelOrderKey)}";
