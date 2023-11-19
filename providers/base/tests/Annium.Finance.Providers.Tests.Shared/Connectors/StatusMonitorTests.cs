@@ -19,7 +19,7 @@ public class StatusMonitorTests : TestBase
     {
         Register(container =>
         {
-            container.AddProvidersSingleton();
+            container.AddProviders();
         });
 
         var monitor = Get<IStatusMonitor>();

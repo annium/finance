@@ -23,7 +23,7 @@ public class SnapshotLoaderTests : TestBase
     {
         Register(container =>
         {
-            container.AddProvidersSingleton();
+            container.AddProviders();
         });
         RegisterTestLogs();
 

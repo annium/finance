@@ -16,7 +16,7 @@ public abstract class ConnectorTestBase : TestBase
             // todo: use server time
             container.AddTime().WithRealTime().SetDefault();
             container.AddMapper();
-            registerProvider(container.AddProvidersSingleton());
+            registerProvider(container.AddProviders());
         });
     }
 }

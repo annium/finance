@@ -13,25 +13,19 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static ProviderRegistrationContext AddProvidersSingleton(this IServiceContainer container) =>
-        container.AddProviders(ServiceLifetime.Singleton);
-
-    public static ProviderRegistrationContext AddProvidersScoped(this IServiceContainer container) =>
-        container.AddProviders(ServiceLifetime.Scoped);
-
-    private static ProviderRegistrationContext AddProviders(this IServiceContainer container, ServiceLifetime lifetime)
+    public static ProviderRegistrationContext AddProviders(this IServiceContainer container)
     {
         // market
         container.AddObjectCache<
             IMarketConfig,
             IMarketConnector,
             ConnectorCacheProvider<IMarketConfig, IMarketConnector>
-        >(lifetime);
+        >(ServiceLifetime.Singleton);
         container.Add<Injected<IMarketConfig>>().AsSelf().Scoped();
 
         // user
         container.AddObjectCache<IUserConfig, IUserConnector, ConnectorCacheProvider<IUserConfig, IUserConnector>>(
-            lifetime
+            ServiceLifetime.Singleton
         );
         container.Add<Injected<IUserConfig>>().AsSelf().Scoped();
 
@@ -40,14 +34,14 @@ public static class ServiceContainerExtensions
         container.Add<StatusReporter>().AsSelf().AsInterfaces().Transient();
 
         // services
-        container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
+        container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(ServiceLifetime.Singleton);
         container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // common
         container.AddScheduler();
         container.AddTables();
 
-        var ctx = new ProviderRegistrationContext(container, lifetime);
+        var ctx = new ProviderRegistrationContext(container);
 
         ctx.WithMarketSynchronizer<NoopMarketSynchronizer>();
         ctx.WithUserSynchronizer<NoopUserSynchronizer>();

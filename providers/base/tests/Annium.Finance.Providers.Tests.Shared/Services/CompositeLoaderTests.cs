@@ -23,7 +23,7 @@ public class CompositeLoaderTests : TestBase
     {
         Register(container =>
         {
-            container.AddProvidersSingleton();
+            container.AddProviders();
         });
         RegisterTestLogs();
 
