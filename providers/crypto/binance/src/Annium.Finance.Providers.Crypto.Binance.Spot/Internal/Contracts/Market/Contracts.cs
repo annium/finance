@@ -20,6 +20,7 @@ internal class Contracts
     public JsonSerializerOptions InstrumentTicker { get; } =
         new JsonSerializerOptions()
             .ResetConverters()
+            .AddConverter<CommandResultConverter>()
             .AddConverter<InstrumentTickerConverter>()
             .AddConverter<StreamDataConverter<InstrumentTicker>>();
 
