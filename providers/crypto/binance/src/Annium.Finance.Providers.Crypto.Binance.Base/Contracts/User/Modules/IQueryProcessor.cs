@@ -5,7 +5,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Modules;
 
-internal interface IQueryProcessor
+public interface IQueryProcessor
 {
     UserResult<Dictionary<string, string>> BuildInitOrderQuery(IInitOrderRequest request);
     UserResult<Dictionary<string, string>> BuildModifyOrderQuery(IModifyOrderRequest request);

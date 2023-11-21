@@ -1,9 +1,9 @@
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Modules;
+namespace Annium.Finance.Providers.Shared.Services;
 
-internal static class Validation
+public static class Validation
 {
     private static readonly UserResult EmptySymbol = UserResult.New(UserOperationStatus.BadRequest, "empty symbol");
     private static readonly UserResult InvalidQuantity = UserResult.New(

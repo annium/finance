@@ -4,7 +4,6 @@ using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
-using NodaTime;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -40,14 +39,7 @@ public class CandleConverterTests : ConnectorTestBase
         deserialized
             .At(0)
             .IsEqual(
-                new CandleDto(
-                    Instant.FromUnixTimeMilliseconds(1499040000000),
-                    0.01634790m,
-                    0.80000000m,
-                    0.01575800m,
-                    0.01577100m,
-                    148976.11427815m
-                )
+                new CandleDto(1499040000000, 0.01634790m, 0.80000000m, 0.01575800m, 0.01577100m, 148976.11427815m)
             );
     }
 

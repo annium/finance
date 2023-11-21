@@ -3,7 +3,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Serialization.Json;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
 
@@ -35,7 +34,7 @@ public class CandleConverter : JsonConverter<CandleDto>
                     return default;
                 }
 
-                var candle = new CandleDto(Instant.FromUnixTimeMilliseconds(timestamp), open, high, low, close, volume);
+                var candle = new CandleDto(timestamp, open, high, low, close, volume);
 
                 return candle;
             }

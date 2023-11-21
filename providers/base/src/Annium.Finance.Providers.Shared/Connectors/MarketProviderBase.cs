@@ -6,14 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.NodaTime.Extensions;
 using NodaTime;
 
 namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class MarketProviderBase
 {
-    private static readonly Duration Minute = Duration.FromMinutes(1);
+    private static readonly long Minute = Duration.FromMinutes(1).TotalMilliseconds.FloorInt64();
 
     protected IReadOnlyCollection<ResourceDto> ResolveResources(IReadOnlyCollection<InstrumentDto> instruments)
     {
@@ -42,16 +41,16 @@ public abstract class MarketProviderBase
         {
             var result = await LoadCandlesBaseAsync(instrument, from, end, chunkSize, fetch, last);
 
-            // return result
-            yield return result;
-
             // if failure / no data - break
             if (result.IsFailure || result.Data.Count == 0)
                 break;
 
+            // return result
+            yield return result;
+
             // adjust window
             last = result.Data.Last();
-            from = last.Moment.Plus(Duration.FromMinutes(1)).FloorToMinute();
+            from = Instant.FromUnixTimeMilliseconds(last.Moment + Minute);
 
             // if window closed - break
             if (end <= from)
@@ -85,10 +84,11 @@ public abstract class MarketProviderBase
 
         // fill gapes
 
-        static CandleDto CandlePlug(Instant moment, decimal price) => new(moment, price, price, price, price, 0);
+        static CandleDto CandlePlug(long moment, decimal price) => new(moment, price, price, price, price, 0);
 
-        if (last is not null && candles[0].Moment != start)
-            candles.Insert(0, CandlePlug(start, last.Close));
+        var startMoment = start.ToUnixTimeMilliseconds();
+        if (last is not null && candles[0].Moment != startMoment)
+            candles.Insert(0, CandlePlug(startMoment, last.Close));
 
         for (var i = 1; i < candles.Count; i++)
         {

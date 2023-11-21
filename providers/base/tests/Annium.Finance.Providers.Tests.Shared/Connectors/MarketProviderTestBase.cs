@@ -65,13 +65,13 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         this.Trace("verify candles");
         candles.Count.Is(2880);
         var firstCandle = candles[0];
-        firstCandle.Moment.Is(start);
+        firstCandle.Moment.Is(start.ToUnixTimeMilliseconds());
         firstCandle.Open.IsNotDefault();
         firstCandle.High.IsNotDefault();
         firstCandle.Low.IsNotDefault();
         firstCandle.Close.IsNotDefault();
         var lastCandle = candles[0];
-        lastCandle.Moment.Is(start);
+        lastCandle.Moment.Is(start.ToUnixTimeMilliseconds());
         lastCandle.Open.IsNotDefault();
         lastCandle.High.IsNotDefault();
         lastCandle.Low.IsNotDefault();
