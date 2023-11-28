@@ -6,9 +6,9 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class BalanceAndPositionUpdateEventConverter : JsonConverter<BalanceAndPositionUpdateEvent>
+internal class BalanceAndPositionUpdateEventConverter : JsonConverter<BalanceAndPositionUpdateEvent?>
 {
-    public override BalanceAndPositionUpdateEvent Read(
+    public override BalanceAndPositionUpdateEvent? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
@@ -90,7 +90,7 @@ internal class BalanceAndPositionUpdateEventConverter : JsonConverter<BalanceAnd
 
     public override void Write(
         Utf8JsonWriter writer,
-        BalanceAndPositionUpdateEvent value,
+        BalanceAndPositionUpdateEvent? value,
         JsonSerializerOptions options
     )
     {

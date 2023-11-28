@@ -27,6 +27,7 @@ internal class CancelOrderResponseConverter : JsonConverter<CancelOrderResponse?
             {
                 if (id == Guid.Empty || string.IsNullOrWhiteSpace(orderId))
                     return default;
+
                 return new CancelOrderResponse(id, orderId);
             }
 

@@ -5,9 +5,9 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountConfigurationUpdateEvent>
+internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountConfigurationUpdateEvent?>
 {
-    public override AccountConfigurationUpdateEvent Read(
+    public override AccountConfigurationUpdateEvent? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
@@ -100,7 +100,7 @@ internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountC
 
     public override void Write(
         Utf8JsonWriter writer,
-        AccountConfigurationUpdateEvent value,
+        AccountConfigurationUpdateEvent? value,
         JsonSerializerOptions options
     )
     {

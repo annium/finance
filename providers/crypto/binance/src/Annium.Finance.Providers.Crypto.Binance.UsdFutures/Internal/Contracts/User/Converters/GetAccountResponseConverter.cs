@@ -2,22 +2,13 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class GetAccountResponseConverter : JsonConverter<AccountResponse>
+internal class GetAccountResponseConverter : JsonConverter<AccountResponse?>
 {
-    private static readonly JsonSerializerOptions BalanceOptions = new JsonSerializerOptions()
-        .ResetConverters()
-        .AddConverter<GetAccountResponseBalanceConverter>();
-
-    private static readonly JsonSerializerOptions PositionOptions = new JsonSerializerOptions()
-        .ResetConverters()
-        .AddConverter<GetAccountResponsePositionConverter>();
-
-    public override AccountResponse Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override AccountResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("deserialization failed");
@@ -47,13 +38,13 @@ internal class GetAccountResponseConverter : JsonConverter<AccountResponse>
                     case "assets":
                         balances = JsonSerializer.Deserialize<IReadOnlyCollection<AccountResponseBalance>>(
                             ref reader,
-                            BalanceOptions
+                            options
                         );
                         break;
                     case "positions":
                         positions = JsonSerializer.Deserialize<IReadOnlyCollection<AccountResponsePosition>>(
                             ref reader,
-                            PositionOptions
+                            options
                         );
                         break;
                     default:
@@ -66,7 +57,7 @@ internal class GetAccountResponseConverter : JsonConverter<AccountResponse>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, AccountResponse value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, AccountResponse? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

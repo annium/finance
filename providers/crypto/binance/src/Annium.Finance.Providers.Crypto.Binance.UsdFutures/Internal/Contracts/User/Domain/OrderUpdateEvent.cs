@@ -2,7 +2,7 @@
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
-public readonly record struct OrderUpdateEvent(
+internal sealed record OrderUpdateEvent(
     string Symbol,
     string TradeId,
     string OrderId,

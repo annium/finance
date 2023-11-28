@@ -3,12 +3,12 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
-public readonly record struct AccountResponse(
+internal sealed record AccountResponse(
     IReadOnlyCollection<AccountResponseBalance> Balances,
     IReadOnlyCollection<AccountResponsePosition> Positions
 );
 
-public readonly record struct AccountResponseBalance(
+internal sealed record AccountResponseBalance(
     string Asset,
     decimal Total,
     decimal Free,
@@ -17,7 +17,7 @@ public readonly record struct AccountResponseBalance(
     long UpdatedDate
 );
 
-public readonly record struct AccountResponsePosition(
+internal sealed record AccountResponsePosition(
     string Symbol,
     OrientationRange Orientation,
     MarginType MarginType,

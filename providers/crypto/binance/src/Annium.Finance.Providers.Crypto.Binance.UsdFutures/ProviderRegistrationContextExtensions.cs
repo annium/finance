@@ -37,15 +37,34 @@ public static class ProviderRegistrationContextExtensions
             .Scoped();
 
         // serializers and http factories
+        // market
         ctx.AddHttpRequestFactoryWithJsonSerializer(ExchangeInfoKey, Contracts.Market.ExchangeInfo);
         ctx.AddHttpRequestFactoryWithJsonSerializer(CandleKey, Contracts.Market.Candle);
         ctx.AddHttpRequestFactoryWithJsonSerializer(InstrumentTickerKey, Contracts.Market.InstrumentTicker);
         ctx.AddHttpRequestFactoryWithJsonSerializer(ServerTimeKey, Contracts.Shared.ServerTime);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ListenKeyKey, Contracts.User.ListenKey);
+
+        // user data load
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetAccount, Contracts.User.GetAccount);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetOrder, Contracts.User.GetOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetTrade, Contracts.User.GetTrade);
+
+        // user data trade
         ctx.AddHttpRequestFactoryWithJsonSerializer(InitOrderKey, Contracts.User.InitOrder);
         ctx.AddHttpRequestFactoryWithJsonSerializer(ModifyOrderKey, Contracts.User.ModifyOrder);
         ctx.AddHttpRequestFactoryWithJsonSerializer(CancelOrderKey, Contracts.User.CancelOrder);
         ctx.AddHttpRequestFactoryWithJsonSerializer(CancelAllOrdersKey, Contracts.User.CancelAllOrders);
+
+        // user data updates
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ListenKeyKey, Contracts.User.ListenKey);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(
+            AccountConfigurationUpdateKey,
+            Contracts.User.AccountConfigurationUpdate
+        );
+        ctx.AddHttpRequestFactoryWithJsonSerializer(
+            BalanceAndPositionUpdateKey,
+            Contracts.User.BalanceAndPositionUpdate
+        );
+        ctx.AddHttpRequestFactoryWithJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
         ctx.Container.Add<BookTickerService>().AsSelf().Scoped();

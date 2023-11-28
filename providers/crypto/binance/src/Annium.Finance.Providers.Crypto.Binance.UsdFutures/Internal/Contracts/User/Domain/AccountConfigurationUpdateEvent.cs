@@ -1,6 +1,6 @@
 ﻿namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
-public readonly record struct AccountConfigurationUpdateEvent(
+internal sealed record AccountConfigurationUpdateEvent(
     long Date,
     AccountConfigurationUpdateEventType Type,
     bool MultiAssetsMode,

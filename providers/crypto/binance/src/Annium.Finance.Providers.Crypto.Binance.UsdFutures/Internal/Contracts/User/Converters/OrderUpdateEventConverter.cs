@@ -8,9 +8,9 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent>
+internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
 {
-    public override OrderUpdateEvent Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override OrderUpdateEvent? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
         {
@@ -186,7 +186,7 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, OrderUpdateEvent value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, OrderUpdateEvent? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }
