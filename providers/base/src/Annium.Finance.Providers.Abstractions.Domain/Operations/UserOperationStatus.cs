@@ -11,5 +11,5 @@ public enum UserOperationStatus
     NotFound,
     ParseError,
     Ok,
-    UncaughtError,
+    UnknownError,
 }

@@ -34,6 +34,6 @@ public static class HttpRequestUserResultExtensions
             HttpStatusCode.BadRequest => UserOperationStatus.BadRequest,
             HttpStatusCode.Unauthorized => UserOperationStatus.Forbidden,
             HttpStatusCode.NotFound => UserOperationStatus.Forbidden,
-            _ => UserOperationStatus.UncaughtError
+            _ => UserOperationStatus.UnknownError
         };
 }

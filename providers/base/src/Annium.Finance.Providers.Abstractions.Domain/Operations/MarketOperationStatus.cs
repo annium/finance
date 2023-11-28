@@ -10,5 +10,5 @@ public enum MarketOperationStatus
     NotFound,
     ParseError,
     Ok,
-    UncaughtError,
+    UnknownError,
 }
