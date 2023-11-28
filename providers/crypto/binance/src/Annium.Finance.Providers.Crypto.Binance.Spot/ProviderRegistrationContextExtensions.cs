@@ -17,7 +17,7 @@ public static class ProviderRegistrationContextExtensions
     public static ProviderRegistrationContext WithBinanceSpot(this ProviderRegistrationContext ctx)
     {
         // provider
-        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, UserConnector, FinanceService>(
+        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, QueryProcessor, UserConnector, FinanceService>(
             Provider,
             ProviderEnvironment.Real | ProviderEnvironment.Test
         );

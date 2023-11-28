@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Modules;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
@@ -70,7 +70,6 @@ internal class QueryProcessor : IQueryProcessor
         result["cancelReplaceMode"] = "STOP_ON_FAILURE";
         result["timeInForce"] = "GTC";
         result["newOrderRespType"] = "RESULT";
-
         result["cancelOrigClientOrderId"] = request.Order.Id.ToString();
         result["newClientOrderId"] = request.Order.Id.ToString();
 

@@ -3,7 +3,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Modules;
+namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IQueryProcessor
 {
