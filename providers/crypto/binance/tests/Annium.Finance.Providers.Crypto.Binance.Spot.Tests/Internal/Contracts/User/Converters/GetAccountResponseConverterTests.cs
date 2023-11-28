@@ -1,0 +1,68 @@
+﻿using System.Collections.Generic;
+using System.Text;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared.Extensions;
+using Annium.Testing;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.User.Converters;
+
+public class GetAccountResponseConverterTests : ConnectorTestBase
+{
+    public GetAccountResponseConverterTests(ITestOutputHelper outputHelper)
+        : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
+
+    [Fact]
+    public void Works()
+    {
+        // arrange
+        var raw =
+            @"{
+            ""makerCommission"": 15,
+            ""takerCommission"": 15,
+            ""buyerCommission"": 0,
+            ""sellerCommission"": 0,
+            ""commissionRates"": {
+                ""maker"": ""0.00150000"",
+                ""taker"": ""0.00150000"",
+                ""buyer"": ""0.00000000"",
+                ""seller"": ""0.00000000""
+            },
+            ""canTrade"": true,
+            ""canWithdraw"": true,
+            ""canDeposit"": true,
+            ""brokered"": false,
+            ""requireSelfTradePrevention"": false,
+            ""preventSor"": false,
+            ""updateTime"": 123456789,
+            ""accountType"": ""SPOT"",
+            ""balances"": [
+                {
+                    ""asset"": ""BTC"",
+                    ""free"": ""1.2"",
+                    ""locked"": ""2.3""
+                },
+                {
+                    ""asset"": ""LTC"",
+                    ""free"": ""1.3"",
+                    ""locked"": ""2.4""
+                }
+            ],
+            ""permissions"": [
+                ""SPOT""
+            ],
+            ""uid"": 354937868
+        }";
+
+        // act - deserialize
+        var serializer = this.GetJsonSerializer(Constants.GetAccount);
+        var deserialized = serializer.Deserialize<IReadOnlyCollection<AssetDto>>(Encoding.UTF8.GetBytes(raw)).NotNull();
+
+        // assert - deserialization
+        deserialized.Has(2);
+        deserialized.At(0).IsEqual(new AssetDto("BTC", 1.2m, 2.3m));
+        deserialized.At(1).IsEqual(new AssetDto("LTC", 1.3m, 2.4m));
+    }
+}

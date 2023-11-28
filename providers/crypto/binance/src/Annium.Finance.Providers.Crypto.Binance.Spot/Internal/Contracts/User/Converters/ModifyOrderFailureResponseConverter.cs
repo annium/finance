@@ -7,7 +7,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResult>
+internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResult?>
 {
     private static readonly JsonSerializerOptions OperationResultDeserializerOptions = new JsonSerializerOptions()
         .ResetConverters()
@@ -122,7 +122,7 @@ internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResu
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, OperationResult value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, OperationResult? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

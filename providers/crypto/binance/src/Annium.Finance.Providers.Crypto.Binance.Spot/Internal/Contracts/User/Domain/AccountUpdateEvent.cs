@@ -2,6 +2,6 @@
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 
-internal readonly record struct AccountUpdateEvent(long Date, IReadOnlyCollection<AccountUpdateEventBalance> Balances);
+internal sealed record AccountUpdateEvent(long Date, IReadOnlyCollection<AccountUpdateEventBalance> Balances);
 
-internal readonly record struct AccountUpdateEventBalance(string Asset, decimal Free, decimal Locked);
+internal sealed record AccountUpdateEventBalance(string Asset, decimal Free, decimal Locked);

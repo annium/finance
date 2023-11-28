@@ -8,9 +8,9 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent>
+internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
 {
-    public override OrderUpdateEvent Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override OrderUpdateEvent? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
         {
@@ -164,30 +164,8 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, OrderUpdateEvent value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, OrderUpdateEvent? value, JsonSerializerOptions options)
     {
-        writer.WriteStartObject();
-        writer.WriteString("e", "executionReport");
-        writer.WriteString("s", value.Symbol);
-        writer.WriteNumber("t", long.Parse(value.TradeId));
-        writer.WriteNumber("i", long.Parse(value.OrderId));
-        writer.WriteString("c", value.ClientOrderId);
-        writer.WriteString("o", OrderTypes.ValueToString[value.Type]);
-        writer.WriteString("S", OrderSides.ValueToString[value.Side]);
-        writer.WriteNumberString("q", value.Quantity);
-        writer.WriteNumberString("p", value.Price);
-        writer.WriteNumberString("P", value.TriggerPrice);
-        writer.WriteString("X", OrderStatuses.ValueToString[value.Status]);
-        writer.WriteNumberString("z", value.ExecutedQuantity);
-        writer.WriteNumberString("Z", value.ExecutedQuantity * value.ExecutedPrice);
-        writer.WriteNumberString("l", value.LastExecutedQuantity);
-        writer.WriteNumberString("L", value.LastExecutedPrice);
-        writer.WriteNumberString("n", value.CommissionAmount);
-        writer.WriteString("N", value.CommissionAsset);
-        writer.WriteBoolean("m", value.IsMaker);
-        writer.WriteNumber("O", value.CreatedDate);
-        writer.WriteNumber("T", value.UpdatedDate);
-
-        writer.WriteEndObject();
+        throw new NotImplementedException();
     }
 }

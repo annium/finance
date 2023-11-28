@@ -62,10 +62,6 @@ internal class AccountUpdateEventBalanceConverter : JsonConverter<AccountUpdateE
 
     public override void Write(Utf8JsonWriter writer, AccountUpdateEventBalance value, JsonSerializerOptions options)
     {
-        writer.WriteStartObject();
-        writer.WriteString("a", value.Asset);
-        writer.WriteNumberString("f", value.Free);
-        writer.WriteNumberString("l", value.Locked);
-        writer.WriteEndObject();
+        throw new NotImplementedException();
     }
 }

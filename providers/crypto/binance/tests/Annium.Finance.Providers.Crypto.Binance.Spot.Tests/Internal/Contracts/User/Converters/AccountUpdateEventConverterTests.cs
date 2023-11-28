@@ -1,0 +1,62 @@
+﻿using System.Linq;
+using System.Text;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
+using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared.Extensions;
+using Annium.Testing;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.User.Converters;
+
+public class AccountUpdateEventConverterTests : ConnectorTestBase
+{
+    public AccountUpdateEventConverterTests(ITestOutputHelper outputHelper)
+        : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
+
+    [Fact]
+    public void Works()
+    {
+        // arrange
+        var raw =
+            @"{
+            ""e"": ""outboundAccountPosition"",
+            ""E"": 1564034571105,
+            ""u"": 1564034571073,
+            ""B"": [
+                {
+                    ""a"": ""ETH"",
+                    ""f"": ""10.500000"",
+                    ""l"": ""1.700000""
+                }
+            ]
+        }";
+
+        // act - deserialize
+        var serializer = this.GetJsonSerializer(Constants.AccountUpdateKey);
+        var deserialized = serializer.Deserialize<AccountUpdateEvent>(Encoding.UTF8.GetBytes(raw)).NotNull();
+
+        // assert - deserialization
+        deserialized.Date.Is(1564034571073);
+        deserialized.Balances.Has(1);
+        var eth = deserialized.Balances.ElementAt(0);
+        eth.IsEqual(new AccountUpdateEventBalance("ETH", 10.5m, 1.7m));
+    }
+
+    [Fact]
+    public void SkipsInvalidData()
+    {
+        // arrange
+        var raw =
+            @"{
+            ""e"": ""invalid""
+        }";
+
+        // act - deserialize
+        var serializer = this.GetJsonSerializer(Constants.AccountUpdateKey);
+        var deserialized = serializer.Deserialize<AccountUpdateEvent>(Encoding.UTF8.GetBytes(raw));
+
+        // assert - deserialization
+        deserialized.IsDefault();
+    }
+}

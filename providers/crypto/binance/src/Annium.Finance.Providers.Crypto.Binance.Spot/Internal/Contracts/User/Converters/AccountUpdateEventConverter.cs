@@ -6,9 +6,9 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domai
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class AccountUpdateEventConverter : JsonConverter<AccountUpdateEvent>
+internal class AccountUpdateEventConverter : JsonConverter<AccountUpdateEvent?>
 {
-    public override AccountUpdateEvent Read(
+    public override AccountUpdateEvent? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
@@ -79,13 +79,8 @@ internal class AccountUpdateEventConverter : JsonConverter<AccountUpdateEvent>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, AccountUpdateEvent value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, AccountUpdateEvent? value, JsonSerializerOptions options)
     {
-        writer.WriteStartObject();
-        writer.WriteString("e", "outboundAccountPosition");
-        writer.WriteNumber("u", value.Date);
-        writer.WritePropertyName("B");
-        JsonSerializer.Serialize(writer, value.Balances, options);
-        writer.WriteEndObject();
+        throw new NotImplementedException();
     }
 }
