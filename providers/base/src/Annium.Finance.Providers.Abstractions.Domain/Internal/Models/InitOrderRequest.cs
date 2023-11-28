@@ -13,5 +13,4 @@ internal class InitOrderRequest : IInitOrderRequest
     public required decimal Qty { get; init; }
     public required decimal Price { get; init; }
     public required decimal LevelPrice { get; init; }
-    public required bool ReduceOnly { get; init; }
 }

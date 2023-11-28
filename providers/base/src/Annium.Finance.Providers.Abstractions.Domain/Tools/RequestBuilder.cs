@@ -13,8 +13,7 @@ public static class RequestBuilder
         string symbol,
         OrderSide side,
         decimal quantity,
-        decimal price,
-        bool reduceOnly = false
+        decimal price
     )
     {
         return new InitOrderRequest
@@ -26,17 +25,10 @@ public static class RequestBuilder
             Qty = quantity,
             Price = price,
             LevelPrice = 0m,
-            ReduceOnly = reduceOnly,
         };
     }
 
-    public static IInitOrderRequest InitMarketOrder(
-        Guid id,
-        string symbol,
-        OrderSide side,
-        decimal quantity,
-        bool reduceOnly = false
-    )
+    public static IInitOrderRequest InitMarketOrder(Guid id, string symbol, OrderSide side, decimal quantity)
     {
         return new InitOrderRequest
         {
@@ -47,7 +39,6 @@ public static class RequestBuilder
             Qty = quantity,
             Price = 0m,
             LevelPrice = 0m,
-            ReduceOnly = reduceOnly,
         };
     }
 
@@ -56,8 +47,7 @@ public static class RequestBuilder
         string symbol,
         OrderSide side,
         decimal quantity,
-        decimal levelPrice,
-        bool reduceOnly = false
+        decimal levelPrice
     )
     {
         return new InitOrderRequest
@@ -69,7 +59,6 @@ public static class RequestBuilder
             Qty = quantity,
             Price = 0m,
             LevelPrice = levelPrice,
-            ReduceOnly = reduceOnly,
         };
     }
 
@@ -78,8 +67,7 @@ public static class RequestBuilder
         string symbol,
         OrderSide side,
         decimal quantity,
-        decimal levelPrice,
-        bool reduceOnly = false
+        decimal levelPrice
     )
     {
         return new InitOrderRequest
@@ -91,7 +79,6 @@ public static class RequestBuilder
             Qty = quantity,
             Price = 0m,
             LevelPrice = levelPrice,
-            ReduceOnly = reduceOnly,
         };
     }
 
@@ -101,8 +88,7 @@ public static class RequestBuilder
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal levelPrice,
-        bool reduceOnly = false
+        decimal levelPrice
     )
     {
         return new InitOrderRequest
@@ -114,7 +100,6 @@ public static class RequestBuilder
             Qty = quantity,
             Price = price,
             LevelPrice = levelPrice,
-            ReduceOnly = reduceOnly,
         };
     }
 
@@ -124,8 +109,7 @@ public static class RequestBuilder
         OrderSide side,
         decimal quantity,
         decimal price,
-        decimal levelPrice,
-        bool reduceOnly = false
+        decimal levelPrice
     )
     {
         return new InitOrderRequest
@@ -137,7 +121,6 @@ public static class RequestBuilder
             Qty = quantity,
             Price = price,
             LevelPrice = levelPrice,
-            ReduceOnly = reduceOnly,
         };
     }
 
