@@ -1,7 +1,6 @@
 using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Tests.Lib.Models;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Tests.Lib;
 
@@ -15,12 +14,12 @@ public static class Helper
         new(
             Guid.NewGuid(),
             instrument,
-            Instant.MinValue,
+            0,
             OrientationRange.Both,
             MarginType.Cross,
             leverage,
             PositionState.Blank,
-            Instant.MinValue,
+            0,
             decimal.Zero,
             decimal.Zero,
             decimal.Zero,

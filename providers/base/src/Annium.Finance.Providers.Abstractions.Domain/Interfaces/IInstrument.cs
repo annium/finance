@@ -11,15 +11,19 @@ public interface IInstrument<TResource> : IInstrument
     TResource Currency { get; }
 }
 
-public interface IInstrument
+public interface IInstrument : IInstrumentBase
 {
     Guid Id { get; }
     string Provider { get; }
     ProviderEnvironment Environment { get; }
-    string Symbol { get; }
     Guid TargetId { get; }
     Guid QuoteId { get; }
     Guid CurrencyId { get; }
+}
+
+public interface IInstrumentBase
+{
+    string Symbol { get; }
     decimal LotSize { get; }
     decimal TickSize { get; }
     decimal MinQty { get; }
@@ -27,5 +31,4 @@ public interface IInstrument
     decimal MinSum { get; }
     decimal MaxSum { get; }
     int MaxOrders { get; }
-    decimal MaxPosition { get; }
 }

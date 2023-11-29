@@ -9,7 +9,7 @@ public static class OrderValidationExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateSide<TOrder>(this TOrder order, OrderSide side)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.Side != side)
             throw new InvalidOperationException($"Order {order} is not a {side} order");
@@ -19,7 +19,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateIsImmediate<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!order.IsImmediate())
             throw new InvalidOperationException($"Order {order} is not an immediate order");
@@ -29,7 +29,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateIsLeveled<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!order.IsLeveled())
             throw new InvalidOperationException($"Order {order} is not a leveled order");
@@ -39,7 +39,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateIsLimit<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!order.IsLimit())
             throw new InvalidOperationException($"Order {order} is not a limit order");
@@ -49,7 +49,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateIsMarket<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!order.IsMarket())
             throw new InvalidOperationException($"Order {order} is not a market order");
@@ -59,7 +59,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateStatus<TOrder>(this TOrder order, OrderStatus status)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.Status != status)
             throw new InvalidOperationException($"Order {order} is not {status}");
@@ -69,7 +69,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateStatus<TOrder>(this TOrder order, params OrderStatus[] statuses)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!Array.Exists(statuses, x => x == order.Status))
             throw new InvalidOperationException($"Order {order} is not {string.Join(", ", statuses)}");
@@ -79,7 +79,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateQtyAndPrice<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.TotalQty <= 0m)
             throw new InvalidOperationException($"Order {order} total qty is invalid");
@@ -112,7 +112,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateIsExecuted<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.ExecutedQty == 0m || order.ExecutedPrice == 0m)
             throw new InvalidOperationException($"Order {order} has not been executed");
@@ -122,7 +122,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TOrder ValidateNewQtyAndPrice<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.ExecutedQty != 0m)
             throw new InvalidOperationException($"Order {order} executed qty is invalid");
@@ -135,7 +135,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TOrder ValidatePartiallyFilledQtyAndPrice<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.ExecutedQty <= 0m || order.ExecutedQty >= order.TotalQty)
             throw new InvalidOperationException($"Order {order} executed qty is invalid");
@@ -148,7 +148,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TOrder ValidateFilledQtyAndPrice<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.ExecutedQty != order.TotalQty)
             throw new InvalidOperationException($"Order {order} executed qty is invalid");
@@ -161,7 +161,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TOrder ValidateCanceledQtyAndPrice<TOrder>(this TOrder order)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (order.ExecutedQty < 0m || order.ExecutedQty >= order.TotalQty)
             throw new InvalidOperationException($"Order {order} executed qty is invalid");
@@ -177,7 +177,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ValidateLevelPrice<TOrder>(this TOrder order, Func<decimal, bool> validate)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!validate(order.LevelPrice))
             throw new InvalidOperationException($"Order {order} level price is invalid");
@@ -185,7 +185,7 @@ public static class OrderValidationExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ValidatePrice<TOrder>(this TOrder order, Func<decimal, bool> validate)
-        where TOrder : IOrder
+        where TOrder : IOrderBase
     {
         if (!validate(order.Price))
             throw new InvalidOperationException($"Order {order} target price is invalid");

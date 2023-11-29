@@ -10,13 +10,17 @@ public interface IPosition<TInstrument, TResource> : IPosition
     TInstrument Instrument { get; }
 }
 
-public interface IPosition
+public interface IPosition : IPositionBase
 {
     Guid Id { get; }
     Guid InstrumentId { get; }
+    bool IsActive { get; }
+    Orientation Orientation { get; }
+}
+
+public interface IPositionBase
+{
     OrientationRange OrientationRange { get; }
     MarginType MarginType { get; }
     byte Leverage { get; }
-    bool IsActive { get; }
-    Orientation Orientation { get; }
 }

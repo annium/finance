@@ -14,12 +14,12 @@ public sealed record Order(
     decimal TotalQty,
     decimal Price,
     decimal LevelPrice,
-    Instant CreatedAt,
+    long CreatedAt,
     OrderStatus Status,
     decimal ExecutedQty,
     decimal ExecutedPrice,
     decimal Fee,
-    Instant UpdatedAt
+    long UpdatedAt
 ) : IOrder<Position, Instrument, Resource>
 {
     public Guid PositionId { get; } = Position.Id;
@@ -28,9 +28,9 @@ public sealed record Order(
     public decimal ExecutedQty { get; private set; } = ExecutedQty;
     public decimal ExecutedPrice { get; private set; } = ExecutedPrice;
     public decimal Fee { get; private set; } = Fee;
-    public Instant UpdatedAt { get; private set; } = UpdatedAt;
+    public long UpdatedAt { get; private set; } = UpdatedAt;
 
-    public Order Update(OrderStatus status, decimal executedQty, decimal executedPrice, decimal fee, Instant now)
+    public Order Update(OrderStatus status, decimal executedQty, decimal executedPrice, decimal fee, long now)
     {
         this.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled);
 

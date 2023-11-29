@@ -4,19 +4,18 @@ using System.Runtime.CompilerServices;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Tests.Lib.Models.Helpers;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Tests.Lib.Models;
 
 public sealed record Position(
     Guid Id,
     Instrument Instrument,
-    Instant CreatedAt,
+    long CreatedAt,
     OrientationRange OrientationRange,
     MarginType MarginType,
     byte Leverage,
     PositionState State,
-    Instant UpdatedAt,
+    long UpdatedAt,
     decimal TotalQty,
     decimal Price,
     decimal OpeningQty,
@@ -40,7 +39,7 @@ public sealed record Position(
         OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");
     public OrientationType? OrientationType { get; private set; }
     public PositionState State { get; private set; } = State;
-    public Instant UpdatedAt { get; private set; } = UpdatedAt;
+    public long UpdatedAt { get; private set; } = UpdatedAt;
     public decimal TotalQty { get; private set; } = TotalQty;
     public decimal Price { get; private set; } = Price;
     public decimal OpeningQty { get; private set; } = OpeningQty;
@@ -57,7 +56,7 @@ public sealed record Position(
     private readonly decimal _borrowedPart = 1m - 1m / Leverage;
     private readonly List<Guid> _orders = new();
 
-    public Position AddOrder(Guid orderId, OrderSide side, decimal totalQty, Instant createdAt)
+    public Position AddOrder(Guid orderId, OrderSide side, decimal totalQty, long createdAt)
     {
         if (_orders.Contains(orderId))
             throw new InvalidOperationException($"Order {orderId} is already tracked by position");
@@ -89,7 +88,7 @@ public sealed record Position(
         decimal fee,
         decimal prevExecutedQty,
         decimal prevFee,
-        Instant updatedAt
+        long updatedAt
     )
     {
         if (!_orders.Contains(orderId))
@@ -132,7 +131,7 @@ public sealed record Position(
         decimal executedQty,
         decimal executedPrice,
         decimal fee,
-        Instant updatedAt
+        long updatedAt
     )
     {
         if (!_orders.Remove(orderId))
@@ -173,13 +172,13 @@ public sealed record Position(
         $"{State} ({OrientationType?.ToString() ?? "inactive"}) {Instrument} with {_orders.Count} order(s) [id:{Id}]";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void SyncState(Instant updatedAt)
+    private void SyncState(long updatedAt)
     {
         BorrowedQty = (OpenedQty - ClosedQty) * _borrowedPart;
         BorrowedSum = BorrowedQty * Price;
 
         State = PositionHelper.ResolveState(TotalQty, OpeningQty, OpenedQty, ClosingQty, ClosedQty);
-        UpdatedAt = Instant.Max(UpdatedAt, updatedAt);
+        UpdatedAt = Math.Max(UpdatedAt, updatedAt);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

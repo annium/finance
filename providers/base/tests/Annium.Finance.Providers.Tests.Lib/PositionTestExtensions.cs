@@ -2,14 +2,11 @@ using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Lib.Models;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Tests.Lib;
 
 public static class PositionTestExtensions
 {
-    private static Instant Now => SystemClock.Instance.GetCurrentInstant();
-
     #region new limit order
 
     public static Order NewLimitBuyOrder(this Position position, decimal totalQty, decimal price) =>
@@ -19,21 +16,7 @@ public static class PositionTestExtensions
         position.NewLimitOrder(OrderSide.Sell, totalQty, price);
 
     public static Order NewLimitOrder(this Position position, OrderSide side, decimal totalQty, decimal price) =>
-        new(
-            Guid.NewGuid(),
-            position,
-            side,
-            OrderType.Limit,
-            totalQty,
-            price,
-            0,
-            Now,
-            OrderStatus.New,
-            0,
-            0,
-            0,
-            NodaConstants.UnixEpoch
-        );
+        new(Guid.NewGuid(), position, side, OrderType.Limit, totalQty, price, 0, 0, OrderStatus.New, 0, 0, 0, 0);
 
     #endregion
 
@@ -46,21 +29,7 @@ public static class PositionTestExtensions
         position.NewMarketOrder(OrderSide.Sell, totalQty);
 
     public static Order NewMarketOrder(this Position position, OrderSide side, decimal totalQty) =>
-        new(
-            Guid.NewGuid(),
-            position,
-            side,
-            OrderType.Market,
-            totalQty,
-            0,
-            0,
-            Now,
-            OrderStatus.New,
-            0,
-            0,
-            0,
-            NodaConstants.UnixEpoch
-        );
+        new(Guid.NewGuid(), position, side, OrderType.Market, totalQty, 0, 0, 0, OrderStatus.New, 0, 0, 0, 0);
 
     #endregion
 
@@ -86,12 +55,12 @@ public static class PositionTestExtensions
             totalQty,
             0,
             levelPrice,
-            Now,
+            0,
             OrderStatus.New,
             0,
             0,
             0,
-            NodaConstants.UnixEpoch
+            0
         );
 
     #endregion
@@ -118,12 +87,12 @@ public static class PositionTestExtensions
             totalQty,
             0,
             levelPrice,
-            Now,
+            0,
             OrderStatus.New,
             0,
             0,
             0,
-            NodaConstants.UnixEpoch
+            0
         );
 
     #endregion

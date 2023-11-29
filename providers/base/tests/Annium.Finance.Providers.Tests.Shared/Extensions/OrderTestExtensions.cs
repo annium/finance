@@ -1,0 +1,44 @@
+﻿using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Testing;
+
+namespace Annium.Finance.Providers.Tests.Shared.Extensions;
+
+public static class OrderTestExtensions
+{
+    public static void ShouldMatch(this OrderDto order, IInitOrderRequest request)
+    {
+        order.Id.IsNotDefault();
+        order.OrderId.IsNullOrWhiteSpace().IsFalse();
+        order.Symbol.Is(request.Symbol);
+        order.Side.Is(request.Side);
+        order.Type.Is(request.Type);
+        order.TotalQty.Is(request.Qty);
+        order.Price.Is(request.Price);
+        order.LevelPrice.Is(request.LevelPrice);
+    }
+
+    public static void ShouldMatch(this OrderDto order, IModifyOrderRequest request)
+    {
+        order.Id.IsNotDefault();
+        order.OrderId.IsNullOrWhiteSpace().IsFalse();
+        order.Symbol.Is(request.Order.Symbol);
+        order.Side.Is(request.Side);
+        order.Type.Is(request.Type);
+        order.TotalQty.Is(request.Qty);
+        order.Price.Is(request.Price);
+        order.LevelPrice.Is(request.LevelPrice);
+    }
+
+    public static void ShouldMatch(this OrderDto order, OrderDto original)
+    {
+        order.Id.Is(original.Id);
+        order.OrderId.Is(original.OrderId);
+        order.Symbol.Is(original.Symbol);
+        order.Side.Is(original.Side);
+        order.Type.Is(original.Type);
+        order.TotalQty.Is(original.TotalQty);
+        order.Price.Is(original.Price);
+        order.LevelPrice.Is(original.LevelPrice);
+    }
+}

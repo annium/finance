@@ -1,6 +1,5 @@
 using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
@@ -12,19 +11,23 @@ public interface IOrder<TPosition, TInstrument, TResource> : IOrder
     TPosition Position { get; }
 }
 
-public interface IOrder
+public interface IOrder : IOrderBase
 {
     Guid Id { get; }
     Guid PositionId { get; }
+}
+
+public interface IOrderBase
+{
     OrderSide Side { get; }
     OrderType Type { get; }
     decimal TotalQty { get; }
     decimal Price { get; }
     decimal LevelPrice { get; }
-    Instant CreatedAt { get; }
+    long CreatedAt { get; }
     OrderStatus Status { get; }
     decimal ExecutedQty { get; }
     decimal ExecutedPrice { get; }
     decimal Fee { get; }
-    Instant UpdatedAt { get; }
+    long UpdatedAt { get; }
 }

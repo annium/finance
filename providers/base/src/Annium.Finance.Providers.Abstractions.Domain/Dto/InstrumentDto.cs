@@ -1,3 +1,5 @@
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+
 namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
 
 public sealed record InstrumentDto(
@@ -14,4 +16,4 @@ public sealed record InstrumentDto(
     decimal MinSum,
     decimal MaxSum,
     int MaxOrders
-);
+) : IInstrumentBase;
