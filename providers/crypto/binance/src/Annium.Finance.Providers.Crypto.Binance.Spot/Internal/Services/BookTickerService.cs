@@ -1,7 +1,6 @@
 using System;
 using System.Net.Mime;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
@@ -12,13 +11,13 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 internal sealed class BookTickerService : BookTickerServiceBase
 {
     public BookTickerService(
-        BaseSettings settings,
+        Configuration config,
         IIndex<SerializerKey, ISerializer<ReadOnlyMemory<byte>>> serializers,
         IStatusReporter statusReporter,
         ILogger logger
     )
         : base(
-            settings,
+            config,
             serializers[SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)],
             statusReporter,
             logger

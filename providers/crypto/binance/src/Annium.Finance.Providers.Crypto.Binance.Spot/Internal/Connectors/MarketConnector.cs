@@ -4,6 +4,7 @@ using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared.Connectors;
@@ -18,7 +19,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     private readonly BookTickerService _bookTickerService;
 
     public MarketConnector(
-        BaseSettings settings,
+        ConfigurationBase config,
         ITableFactory tableFactory,
         MarketProvider marketProvider,
         ILoaderFactory loaderFactory,
@@ -27,11 +28,11 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         IMarketSynchronizer synchronizer,
         ILogger logger
     )
-        : base(settings.Config, tableFactory, monitor, synchronizer, logger)
+        : base(config.Provider, config.Environment, tableFactory, monitor, synchronizer, logger)
     {
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new SnapshotLoaderConfig(3000, 10000, 5),
-            async _ => await marketProvider.LoadContextAsync(settings.Config.Environment),
+            async _ => await marketProvider.LoadContextAsync(config.Environment),
             600_000,
             0
         );

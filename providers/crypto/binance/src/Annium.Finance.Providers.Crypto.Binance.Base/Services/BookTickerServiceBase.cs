@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
@@ -17,12 +16,12 @@ public abstract class BookTickerServiceBase : WebSocketService
     public event Action<InstrumentTicker> OnData = delegate { };
 
     protected BookTickerServiceBase(
-        BaseSettings settings,
+        ConfigurationBase config,
         ISerializer<ReadOnlyMemory<byte>> serializer,
         IStatusReporter statusReporter,
         ILogger logger
     )
-        : base(settings, statusReporter, logger)
+        : base(config, statusReporter, logger)
     {
         _serializer = serializer;
     }

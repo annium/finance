@@ -6,6 +6,7 @@ using Annium.Execution.Background;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
@@ -29,7 +30,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     private int _isDisposed;
 
     protected MarketConnectorBase(
-        IMarketConfig config,
+        string provider,
+        ProviderEnvironment environment,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
         IMarketSynchronizer synchronizer,
@@ -37,7 +39,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        _config = config;
+        _config = new MarketConfig(provider, environment);
         _synchronizer = synchronizer;
 
         Disposable = Annium.Disposable.AsyncBox(logger);

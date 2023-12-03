@@ -2,7 +2,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts;
@@ -16,6 +15,14 @@ public static class ProviderRegistrationContextExtensions
 {
     public static ProviderRegistrationContext WithBinanceUsdFutures(this ProviderRegistrationContext ctx)
     {
+        return ctx.WithBinanceUsdFutures(new ProviderConfiguration());
+    }
+
+    public static ProviderRegistrationContext WithBinanceUsdFutures(
+        this ProviderRegistrationContext ctx,
+        ProviderConfiguration cfg
+    )
+    {
         // provider
         ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, QueryProcessor, UserConnector, FinanceService>(
             Provider,
@@ -26,12 +33,24 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container
             .Add(sp =>
             {
-                var cfg = sp.Resolve<Injected<IMarketConfig>>().Value;
+                var marketConfig = sp.Resolve<Injected<IMarketConfig>>().Value;
 
-                var httpApi = Endpoints.GetHttpApi(cfg.Environment);
-                var wsApi = Endpoints.GetWsApi(cfg.Environment);
+                var httpApi = Endpoints.GetHttpApi(marketConfig.Environment);
+                var wsApi = Endpoints.GetWsApi(marketConfig.Environment);
 
-                return new BaseSettings(cfg, httpApi, wsApi, "/stream");
+                return new Configuration
+                {
+                    Provider = marketConfig.Provider,
+                    Environment = marketConfig.Environment,
+                    HttpApi = httpApi,
+                    WsApi = wsApi,
+                    WsMarketEndpoint = "/stream",
+                    ReloadAccountInterval = cfg.ReloadAccountInterval,
+                    ReloadAccountDebounce = cfg.ReloadAccountDebounce,
+                    ReloadOrdersInterval = cfg.ReloadOrdersInterval,
+                    ReloadOrdersDebounce = cfg.ReloadOrdersDebounce,
+                    ReloadDealsDebounce = cfg.ReloadDealsDebounce,
+                };
             })
             .AsSelf()
             .Scoped();

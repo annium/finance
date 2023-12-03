@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Linq;
 using Annium.Logging;
@@ -19,7 +18,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
     private readonly HashSet<string> _topics = new();
     private readonly IStatusReporter _statusReporter;
 
-    protected WebSocketService(BaseSettings settings, IStatusReporter statusReporter, ILogger logger)
+    protected WebSocketService(ConfigurationBase config, IStatusReporter statusReporter, ILogger logger)
     {
         Logger = logger;
 
@@ -31,7 +30,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
 
-        _socket.Connect(new Uri(settings.WsApi, settings.WsMarketEndpoint));
+        _socket.Connect(new Uri(config.WsApi, config.WsMarketEndpoint));
         _statusReporter.Connecting();
     }
 
