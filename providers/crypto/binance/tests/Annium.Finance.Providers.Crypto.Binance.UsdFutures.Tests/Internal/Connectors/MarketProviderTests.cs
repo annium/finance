@@ -6,9 +6,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors;
 
-public class MarketProviderTest : MarketProviderTestBase
+public class MarketProviderTests : MarketProviderTestBase
 {
-    public MarketProviderTest(ITestOutputHelper outputHelper)
+    public MarketProviderTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), "BTCUSDT", outputHelper) { }
 
     [Theory]

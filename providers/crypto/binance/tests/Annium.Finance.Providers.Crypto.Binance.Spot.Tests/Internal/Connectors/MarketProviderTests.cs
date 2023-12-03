@@ -6,15 +6,15 @@ using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors;
 
-public class MarketConnectorTest : MarketConnectorTestBase
+public class MarketProviderTests : MarketProviderTestBase
 {
-    public MarketConnectorTest(ITestOutputHelper outputHelper)
+    public MarketProviderTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), "BTCUSDT", outputHelper) { }
 
     [Theory]
     [ClassData(typeof(ProviderMarketEnvironments))]
-    public async Task MarketConnectorAsync(ProviderKey providerKey)
+    public async Task MarketProviderAsync(ProviderKey providerKey)
     {
-        await MarketConnectorBaseAsync(providerKey);
+        await MarketProviderBaseAsync(providerKey);
     }
 }
