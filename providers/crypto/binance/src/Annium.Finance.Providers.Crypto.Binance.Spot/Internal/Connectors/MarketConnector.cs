@@ -4,7 +4,6 @@ using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared.Connectors;
@@ -19,7 +18,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     private readonly BookTickerService _bookTickerService;
 
     public MarketConnector(
-        ConfigurationBase config,
+        Configuration config,
         ITableFactory tableFactory,
         MarketProvider marketProvider,
         ILoaderFactory loaderFactory,
