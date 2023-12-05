@@ -45,15 +45,23 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         this.Trace("start");
 
         var marketConfig = Get<IMapper>().Map<IMarketConfig>(_config);
+        this.Trace("get market connector for {config}", marketConfig);
         var marketConnectorRef = await Get<IObjectCache<IMarketConfig, IMarketConnector>>().GetAsync(marketConfig);
         Disposable += marketConnectorRef;
 
-        Instrument = marketConnectorRef.Value.Instruments.Single(x => x.Symbol == _symbol);
+        this.Trace("await until market connector is ready");
+        await marketConnectorRef.Value.WhenConnected();
 
+        this.Trace<string>("find instrument {symbol}", _symbol);
+        Instrument = marketConnectorRef.Value.Instruments.Single(x => x.Symbol == _symbol);
+        this.Trace("found instrument {instrument}", Instrument);
+
+        this.Trace("get user connector for {config}", _config);
         var userConnectorRef = await Get<IObjectCache<IUserConfig, IUserConnector>>().GetAsync(_config);
         Disposable += userConnectorRef;
         Connector = userConnectorRef.Value;
 
+        this.Trace("subscribe to connector errors");
         Connector.OnError += _errors.Enqueue;
 
         this.Trace("done");
