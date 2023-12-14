@@ -18,7 +18,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
     private readonly HashSet<string> _topics = new();
     private readonly IStatusReporter _statusReporter;
 
-    protected WebSocketService(ConfigurationBase config, IStatusReporter statusReporter, ILogger logger)
+    protected WebSocketService(MarketConfigBase config, IStatusReporter statusReporter, ILogger logger)
     {
         Logger = logger;
 

@@ -14,7 +14,7 @@ using OneOf;
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
 internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider<TConfig, TConnector>, ILogSubject
-    where TConfig : class, IConnectorConfig
+    where TConfig : class, IConnectorSettings
     where TConnector : IConnectorBase
 {
     public ILogger Logger { get; }

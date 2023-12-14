@@ -7,7 +7,6 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
 
@@ -15,8 +14,8 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
-    public ILogger Logger { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
+    public ILogger Logger { get; }
     public ITableView<ResourceDto> Resources => ResourcesTable;
     public ITableView<InstrumentDto> Instruments => InstrumentsTable;
     public ITableView<InstrumentTicker> Tickers => TickersTable;
@@ -25,7 +24,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     protected readonly ITable<InstrumentTicker> TickersTable;
     protected AsyncDisposableBox Disposable;
     private readonly IExecutor _executor;
-    private readonly IMarketConfig _config;
+    private readonly MarketSettings _config;
     private readonly IMarketSynchronizer _synchronizer;
     private int _isDisposed;
 
@@ -39,7 +38,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        _config = new MarketConfig(provider, environment);
+        _config = new MarketSettings(provider, environment);
         _synchronizer = synchronizer;
 
         Disposable = Annium.Disposable.AsyncBox(logger);

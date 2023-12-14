@@ -16,7 +16,7 @@ public abstract class BookTickerServiceBase : WebSocketService
     public event Action<InstrumentTicker> OnData = delegate { };
 
     protected BookTickerServiceBase(
-        ConfigurationBase config,
+        MarketConfigBase config,
         ISerializer<ReadOnlyMemory<byte>> serializer,
         IStatusReporter statusReporter,
         ILogger logger

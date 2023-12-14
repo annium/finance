@@ -1,6 +1,5 @@
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
@@ -17,17 +16,17 @@ public static class ServiceContainerExtensions
     {
         // market
         container.AddObjectCache<
-            IMarketConfig,
+            MarketSettings,
             IMarketConnector,
-            ConnectorCacheProvider<IMarketConfig, IMarketConnector>
+            ConnectorCacheProvider<MarketSettings, IMarketConnector>
         >(ServiceLifetime.Singleton);
-        container.Add<Injected<IMarketConfig>>().AsSelf().Scoped();
+        container.Add<Injected<MarketSettings>>().AsSelf().Scoped();
 
         // user
-        container.AddObjectCache<IUserConfig, IUserConnector, ConnectorCacheProvider<IUserConfig, IUserConnector>>(
+        container.AddObjectCache<UserSettings, IUserConnector, ConnectorCacheProvider<UserSettings, IUserConnector>>(
             ServiceLifetime.Singleton
         );
-        container.Add<Injected<IUserConfig>>().AsSelf().Scoped();
+        container.Add<Injected<UserSettings>>().AsSelf().Scoped();
 
         // status
         container.Add<StatusMonitor>().AsSelf().AsInterfaces().Scoped();

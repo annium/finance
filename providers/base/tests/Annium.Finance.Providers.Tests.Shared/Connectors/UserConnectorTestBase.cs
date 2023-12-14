@@ -9,6 +9,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Logging;
@@ -22,14 +23,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
     protected InstrumentDto Instrument { get; private set; } = default!;
     protected IUserConnector Connector { get; private set; } = default!;
     protected AsyncDisposableBox Disposable { get; set; }
-    private readonly IUserConfig _config;
+    private readonly UserSettings _config;
     private readonly string _symbol;
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
     private AssetDto _balance = default!;
 
     protected UserConnectorTestBase(
         Action<ProviderRegistrationContext> registerProvider,
-        IUserConfig config,
+        UserSettings config,
         string symbol,
         ITestOutputHelper output
     )
@@ -44,9 +45,9 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
     {
         this.Trace("start");
 
-        var marketConfig = Get<IMapper>().Map<IMarketConfig>(_config);
+        var marketConfig = Get<IMapper>().Map<MarketSettings>(_config);
         this.Trace("get market connector for {config}", marketConfig);
-        var marketConnectorRef = await Get<IObjectCache<IMarketConfig, IMarketConnector>>().GetAsync(marketConfig);
+        var marketConnectorRef = await Get<IObjectCache<MarketSettings, IMarketConnector>>().GetAsync(marketConfig);
         Disposable += marketConnectorRef;
 
         this.Trace("await until market connector is ready");
@@ -57,7 +58,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         this.Trace("found instrument {instrument}", Instrument);
 
         this.Trace("get user connector for {config}", _config);
-        var userConnectorRef = await Get<IObjectCache<IUserConfig, IUserConnector>>().GetAsync(_config);
+        var userConnectorRef = await Get<IObjectCache<UserSettings, IUserConnector>>().GetAsync(_config);
         Disposable += userConnectorRef;
         Connector = userConnectorRef.Value;
 

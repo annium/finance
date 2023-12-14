@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Logging;
@@ -22,7 +22,7 @@ public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, I
 
     protected UserConnectorPositionalTestBase(
         Action<ProviderRegistrationContext> registerProvider,
-        IUserConfig config,
+        UserSettings config,
         string symbol,
         ITestOutputHelper output
     )

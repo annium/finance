@@ -3,7 +3,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base;
 
-public abstract record ConfigurationBase
+public abstract record MarketConfigBase
 {
     public required string Provider { get; init; }
     public required ProviderEnvironment Environment { get; init; }

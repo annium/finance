@@ -18,7 +18,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     private readonly BookTickerService _bookTickerService;
 
     public MarketConnector(
-        Configuration config,
+        MarketConfig config,
         ITableFactory tableFactory,
         MarketProvider marketProvider,
         ILoaderFactory loaderFactory,

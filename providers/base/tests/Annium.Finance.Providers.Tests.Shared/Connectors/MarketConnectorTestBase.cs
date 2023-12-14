@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Logging;
@@ -32,10 +31,10 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
 
         // arrange - market components
         this.Trace("get market connectors cache");
-        var marketCache = Get<IObjectCache<IMarketConfig, IMarketConnector>>();
+        var marketCache = Get<IObjectCache<MarketSettings, IMarketConnector>>();
 
         // arrange - resolve market ref
-        var marketConfig = new MarketConfig(providerKey.Provider, providerKey.Environment);
+        var marketConfig = new MarketSettings(providerKey.Provider, providerKey.Environment);
         this.Trace("get market connector for {config}", marketConfig);
         await using var marketRef = await marketCache.GetAsync(marketConfig);
         var market = marketRef.Value;

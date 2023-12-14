@@ -1,6 +1,5 @@
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
@@ -8,6 +7,8 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared;
 using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
+using MarketConfig = Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.MarketConfig;
+using UserConfig = Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.UserConfig;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures;
 
@@ -33,18 +34,34 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container
             .Add(sp =>
             {
-                var marketConfig = sp.Resolve<Injected<IMarketConfig>>().Value;
+                var marketConfig = sp.Resolve<Injected<MarketSettings>>().Value;
 
                 var httpApi = Endpoints.GetHttpApi(marketConfig.Environment);
                 var wsApi = Endpoints.GetWsApi(marketConfig.Environment);
 
-                return new Configuration
+                return new MarketConfig
                 {
                     Provider = marketConfig.Provider,
                     Environment = marketConfig.Environment,
                     HttpApi = httpApi,
                     WsApi = wsApi,
                     WsMarketEndpoint = "/stream",
+                };
+            })
+            .AsSelf()
+            .Scoped();
+
+        ctx.Container
+            .Add(sp =>
+            {
+                var userConfig = sp.Resolve<Injected<UserSettings>>().Value;
+
+                return new UserConfig
+                {
+                    Provider = userConfig.Provider,
+                    Environment = userConfig.Environment,
+                    Key = userConfig.Key,
+                    Secret = userConfig.Secret,
                     ReloadAccountInterval = cfg.ReloadAccountInterval,
                     ReloadAccountDebounce = cfg.ReloadAccountDebounce,
                     ReloadOrdersInterval = cfg.ReloadOrdersInterval,

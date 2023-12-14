@@ -11,7 +11,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 internal sealed class BookTickerService : BookTickerServiceBase
 {
     public BookTickerService(
-        Configuration config,
+        MarketConfig config,
         IIndex<SerializerKey, ISerializer<ReadOnlyMemory<byte>>> serializers,
         IStatusReporter statusReporter,
         ILogger logger
