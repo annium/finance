@@ -16,13 +16,13 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     public ILogger Logger { get; }
-    public ITableView<AssetDto> Assets => AssetsTable;
-    public ITableView<PositionDto> Positions => PositionsTable;
-    public ITableView<OrderDto> Orders => OrdersTable;
-    protected readonly ITable<AssetDto> AssetsTable;
-    protected readonly ITable<PositionDto> PositionsTable;
-    protected readonly ITable<OrderDto> OrdersTable;
+    public ITableView<AssetDto> Assets => _assets;
+    public ITableView<PositionDto> Positions => _positions;
+    public ITableView<OrderDto> Orders => _orders;
     protected AsyncDisposableBox Disposable;
+    private readonly ITable<AssetDto> _assets;
+    private readonly ITable<PositionDto> _positions;
+    private readonly ITable<OrderDto> _orders;
     private readonly IExecutor _executor;
     private readonly IUserSynchronizer _synchronizer;
     private readonly UserSettings _config;
@@ -48,19 +48,19 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;
 
         //
-        Disposable += AssetsTable = tableFactory
+        Disposable += _assets = tableFactory
             .New<AssetDto>()
             .Allow(TablePermission.All)
             .Key(x => x.Resource)
             .UpdateWith(AssetHasChanged, AssetUpdate)
             .Build();
-        Disposable += PositionsTable = tableFactory
+        Disposable += _positions = tableFactory
             .New<PositionDto>()
             .Allow(TablePermission.All)
             .Key(x => new { x.Symbol, x.OrientationRange })
             .UpdateWith(PositionHasChanged, PositionUpdate)
             .Build();
-        Disposable += OrdersTable = tableFactory
+        Disposable += _orders = tableFactory
             .New<OrderDto>()
             .Allow(TablePermission.All)
             .Key(x => x.Id)
@@ -83,7 +83,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var scheduled = _executor.TrySchedule(async () =>
         {
             this.Trace("start sync");
-            await _synchronizer.ExecuteAsync(_config, _userProvider, AssetsTable, PositionsTable, OrdersTable);
+            await _synchronizer.ExecuteAsync(_config, _userProvider, _assets, _positions, _orders);
             this.Trace("done sync");
         });
 
@@ -122,5 +122,13 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         throw new NotImplementedException();
     }
 
-    private void HandleStatusChanged(ConnectorStatus status) => OnStatusChanged(status);
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        if (status is ConnectorStatus.Disconnected or ConnectorStatus.Connecting)
+        {
+            this.Trace("notify {status} status", status);
+            OnStatusChanged(status);
+            return;
+        }
+    }
 }

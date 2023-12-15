@@ -23,16 +23,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         IUserSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.GetSettings(), userProviders[Constants.Provider], tableFactory, monitor, synchronizer, logger) { }
+        : base(config.GetSettings(), userProviders[Constants.Provider], tableFactory, monitor, synchronizer, logger)
+    {
+        // init load
+        // schedule sync on connected
+    }
 
     public ValueTask InitAsync()
     {
-        throw new NotImplementedException();
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
+        return ValueTask.CompletedTask;
     }
 
     public Task<UserResult> SetLeverage(PositionDto position, byte leverage)
