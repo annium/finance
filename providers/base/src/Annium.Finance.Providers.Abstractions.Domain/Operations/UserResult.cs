@@ -10,6 +10,8 @@ public sealed record UserResult : IBaseResult
 
     public static UserResult New(UserOperationStatus status, string message) => new(status, message);
 
+    public static UserResult From<T>(UserResult<T> result) => new(result.Status, result.Message);
+
     public static UserResult<T> Ok<T>(T data) => new(UserOperationStatus.Ok, data, string.Empty);
 
     public static UserResult<T> New<T>(UserOperationStatus status, T data) => new(status, data, string.Empty);

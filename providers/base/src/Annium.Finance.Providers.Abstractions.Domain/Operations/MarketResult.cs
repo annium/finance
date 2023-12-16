@@ -10,6 +10,8 @@ public sealed record MarketResult : IBaseResult
 
     public static MarketResult New(MarketOperationStatus status, string message) => new(status, message);
 
+    public static MarketResult From<T>(MarketResult<T> result) => new(result.Status, result.Message);
+
     public static MarketResult<T> Ok<T>(T data) => new(MarketOperationStatus.Ok, data, string.Empty);
 
     public static MarketResult<T> New<T>(MarketOperationStatus status, T data) => new(status, data, string.Empty);
