@@ -5,6 +5,7 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IConnectorBase : IAsyncDisposable
 {
+    ConnectorStatus Status { get; }
     event Action<ConnectorStatus> OnStatusChanged;
     ValueTask InitAsync();
 }

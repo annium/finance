@@ -14,6 +14,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
+    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public ILogger Logger { get; }
     public ITableView<ResourceDto> Resources => ResourcesTable;
@@ -94,5 +95,9 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         this.Trace("done, result: {result}", scheduled);
     }
 
-    private void HandleStatusChanged(ConnectorStatus status) => OnStatusChanged(status);
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        Status = status;
+        OnStatusChanged(status);
+    }
 }

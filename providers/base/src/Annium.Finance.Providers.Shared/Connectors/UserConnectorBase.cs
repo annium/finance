@@ -15,6 +15,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 {
+    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     public ILogger Logger { get; }
@@ -158,6 +159,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         if (status is not ConnectorStatus.Connected)
         {
             this.Trace("notify {status} status", status);
+            Status = status;
             OnStatusChanged(status);
             return;
         }
@@ -175,6 +177,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             SubscribeReaders();
 
             this.Trace("notify {status} status", status);
+            Status = status;
             OnStatusChanged(status);
 
             this.Trace("done sync");
