@@ -1,4 +1,6 @@
 using System;
+using System.Reactive.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Execution.Background;
@@ -19,14 +21,21 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public ITableView<AssetDto> Assets => _assets;
     public ITableView<PositionDto> Positions => _positions;
     public ITableView<OrderDto> Orders => _orders;
+    protected readonly ChannelWriter<AssetDto> AssetWriter;
+    protected readonly ChannelWriter<PositionDto> PositionWriter;
+    protected readonly ChannelWriter<OrderDto> OrderWriter;
     protected AsyncDisposableBox Disposable;
     private readonly ITable<AssetDto> _assets;
     private readonly ITable<PositionDto> _positions;
     private readonly ITable<OrderDto> _orders;
+    private readonly ChannelReader<AssetDto> _assetReader;
+    private readonly ChannelReader<PositionDto> _positionReader;
+    private readonly ChannelReader<OrderDto> _orderReader;
     private readonly IExecutor _executor;
     private readonly IUserSynchronizer _synchronizer;
     private readonly UserSettings _config;
     private readonly IUserProvider _userProvider;
+    private DisposableBox _sourceSubscriptions;
 
     protected UserConnectorBase(
         UserSettings config,
@@ -69,6 +78,20 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             .Build();
 
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+
+        Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
+
+        var assetChannel = Channel.CreateUnbounded<AssetDto>();
+        AssetWriter = assetChannel.Writer;
+        _assetReader = assetChannel.Reader;
+
+        var positionChannel = Channel.CreateUnbounded<PositionDto>();
+        PositionWriter = positionChannel.Writer;
+        _positionReader = positionChannel.Reader;
+
+        var orderChannel = Channel.CreateUnbounded<OrderDto>();
+        OrderWriter = orderChannel.Writer;
+        _orderReader = orderChannel.Reader;
     }
 
     public ValueTask DisposeAsync()
@@ -76,59 +99,99 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         return Disposable.DisposeAsync();
     }
 
-    protected void ScheduleSync()
-    {
-        this.Trace("start");
+    protected void ReportError(ConnectorError error) => OnError(error);
 
+    private bool AssetHasChanged(AssetDto a, AssetDto b)
+    {
+        return a.Free != b.Free || a.Locked != b.Locked;
+    }
+
+    private void AssetUpdate(AssetDto source, AssetDto value)
+    {
+        source.Update(value.Free, value.Locked);
+    }
+
+    private bool PositionHasChanged(PositionDto a, PositionDto b)
+    {
+        return a.MarginType != b.MarginType || a.Leverage != b.Leverage || a.Amount != b.Amount;
+    }
+
+    private void PositionUpdate(PositionDto source, PositionDto value)
+    {
+        source.Update(value.MarginType, value.Leverage, value.Amount);
+    }
+
+    private bool OrderHasChanged(OrderDto a, OrderDto b)
+    {
+        return a.Side != b.Side
+            || a.Type != b.Type
+            || a.TotalQty != b.TotalQty
+            || a.Price != b.Price
+            || a.LevelPrice != b.LevelPrice
+            || a.CreatedAt != b.CreatedAt
+            || a.Status != b.Status
+            || a.ExecutedQty != b.ExecutedQty
+            || a.ExecutedPrice != b.ExecutedPrice
+            || a.Fee != b.Fee
+            || a.UpdatedAt != b.UpdatedAt;
+    }
+
+    private void OrderUpdate(OrderDto source, OrderDto value)
+    {
+        source.Update(
+            value.Side,
+            value.Type,
+            value.TotalQty,
+            value.Price,
+            value.LevelPrice,
+            value.CreatedAt,
+            value.Status,
+            value.ExecutedQty,
+            value.ExecutedPrice,
+            value.Fee,
+            value.UpdatedAt
+        );
+    }
+
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        if (status is not ConnectorStatus.Connected)
+        {
+            this.Trace("notify {status} status", status);
+            OnStatusChanged(status);
+            return;
+        }
+
+        this.Trace("unsubscribe readers");
+        UnsubscribeReaders();
+
+        this.Trace("schedule sync");
         var scheduled = _executor.TrySchedule(async () =>
         {
             this.Trace("start sync");
             await _synchronizer.ExecuteAsync(_config, _userProvider, _assets, _positions, _orders);
+
+            this.Trace("subscribe readers");
+            SubscribeReaders();
+
+            this.Trace("notify {status} status", status);
+            OnStatusChanged(status);
+
             this.Trace("done sync");
         });
 
         this.Trace("done, result: {result}", scheduled);
     }
 
-    protected void ReportError(ConnectorError error) => OnError(error);
-
-    private bool AssetHasChanged(AssetDto a, AssetDto b)
+    private void SubscribeReaders()
     {
-        throw new NotImplementedException();
+        _sourceSubscriptions += _assetReader.AsObservable().Subscribe(_assets.Set);
+        _sourceSubscriptions += _positionReader.AsObservable().Subscribe(_positions.Set);
+        _sourceSubscriptions += _orderReader.AsObservable().Subscribe(_orders.Set);
     }
 
-    private void AssetUpdate(AssetDto a, AssetDto b)
+    private void UnsubscribeReaders()
     {
-        throw new NotImplementedException();
-    }
-
-    private bool PositionHasChanged(PositionDto a, PositionDto b)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void PositionUpdate(PositionDto a, PositionDto b)
-    {
-        throw new NotImplementedException();
-    }
-
-    private bool OrderHasChanged(OrderDto a, OrderDto b)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void OrderUpdate(OrderDto a, OrderDto b)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void HandleStatusChanged(ConnectorStatus status)
-    {
-        if (status is ConnectorStatus.Disconnected or ConnectorStatus.Connecting)
-        {
-            this.Trace("notify {status} status", status);
-            OnStatusChanged(status);
-            return;
-        }
+        _sourceSubscriptions.DisposeAndReset();
     }
 }
