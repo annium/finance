@@ -5,6 +5,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Operations;
 [AutoMapped]
 public enum MarketOperationStatus
 {
+    NotConnected,
     NetworkError,
     BadRequest,
     NotFound,
