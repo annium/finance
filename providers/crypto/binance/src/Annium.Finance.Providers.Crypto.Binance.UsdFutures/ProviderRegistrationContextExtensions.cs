@@ -1,6 +1,7 @@
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts;
@@ -109,6 +110,14 @@ public static class ProviderRegistrationContextExtensions
 
         // services
         ctx.Container.Add<BookTickerService>().AsSelf().Scoped();
+        ctx.Container
+            .Add<SignatureService>(static sp =>
+            {
+                var config = sp.Resolve<UserConfig>();
+                return new SignatureService(config.Key, config.Secret);
+            })
+            .AsSelf()
+            .Scoped();
 
         return ctx;
     }
