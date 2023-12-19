@@ -14,13 +14,13 @@ using OneOf;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
-internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider<TConfig, TConnector>, ILogSubject
-    where TConfig : class, IConnectorSettings
+internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvider<TSettings, TConnector>, ILogSubject
+    where TSettings : class, IConnectorSettings
     where TConnector : IConnectorBase
 {
     public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
-    private readonly ConcurrentDictionary<TConfig, Entry> _scopes = new();
+    private readonly ConcurrentDictionary<TSettings, Entry> _scopes = new();
 
     public ConnectorCacheProvider(IServiceProvider sp, ILogger logger)
     {
@@ -29,7 +29,7 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
     }
 
     public override async Task<OneOf<TConnector, IDisposableReference<TConnector>>> CreateAsync(
-        TConfig key,
+        TSettings key,
         CancellationToken ct
     )
     {
@@ -44,7 +44,7 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         return entry.Connector;
     }
 
-    public override async Task DisposeAsync(TConfig key, TConnector value)
+    public override async Task DisposeAsync(TSettings key, TConnector value)
     {
         var providerKey = key.GetProviderKey();
 
@@ -61,7 +61,7 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         this.Warn("resolved no {key} entry for {config}", providerKey, key);
     }
 
-    private Entry CreateEntry(TConfig config)
+    private Entry CreateEntry(TSettings config)
     {
         var providerKey = ProviderKey.Create(config.Provider, config.Environment);
 
@@ -69,7 +69,7 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         var scope = _sp.CreateAsyncScope();
 
         this.Trace("{key} - provide {config} into scope", providerKey, config);
-        var injected = scope.ServiceProvider.Resolve<Injected<TConfig>>();
+        var injected = scope.ServiceProvider.Resolve<Injected<TSettings>>();
         injected.Init(config);
 
         this.Trace("create new {key} connector for {config}", providerKey, config);
