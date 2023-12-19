@@ -1,3 +1,4 @@
+using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 
@@ -9,6 +10,8 @@ public abstract record UserConfigBase
     public required ProviderEnvironment Environment { get; init; }
     public required string Key { get; init; }
     public required string Secret { get; init; }
+    public required Uri HttpApi { get; init; }
+    public required Uri WsApi { get; init; }
 }
 
 public static class UserConfigBaseExtensions

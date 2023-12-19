@@ -34,15 +34,15 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container
             .Add(sp =>
             {
-                var marketConfig = sp.Resolve<Injected<MarketSettings>>().Value;
+                var marketSettings = sp.Resolve<Injected<MarketSettings>>().Value;
 
-                var httpApi = Endpoints.GetHttpApi(marketConfig.Environment);
-                var wsApi = Endpoints.GetWsApi(marketConfig.Environment);
+                var httpApi = Endpoints.GetHttpApi(marketSettings.Environment);
+                var wsApi = Endpoints.GetWsApi(marketSettings.Environment);
 
                 return new MarketConfig
                 {
-                    Provider = marketConfig.Provider,
-                    Environment = marketConfig.Environment,
+                    Provider = marketSettings.Provider,
+                    Environment = marketSettings.Environment,
                     HttpApi = httpApi,
                     WsApi = wsApi,
                     WsMarketEndpoint = "/stream",
@@ -54,14 +54,19 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container
             .Add(sp =>
             {
-                var userConfig = sp.Resolve<Injected<UserSettings>>().Value;
+                var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
+
+                var httpApi = Endpoints.GetHttpApi(userSettings.Environment);
+                var wsApi = Endpoints.GetWsApi(userSettings.Environment);
 
                 return new UserConfig
                 {
-                    Provider = userConfig.Provider,
-                    Environment = userConfig.Environment,
-                    Key = userConfig.Key,
-                    Secret = userConfig.Secret,
+                    Provider = userSettings.Provider,
+                    Environment = userSettings.Environment,
+                    Key = userSettings.Key,
+                    Secret = userSettings.Secret,
+                    HttpApi = httpApi,
+                    WsApi = wsApi,
                     ReloadAccountInterval = cfg.ReloadAccountInterval,
                     ReloadAccountDebounce = cfg.ReloadAccountDebounce,
                     ReloadOrdersInterval = cfg.ReloadOrdersInterval,
