@@ -65,6 +65,9 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         this.Trace("subscribe to connector errors");
         Connector.OnError += _errors.Enqueue;
 
+        this.Trace("await until user connector is ready");
+        await Connector.WhenConnected();
+
         this.Trace("done");
     }
 
