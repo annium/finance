@@ -9,7 +9,7 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Sync;
 public interface IUserSynchronizer
 {
     Task ExecuteAsync(
-        UserSettings config,
+        UserSettings settings,
         IUserProvider provider,
         ITable<AssetDto> assets,
         ITable<PositionDto> positions,

@@ -34,12 +34,12 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelReader<OrderDto> _orderReader;
     private readonly IExecutor _executor;
     private readonly IUserSynchronizer _synchronizer;
-    private readonly UserSettings _config;
+    private readonly UserSettings _settings;
     private readonly IUserProvider _userProvider;
     private DisposableBox _sourceSubscriptions;
 
     protected UserConnectorBase(
-        UserSettings config,
+        UserSettings settings,
         IUserProvider userProvider,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
@@ -48,7 +48,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        _config = config;
+        _settings = settings;
         _userProvider = userProvider;
         _synchronizer = synchronizer;
 
@@ -171,7 +171,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var scheduled = _executor.TrySchedule(async () =>
         {
             this.Trace("start sync");
-            await _synchronizer.ExecuteAsync(_config, _userProvider, _assets, _positions, _orders);
+            await _synchronizer.ExecuteAsync(_settings, _userProvider, _assets, _positions, _orders);
 
             this.Trace("subscribe readers");
             SubscribeReaders();

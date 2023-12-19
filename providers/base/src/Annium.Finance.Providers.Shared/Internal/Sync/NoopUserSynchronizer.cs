@@ -10,7 +10,7 @@ namespace Annium.Finance.Providers.Shared.Internal.Sync;
 internal class NoopUserSynchronizer : IUserSynchronizer
 {
     public Task ExecuteAsync(
-        UserSettings config,
+        UserSettings settings,
         IUserProvider provider,
         ITable<AssetDto> assets,
         ITable<PositionDto> positions,
