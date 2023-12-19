@@ -10,7 +10,7 @@ public static class TestBaseExtensions
     public static ISerializer<ReadOnlyMemory<byte>> GetJsonSerializer(this TestBase testBase, string key)
     {
         var serializerKey = SerializerKey.Create(key, MediaTypeNames.Application.Json);
-        var serializer = testBase.GetKeyed<SerializerKey, ISerializer<ReadOnlyMemory<byte>>>(serializerKey);
+        var serializer = testBase.GetKeyed<ISerializer<ReadOnlyMemory<byte>>>(serializerKey);
 
         return serializer;
     }

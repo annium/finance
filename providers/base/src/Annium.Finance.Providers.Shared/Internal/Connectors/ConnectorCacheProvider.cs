@@ -9,6 +9,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using OneOf;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
@@ -19,18 +20,12 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
 {
     public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
-    private readonly IIndex<ProviderKey, Func<IServiceProvider, TConnector>> _connectorFactories;
     private readonly ConcurrentDictionary<TConfig, Entry> _scopes = new();
 
-    public ConnectorCacheProvider(
-        IServiceProvider sp,
-        IIndex<ProviderKey, Func<IServiceProvider, TConnector>> connectorFactories,
-        ILogger logger
-    )
+    public ConnectorCacheProvider(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;
         _sp = sp;
-        _connectorFactories = connectorFactories;
     }
 
     public override async Task<OneOf<TConnector, IDisposableReference<TConnector>>> CreateAsync(
@@ -78,13 +73,13 @@ internal class ConnectorCacheProvider<TConfig, TConnector> : ObjectCacheProvider
         injected.Init(config);
 
         this.Trace("create new {key} connector for {config}", providerKey, config);
-        var factory = _connectorFactories[providerKey];
+        var factory = _sp.ResolveKeyed<Func<IServiceProvider, TConnector>>(providerKey);
         var connector = factory(scope.ServiceProvider);
 
         return new Entry(scope, connector);
     }
 
-    private record Entry(IAsyncServiceScope Scope, TConnector Connector) : IAsyncDisposable
+    private record Entry(IAsyncDisposable Scope, TConnector Connector) : IAsyncDisposable
     {
         public ValueTask DisposeAsync()
         {

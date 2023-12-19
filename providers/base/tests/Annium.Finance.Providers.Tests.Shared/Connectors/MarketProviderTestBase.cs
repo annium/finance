@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
@@ -40,7 +39,7 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
 
         // act - resolve market provider
         this.Trace("resolve market provider");
-        var provider = Get<IIndex<string, IMarketProvider>>()[providerKey.Provider];
+        var provider = GetKeyed<IMarketProvider>(providerKey.Provider);
 
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();

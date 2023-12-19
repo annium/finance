@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
@@ -8,23 +7,32 @@ using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base;
+using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 
 internal class UserConnector : UserConnectorBase, IUserConnector
 {
+    private readonly QueryProcessor _queryProcessor;
+    private readonly SignatureService _signatureService;
+
     public UserConnector(
         UserConfig config,
-        IIndex<string, IUserProvider> userProviders,
+        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
+        QueryProcessor queryProcessor,
+        SignatureService signatureService,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.GetSettings(), userProviders[Constants.Provider], tableFactory, monitor, synchronizer, logger)
+        : base(config.GetSettings(), userProvider, tableFactory, monitor, synchronizer, logger)
     {
+        _queryProcessor = queryProcessor;
+        _signatureService = signatureService;
         // init load
         // schedule sync on connected
     }

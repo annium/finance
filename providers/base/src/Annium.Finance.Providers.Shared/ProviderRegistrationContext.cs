@@ -32,9 +32,9 @@ public readonly struct ProviderRegistrationContext
         where TQueryProcessor : IQueryProcessor
         where TFinanceService : IFinanceService
     {
-        Container.Add<TMarketProvider>().AsKeyed<IMarketProvider, string>(provider).AsSelf().Singleton();
+        Container.Add<TMarketProvider>().AsKeyed<IMarketProvider>(provider).AsSelf().Singleton();
         Container.Add<TMarketConnector>().AsSelf().Transient();
-        Container.Add<TUserProvider>().AsKeyed<IUserProvider, string>(provider).AsSelf().Singleton();
+        Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Singleton();
         Container.Add<IQueryProcessor, TQueryProcessor>().AsSelf().Transient();
         Container.Add<TUserConnector>().AsSelf().Transient();
         Container.Add<TFinanceService>().AsSelf().Transient();
@@ -45,16 +45,13 @@ public readonly struct ProviderRegistrationContext
             Container.Add(providerKey).AsSelf().Singleton();
             Container
                 .Add<Func<IServiceProvider, TMarketConnector>>(sp => sp.Resolve<TMarketConnector>())
-                .AsKeyed<Func<IServiceProvider, IMarketConnector>, ProviderKey>(providerKey)
+                .AsKeyed<Func<IServiceProvider, IMarketConnector>>(providerKey)
                 .Singleton();
             Container
                 .Add<Func<IServiceProvider, TUserConnector>>(sp => sp.Resolve<TUserConnector>())
-                .AsKeyed<Func<IServiceProvider, IUserConnector>, ProviderKey>(providerKey)
+                .AsKeyed<Func<IServiceProvider, IUserConnector>>(providerKey)
                 .Singleton();
-            Container
-                .Add<Func<TFinanceService>>(sp => sp.Resolve<TFinanceService>)
-                .AsKeyed<Func<IFinanceService>, ProviderKey>(providerKey)
-                .Singleton();
+            Container.Add<TFinanceService>().AsKeyed<IFinanceService>(providerKey).Singleton();
         }
 
         return this;

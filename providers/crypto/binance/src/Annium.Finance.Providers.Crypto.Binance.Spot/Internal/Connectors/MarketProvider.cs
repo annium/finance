@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
@@ -15,6 +14,7 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extension
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
@@ -25,11 +25,15 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
     private readonly IHttpRequestFactory _exchangeInfoRequestFactory;
     private readonly IHttpRequestFactory _candleRequestFactory;
 
-    public MarketProvider(IIndex<string, IHttpRequestFactory> httpRequestFactories, ILogger logger)
+    public MarketProvider(
+        [FromKeyedServices(Constants.ExchangeInfoKey)] IHttpRequestFactory exchangeInfoRequestFactory,
+        [FromKeyedServices(Constants.CandleKey)] IHttpRequestFactory candleRequestFactory,
+        ILogger logger
+    )
     {
         Logger = logger;
-        _exchangeInfoRequestFactory = httpRequestFactories[Constants.ExchangeInfoKey];
-        _candleRequestFactory = httpRequestFactories[Constants.CandleKey];
+        _exchangeInfoRequestFactory = exchangeInfoRequestFactory;
+        _candleRequestFactory = candleRequestFactory;
     }
 
     public async Task<MarketResult<MarketContext>> LoadContextAsync(ProviderEnvironment env)

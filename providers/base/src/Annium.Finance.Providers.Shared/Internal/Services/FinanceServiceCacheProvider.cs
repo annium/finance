@@ -13,12 +13,12 @@ namespace Annium.Finance.Providers.Shared.Internal.Services;
 internal class FinanceServiceCacheProvider : ObjectCacheProvider<ProviderKey, IFinanceService>, ILogSubject
 {
     public ILogger Logger { get; }
-    private readonly IIndex<ProviderKey, Func<IFinanceService>> _serviceFactories;
+    private readonly IServiceProvider _sp;
 
-    public FinanceServiceCacheProvider(IIndex<ProviderKey, Func<IFinanceService>> serviceFactories, ILogger logger)
+    public FinanceServiceCacheProvider(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;
-        _serviceFactories = serviceFactories;
+        _sp = sp;
     }
 
     public override async Task<OneOf<IFinanceService, IDisposableReference<IFinanceService>>> CreateAsync(
@@ -27,7 +27,7 @@ internal class FinanceServiceCacheProvider : ObjectCacheProvider<ProviderKey, IF
     )
     {
         this.Trace("create new {providerKey} finance service", providerKey);
-        var service = _serviceFactories[providerKey]();
+        var service = _sp.ResolveKeyed<IFinanceService>(providerKey);
 
         this.Trace("init {providerKey} finance service", providerKey);
         await service.InitAsync(providerKey.Environment);

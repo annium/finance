@@ -10,15 +10,12 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 
 internal sealed class BookTickerService : BookTickerServiceBase
 {
-    public BookTickerService(
-        MarketConfig config,
-        IIndex<SerializerKey, ISerializer<ReadOnlyMemory<byte>>> serializers,
-        IStatusReporter statusReporter,
-        ILogger logger
-    )
+    public BookTickerService(IServiceProvider sp, MarketConfig config, IStatusReporter statusReporter, ILogger logger)
         : base(
             config,
-            serializers[SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)],
+            sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
+                SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)
+            ),
             statusReporter,
             logger
         ) { }
