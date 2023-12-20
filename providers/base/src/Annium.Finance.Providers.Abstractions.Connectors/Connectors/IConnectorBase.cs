@@ -7,5 +7,6 @@ public interface IConnectorBase : IAsyncDisposable
 {
     ConnectorStatus Status { get; }
     event Action<ConnectorStatus> OnStatusChanged;
+    event Action<ConnectorError> OnError;
     ValueTask InitAsync();
 }

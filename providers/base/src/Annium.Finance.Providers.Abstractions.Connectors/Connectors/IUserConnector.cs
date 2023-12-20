@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -9,7 +8,6 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IUserConnector : IConnectorBase
 {
-    event Action<ConnectorError> OnError;
     ITableView<AssetDto> Assets { get; }
     ITableView<PositionDto> Positions { get; }
     ITableView<OrderDto> Orders { get; }
@@ -19,5 +17,3 @@ public interface IUserConnector : IConnectorBase
     Task<UserResult> CancelOrder(OrderDto order);
     Task<UserResult> CancelAllOrders(string symbol);
 }
-
-public sealed record ConnectorError(UserOperationStatus Status, string Message);
