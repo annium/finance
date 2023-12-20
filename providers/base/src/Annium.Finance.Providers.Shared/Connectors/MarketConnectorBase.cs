@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Execution.Background;
@@ -28,7 +27,6 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     private readonly IExecutor _executor;
     private readonly MarketSettings _config;
     private readonly IMarketSynchronizer _synchronizer;
-    private int _isDisposed;
 
     protected MarketConnectorBase(
         string provider,
@@ -73,13 +71,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     public async ValueTask DisposeAsync()
     {
         this.Trace("start");
-        if (Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
-        {
-            this.Trace("already disposed");
-            return;
-        }
 
-        this.Trace("run");
         await Disposable.DisposeAsync();
 
         this.Trace("done");
