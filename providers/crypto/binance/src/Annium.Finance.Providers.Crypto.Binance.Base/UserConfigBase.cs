@@ -12,6 +12,7 @@ public abstract record UserConfigBase
     public required string Secret { get; init; }
     public required Uri HttpApi { get; init; }
     public required Uri WsApi { get; init; }
+    public required string ListenKeyBase { get; init; }
     public required int ListenKeyFetchInterval { get; init; }
     public required int ListenKeyConfirmInterval { get; init; }
 }
