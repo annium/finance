@@ -37,51 +37,9 @@ public static class ProviderRegistrationContextExtensions
         );
 
         // settings
-        ctx.Container
-            .Add(sp =>
-            {
-                var marketSettings = sp.Resolve<Injected<MarketSettings>>().Value;
-
-                var httpApi = Endpoints.GetHttpApi(marketSettings.Environment);
-                var wsApi = Endpoints.GetWsApi(marketSettings.Environment);
-
-                return new MarketConfig
-                {
-                    Provider = marketSettings.Provider,
-                    Environment = marketSettings.Environment,
-                    HttpApi = httpApi,
-                    WsApi = wsApi,
-                    WsMarketEndpoint = "/stream",
-                };
-            })
-            .AsSelf()
-            .Scoped();
-
-        ctx.Container
-            .Add(sp =>
-            {
-                var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-
-                var httpApi = Endpoints.GetHttpApi(userSettings.Environment);
-                var wsApi = Endpoints.GetWsApi(userSettings.Environment);
-
-                return new UserConfig
-                {
-                    Provider = userSettings.Provider,
-                    Environment = userSettings.Environment,
-                    Key = userSettings.Key,
-                    Secret = userSettings.Secret,
-                    HttpApi = httpApi,
-                    WsApi = wsApi,
-                    ReloadAccountInterval = cfg.ReloadAccountInterval,
-                    ReloadAccountDebounce = cfg.ReloadAccountDebounce,
-                    ReloadOrdersInterval = cfg.ReloadOrdersInterval,
-                    ReloadOrdersDebounce = cfg.ReloadOrdersDebounce,
-                    ReloadDealsDebounce = cfg.ReloadDealsDebounce,
-                };
-            })
-            .AsSelf()
-            .Scoped();
+        ctx.Container.Add<ProviderConfiguration>().AsSelf().Singleton();
+        ctx.Container.Add(MarketConfigFactory).AsSelf().Scoped();
+        ctx.Container.Add(UserConfigFactory).AsSelf().Scoped();
 
         // serializers and http factories
         // market
@@ -118,6 +76,48 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
 
         return ctx;
+    }
+
+    private static MarketConfig MarketConfigFactory(IServiceProvider sp)
+    {
+        var marketSettings = sp.Resolve<Injected<MarketSettings>>().Value;
+
+        var httpApi = Endpoints.GetHttpApi(marketSettings.Environment);
+        var wsApi = Endpoints.GetWsApi(marketSettings.Environment);
+
+        return new MarketConfig
+        {
+            Provider = marketSettings.Provider,
+            Environment = marketSettings.Environment,
+            HttpApi = httpApi,
+            WsApi = wsApi,
+            WsMarketEndpoint = "/stream",
+        };
+    }
+
+    private static UserConfig UserConfigFactory(IServiceProvider sp)
+    {
+        var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
+
+        var httpApi = Endpoints.GetHttpApi(userSettings.Environment);
+        var wsApi = Endpoints.GetWsApi(userSettings.Environment);
+
+        var providerConfig = sp.Resolve<ProviderConfiguration>();
+
+        return new UserConfig
+        {
+            Provider = userSettings.Provider,
+            Environment = userSettings.Environment,
+            Key = userSettings.Key,
+            Secret = userSettings.Secret,
+            HttpApi = httpApi,
+            WsApi = wsApi,
+            ReloadAccountInterval = providerConfig.ReloadAccountInterval,
+            ReloadAccountDebounce = providerConfig.ReloadAccountDebounce,
+            ReloadOrdersInterval = providerConfig.ReloadOrdersInterval,
+            ReloadOrdersDebounce = providerConfig.ReloadOrdersDebounce,
+            ReloadDealsDebounce = providerConfig.ReloadDealsDebounce,
+        };
     }
 
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
