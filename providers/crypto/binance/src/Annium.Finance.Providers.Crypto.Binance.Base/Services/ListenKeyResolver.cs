@@ -39,14 +39,20 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
 
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
+        _statusReporter.Connecting();
 
         _disposable = Disposable.AsyncBox(logger);
         _disposable += _timer = Timers.Async(GetListenKeyAsync, 0, _config.ListenKeyFetchInterval);
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        return _disposable.DisposeAsync();
+        this.Trace("start");
+
+        await _disposable.DisposeAsync();
+        _statusReporter.Disconnected();
+
+        this.Trace("done");
     }
 
     public void RequestNewListenKey()
@@ -54,6 +60,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         this.Trace("start");
 
         _listenKey = string.Empty;
+        _statusReporter.Connecting();
         _timer.Change(0, _config.ListenKeyFetchInterval);
 
         this.Trace("done");
@@ -111,6 +118,9 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
 
             _listenKey = listenKey.Value;
             OnListenKeyFetched(_listenKey);
+
+            _statusReporter.Connected();
+
             _timer.Change(_config.ListenKeyConfirmInterval, _config.ListenKeyConfirmInterval);
 
             this.Trace("done");
@@ -130,6 +140,8 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         this.Trace("listen key changed");
 
         _listenKey = string.Empty;
+        _statusReporter.Connecting();
+
         OnListenKeyReset();
 
         this.Trace("done");
@@ -147,6 +159,8 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
             _statusReporter.Error(new ConnectorError($"{status}: {message}"));
 
             OnListenKeyReset();
+
+            this.Trace("done");
 
             return;
         }
