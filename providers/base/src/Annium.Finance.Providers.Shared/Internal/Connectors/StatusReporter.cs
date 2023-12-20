@@ -46,13 +46,24 @@ internal class StatusReporter : IStatusReporter, ILogSubject
 
     public void Disconnected() => ReportStatus(ConnectorStatus.Disconnected);
 
+    public void Error(ConnectorError error)
+    {
+        var target = GetTarget();
+
+        this.Trace("report {target} error {error}", target, error);
+        _monitor.Error(target, error);
+    }
+
     private void ReportStatus(ConnectorStatus status)
     {
-        var target = _target;
-        if (target == string.Empty)
-            throw new InvalidOperationException($"{this.GetFullId()} is not bound to any target");
+        var target = GetTarget();
 
         this.Trace("set {target} status to {status}", target, status);
         _monitor.TrackStatus(target, status);
     }
+
+    private string GetTarget() =>
+        _target == string.Empty
+            ? throw new InvalidOperationException($"{this.GetFullId()} is not bound to any target")
+            : _target;
 }

@@ -6,4 +6,5 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 public interface IStatusMonitor
 {
     event Action<ConnectorStatus> OnStatusChanged;
+    event Action<ConnectorError> OnError;
 }

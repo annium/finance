@@ -12,6 +12,7 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
+    public event Action<ConnectorError> OnError = delegate { };
     private readonly object _locker = new();
     private readonly Dictionary<string, ConnectorStatus> _targets = new();
     private ConnectorStatus _status;
@@ -53,6 +54,11 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
 
             UpdateStatus();
         }
+    }
+
+    public void Error(string target, ConnectorError error)
+    {
+        this.Trace("{target} - {error}", target, error);
     }
 
     private void UpdateStatus()

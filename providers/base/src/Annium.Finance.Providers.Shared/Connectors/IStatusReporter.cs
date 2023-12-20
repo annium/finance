@@ -1,3 +1,5 @@
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+
 namespace Annium.Finance.Providers.Shared.Connectors;
 
 public interface IStatusReporter
@@ -7,4 +9,5 @@ public interface IStatusReporter
     void Connecting();
     void Connected();
     void Disconnected();
+    void Error(ConnectorError error);
 }
