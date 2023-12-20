@@ -8,7 +8,7 @@ using Annium.Logging;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
-internal class StatusMonitor : IStatusMonitor, ILogSubject
+internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
@@ -20,6 +20,12 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
     public StatusMonitor(ILogger logger)
     {
         Logger = logger;
+        this.Trace("start");
+    }
+
+    public void Dispose()
+    {
+        this.Trace("start");
     }
 
     public void Register(string target)
