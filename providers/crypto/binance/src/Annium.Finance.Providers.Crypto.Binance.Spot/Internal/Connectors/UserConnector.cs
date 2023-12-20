@@ -39,12 +39,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     public ValueTask InitAsync()
     {
-        throw new NotImplementedException();
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
+        return ValueTask.CompletedTask;
     }
 
     public Task<UserResult> SetLeverage(PositionDto position, byte leverage)
