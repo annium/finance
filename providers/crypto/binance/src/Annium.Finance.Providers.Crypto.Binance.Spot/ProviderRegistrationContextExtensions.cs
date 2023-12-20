@@ -105,6 +105,8 @@ public static class ProviderRegistrationContextExtensions
             Secret = userSettings.Secret,
             HttpApi = httpApi,
             WsApi = wsApi,
+            ListenKeyFetchInterval = providerConfig.ListenKeyFetchInterval,
+            ListenKeyConfirmInterval = providerConfig.ListenKeyConfirmInterval,
             ReloadAccountInterval = providerConfig.ReloadAccountInterval,
             ReloadAccountDebounce = providerConfig.ReloadAccountDebounce,
             ReloadOrdersInterval = providerConfig.ReloadOrdersInterval,
