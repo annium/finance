@@ -15,13 +15,13 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 {
-    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
-    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
-    public event Action<ConnectorError> OnError = delegate { };
     public ILogger Logger { get; }
+    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
     public ITableView<AssetDto> Assets => _assets;
     public ITableView<PositionDto> Positions => _positions;
     public ITableView<OrderDto> Orders => _orders;
+    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
+    public event Action<ConnectorError> OnError = delegate { };
     protected readonly ChannelWriter<AssetDto> AssetWriter;
     protected readonly ChannelWriter<PositionDto> PositionWriter;
     protected readonly ChannelWriter<OrderDto> OrderWriter;

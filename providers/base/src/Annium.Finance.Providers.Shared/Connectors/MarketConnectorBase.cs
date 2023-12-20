@@ -14,12 +14,12 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
-    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
-    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public ILogger Logger { get; }
+    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
     public ITableView<ResourceDto> Resources => ResourcesTable;
     public ITableView<InstrumentDto> Instruments => InstrumentsTable;
     public ITableView<InstrumentTicker> Tickers => TickersTable;
+    public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     protected readonly ITable<ResourceDto> ResourcesTable;
     protected readonly ITable<InstrumentDto> InstrumentsTable;
     protected readonly ITable<InstrumentTicker> TickersTable;

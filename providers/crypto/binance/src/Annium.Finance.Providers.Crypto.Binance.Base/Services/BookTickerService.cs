@@ -12,8 +12,8 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
 public sealed class BookTickerService : WebSocketService
 {
-    private readonly ISerializer<ReadOnlyMemory<byte>> _serializer;
     public event Action<InstrumentTicker> OnData = delegate { };
+    private readonly ISerializer<ReadOnlyMemory<byte>> _serializer;
 
     public BookTickerService(
         MarketConfigBase config,
