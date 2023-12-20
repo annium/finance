@@ -142,10 +142,18 @@ public static class ProviderRegistrationContextExtensions
     {
         var config = sp.Resolve<UserConfig>();
         var httpRequestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ListenKeyKey);
+        var signatureService = sp.Resolve<SignatureService>();
         var statusReporter = sp.Resolve<IStatusReporter>();
         var logger = sp.Resolve<ILogger>();
 
-        return new ListenKeyResolver(config, "/fapi/v1/listenKey", httpRequestFactory, statusReporter, logger);
+        return new ListenKeyResolver(
+            config,
+            "/fapi/v1/listenKey",
+            httpRequestFactory,
+            signatureService,
+            statusReporter,
+            logger
+        );
     }
 
     private static UserStream UserStreamFactory(IServiceProvider sp)

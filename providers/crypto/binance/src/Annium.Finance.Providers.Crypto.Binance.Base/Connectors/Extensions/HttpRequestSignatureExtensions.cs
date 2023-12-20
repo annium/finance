@@ -6,9 +6,10 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 public static class HttpRequestSignatureExtensions
 {
     public static IHttpRequest Sign(this IHttpRequest request, SignatureService ss) =>
-        request.Timestamp(ss).Key(ss.GetKey()).Signature(ss);
+        request.Timestamp(ss).Key(ss).Signature(ss);
 
-    public static IHttpRequest Key(this IHttpRequest request, string key) => request.Header("x-mbx-apikey", key);
+    public static IHttpRequest Key(this IHttpRequest request, SignatureService ss) =>
+        request.Header("x-mbx-apikey", ss.GetKey());
 
     public static IHttpRequest Timestamp(this IHttpRequest request, long timestamp) =>
         request.Param("timestamp", timestamp);

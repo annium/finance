@@ -19,6 +19,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
     private readonly UserConfigBase _config;
     private readonly string _endpoint;
     private readonly IHttpRequestFactory _httpRequestFactory;
+    private readonly SignatureService _signatureService;
     private readonly IStatusReporter _statusReporter;
     private readonly IAsyncTimer _timer;
     private readonly AsyncDisposableBox _disposable;
@@ -28,6 +29,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         UserConfigBase config,
         string endpoint,
         IHttpRequestFactory httpRequestFactory,
+        SignatureService signatureService,
         IStatusReporter statusReporter,
         ILogger logger
     )
@@ -36,6 +38,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         _config = config;
         _endpoint = endpoint;
         _httpRequestFactory = httpRequestFactory;
+        _signatureService = signatureService;
 
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
@@ -77,6 +80,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
             result = await _httpRequestFactory
                 .New(_config.HttpApi)
                 .Post(_endpoint)
+                .Key(_signatureService)
                 .WithLogFrom(this)
                 .AsUserResultAsync(new ListenKey(string.Empty));
 
