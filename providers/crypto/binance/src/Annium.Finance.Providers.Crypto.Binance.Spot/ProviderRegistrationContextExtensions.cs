@@ -109,7 +109,7 @@ public static class ProviderRegistrationContextExtensions
             Secret = userSettings.Secret,
             HttpApi = httpApi,
             WsApi = wsApi,
-            ListenKeyBase = "/ws/",
+            ListenKeyBase = "ws/",
             ListenKeyFetchInterval = providerConfig.ListenKeyFetchInterval,
             ListenKeyConfirmInterval = providerConfig.ListenKeyConfirmInterval,
             ReloadAccountInterval = providerConfig.ReloadAccountInterval,
