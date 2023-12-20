@@ -57,6 +57,9 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         monitor.OnStatusChanged += HandleStatusChanged;
         Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;
 
+        monitor.OnError += HandleError;
+        Disposable += () => monitor.OnError -= HandleError;
+
         //
         Disposable += _assets = tableFactory
             .New<AssetDto>()
@@ -184,6 +187,11 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         });
 
         this.Trace("done, result: {result}", scheduled);
+    }
+
+    private void HandleError(ConnectorError error)
+    {
+        OnError(error);
     }
 
     private void SubscribeReaders()

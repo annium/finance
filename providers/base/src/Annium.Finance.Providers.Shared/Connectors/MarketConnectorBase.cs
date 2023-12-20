@@ -20,6 +20,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     public ITableView<InstrumentDto> Instruments => InstrumentsTable;
     public ITableView<InstrumentTicker> Tickers => TickersTable;
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
+    public event Action<ConnectorError> OnError = delegate { };
     protected readonly ITable<ResourceDto> ResourcesTable;
     protected readonly ITable<InstrumentDto> InstrumentsTable;
     protected readonly ITable<InstrumentTicker> TickersTable;
@@ -46,6 +47,9 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 
         monitor.OnStatusChanged += HandleStatusChanged;
         Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;
+
+        monitor.OnError += HandleError;
+        Disposable += () => monitor.OnError -= HandleError;
 
         Disposable += ResourcesTable = tableFactory
             .New<ResourceDto>()
@@ -99,5 +103,10 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     {
         Status = status;
         OnStatusChanged(status);
+    }
+
+    private void HandleError(ConnectorError error)
+    {
+        OnError(error);
     }
 }
