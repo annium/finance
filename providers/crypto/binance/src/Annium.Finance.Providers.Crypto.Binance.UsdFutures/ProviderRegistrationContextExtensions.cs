@@ -3,6 +3,7 @@ using System.Net.Mime;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
@@ -11,6 +12,7 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
+using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
 using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 using MarketConfig = Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.MarketConfig;
@@ -74,6 +76,8 @@ public static class ProviderRegistrationContextExtensions
         // services
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
+        ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
+        ctx.Container.Add(UserStreamFactory).AsSelf().Scoped();
 
         return ctx;
     }
@@ -139,5 +143,25 @@ public static class ProviderRegistrationContextExtensions
         var config = sp.Resolve<UserConfig>();
 
         return new SignatureService(config.Key, config.Secret);
+    }
+
+    private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)
+    {
+        var config = sp.Resolve<UserConfig>();
+        var httpRequestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ListenKeyKey);
+        var statusReporter = sp.Resolve<IStatusReporter>();
+        var logger = sp.Resolve<ILogger>();
+
+        return new ListenKeyResolver(config, "/fapi/v1/listenKey", httpRequestFactory, statusReporter, logger);
+    }
+
+    private static UserStream UserStreamFactory(IServiceProvider sp)
+    {
+        var config = sp.Resolve<UserConfig>();
+        var listenKeyResolver = sp.Resolve<ListenKeyResolver>();
+        var statusReporter = sp.Resolve<IStatusReporter>();
+        var logger = sp.Resolve<ILogger>();
+
+        return new UserStream(config, listenKeyResolver, statusReporter, logger);
     }
 }
