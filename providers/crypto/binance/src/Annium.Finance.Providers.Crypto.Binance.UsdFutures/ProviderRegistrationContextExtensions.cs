@@ -1,3 +1,5 @@
+using System;
+using System.Net.Mime;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
@@ -7,6 +9,9 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared;
+using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Logging;
+using Annium.Serialization.Abstractions;
 using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 using MarketConfig = Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.MarketConfig;
 using UserConfig = Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.UserConfig;
@@ -109,16 +114,27 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddHttpRequestFactoryWithJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
-        ctx.Container.Add<BookTickerService>().AsSelf().Scoped();
-        ctx.Container
-            .Add<SignatureService>(static sp =>
-            {
-                var config = sp.Resolve<UserConfig>();
-                return new SignatureService(config.Key, config.Secret);
-            })
-            .AsSelf()
-            .Scoped();
+        ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
+        ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
 
         return ctx;
+    }
+
+    private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
+    {
+        var config = sp.Resolve<MarketConfig>();
+        var serializerKey = SerializerKey.Create(InstrumentTickerKey, MediaTypeNames.Application.Json);
+        var serializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(serializerKey);
+        var statusReporter = sp.Resolve<IStatusReporter>();
+        var logger = sp.Resolve<ILogger>();
+
+        return new BookTickerService(config, serializer, statusReporter, logger);
+    }
+
+    private static SignatureService SignatureServiceFactory(IServiceProvider sp)
+    {
+        var config = sp.Resolve<UserConfig>();
+
+        return new SignatureService(config.Key, config.Secret);
     }
 }

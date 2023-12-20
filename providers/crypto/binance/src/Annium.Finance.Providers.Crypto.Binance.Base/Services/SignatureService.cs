@@ -6,7 +6,7 @@ using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
-public class SignatureService
+public sealed class SignatureService
 {
     public long ServerTime => SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private readonly SecureString _key;

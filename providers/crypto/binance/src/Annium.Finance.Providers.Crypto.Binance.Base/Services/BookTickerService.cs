@@ -10,12 +10,12 @@ using Annium.Serialization.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
-public abstract class BookTickerServiceBase : WebSocketService
+public sealed class BookTickerService : WebSocketService
 {
     private readonly ISerializer<ReadOnlyMemory<byte>> _serializer;
     public event Action<InstrumentTicker> OnData = delegate { };
 
-    protected BookTickerServiceBase(
+    public BookTickerService(
         MarketConfigBase config,
         ISerializer<ReadOnlyMemory<byte>> serializer,
         IStatusReporter statusReporter,
