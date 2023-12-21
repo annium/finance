@@ -108,28 +108,33 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
+            this.Trace<string>("skip on {symbol} - not connected", symbol);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
         var queryResult = _queryProcessor.BuildCancelAllOrdersQuery(symbol);
         if (queryResult.IsFailure)
         {
+            this.Trace("query processing failed: {result}", queryResult);
             return UserResult.From(queryResult);
         }
 
-        await Task.CompletedTask;
+        this.Trace("start");
         var result = await _cancelAllOrdersRequestFactory
             .New(_config.HttpApi)
             .Delete("/fapi/v1/allOpenOrders")
             .Params(queryResult.Data)
             .Sign(_signatureService)
+            .WithLogFrom(this)
             .AsUserResultAsync(new OperationResult(0, string.Empty));
+        this.Trace("done");
 
         return UserResult.From(result);
     }
 
     private async Task<IBaseResult<AccountResponse>> LoadAccount(CancellationToken ct)
     {
+        this.Trace("start");
         var result = await _getAccountRequestFactory
             .New(_config.HttpApi)
             .Get("/fapi/v2/account")
@@ -140,12 +145,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .AsUserResultAsync(
                 new AccountResponse(Array.Empty<AccountResponseBalance>(), Array.Empty<AccountResponsePosition>())
             );
+        this.Trace("done");
 
         return result;
     }
 
     private void HandleAccount(AccountResponse response)
     {
+        this.Trace("start");
+
         foreach (var x in response.Balances)
         {
             var asset = new AssetDto(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin);
@@ -157,6 +165,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             var position = new PositionDto(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount);
             PositionWriter.Write(position);
         }
+
+        this.Trace("done");
     }
 
     private void HandleConnected()
