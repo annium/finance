@@ -96,6 +96,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var orderChannel = Channel.CreateUnbounded<OrderDto>();
         OrderWriter = orderChannel.Writer;
         _orderReader = orderChannel.Reader;
+
+        SubscribeReaders();
     }
 
     public ValueTask DisposeAsync()
