@@ -41,4 +41,26 @@ internal class LoaderFactory : ILoaderFactory
 
         return new CompositeLoader<T>(loader, intervalPeriod, debouncePeriod, _logger);
     }
+
+    public IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
+        TContext initialContext,
+        SnapshotLoaderConfig cfg,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, TData, TContext> getContext,
+        int intervalPeriod,
+        int debouncePeriod
+    )
+        where TKey : notnull
+    {
+        return new KeyedLoader<TKey, TContext, TData>(
+            _sp,
+            initialContext,
+            cfg,
+            getLoad,
+            getContext,
+            intervalPeriod,
+            debouncePeriod,
+            _logger
+        );
+    }
 }

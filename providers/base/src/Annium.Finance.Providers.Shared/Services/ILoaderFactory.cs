@@ -19,4 +19,14 @@ public interface ILoaderFactory
         int intervalPeriod,
         int debouncePeriod
     );
+
+    IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
+        TContext initialContext,
+        SnapshotLoaderConfig cfg,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, TData, TContext> getContext,
+        int intervalPeriod,
+        int debouncePeriod
+    )
+        where TKey : notnull;
 }
