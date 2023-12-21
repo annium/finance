@@ -84,9 +84,26 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public Task<UserResult> SetLeverage(PositionDto position, byte leverage)
+    public async Task<UserResult> SetLeverage(PositionDto position, byte leverage)
     {
-        throw new NotImplementedException();
+        this.Trace("set leverage to {leverage}", leverage);
+
+        await Task.CompletedTask;
+        // var result = await _
+        //     .New(_httpApiEndpoint)
+        //     .Post("/fapi/v1/leverage")
+        //     .Param("symbol", position.Instrument.Symbol)
+        //     .Param("leverage", leverage)
+        //     .Sign(Config.Key, Config.Secret)
+        //     .WithLogFrom(this, LogData.Headers | LogData.Response)
+        //     .WithRateDelay("1m")
+        //     .AsUserResultAsync<LeverageResponse>();
+        //
+        // RequestUpdateAssetsAndPositions();
+
+        this.Trace("done");
+
+        return UserResult.Ok();
     }
 
     public Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
