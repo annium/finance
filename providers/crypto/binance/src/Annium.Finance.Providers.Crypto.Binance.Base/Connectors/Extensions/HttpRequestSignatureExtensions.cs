@@ -22,10 +22,12 @@ public static class HttpRequestSignatureExtensions
     public static IHttpRequest Signature(this IHttpRequest request, SignatureService ss) =>
         request.Configure(req =>
         {
+            // calculate signature
+            req.NoParam("signature");
             var query = req.Uri.Query.TrimStart('?');
-            var body = req.Content?.ReadAsStringAsync().Result ?? string.Empty;
-            var signature = ss.GetSignature($"{query}{body}");
+            var signature = ss.GetSignature(query);
 
+            // add signature to query params
             req.Param("signature", signature);
         });
 }
