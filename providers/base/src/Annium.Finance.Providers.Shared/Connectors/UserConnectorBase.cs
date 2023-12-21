@@ -10,6 +10,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
+using Annium.Threading.Channels;
 
 namespace Annium.Finance.Providers.Shared.Connectors;
 
@@ -172,11 +173,15 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         this.Trace("schedule sync");
         var scheduled = _executor.TrySchedule(async () =>
         {
+            this.Trace("wait until assets/positions are read");
+            await Task.WhenAll(_assetReader.WhenEmpty(), _positionReader.WhenEmpty());
+
             this.Trace("unsubscribe readers");
             UnsubscribeReaders();
 
-            this.Trace("start sync");
+            this.Trace("sync start");
             await _synchronizer.ExecuteAsync(_settings, _userProvider, _assets, _positions, _orders);
+            this.Trace("sync done");
 
             this.Trace("subscribe readers");
             SubscribeReaders();
