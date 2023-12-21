@@ -14,7 +14,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<string> OnListenKeyFetched = _ => { };
+    public event Action<string> OnListenKeyFetched = delegate { };
     public event Action OnListenKeyReset = () => { };
     private readonly UserConfigBase _config;
     private readonly string _endpoint;

@@ -10,7 +10,7 @@ namespace Annium.Finance.Providers.Shared.Internal.Services;
 internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<T> OnData = _ => { };
+    public event Action<T> OnData = delegate { };
     private readonly ISnapshotLoader<T> _loader;
     private readonly IAsyncTimer? _intervalTimer;
     private readonly int _intervalPeriod;
