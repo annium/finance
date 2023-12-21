@@ -12,8 +12,8 @@ public interface IUserConnector : IConnectorBase
     ITableView<PositionDto> Positions { get; }
     ITableView<OrderDto> Orders { get; }
     Task<UserResult> SetLeverage(PositionDto position, byte leverage);
-    Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order);
-    Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order);
+    Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request);
+    Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request);
     Task<UserResult> CancelOrder(OrderDto order);
     Task<UserResult> CancelAllOrders(string symbol);
 }

@@ -109,15 +109,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return UserResult.Ok();
     }
 
-    public async Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
+    public async Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {order} - not connected", order);
+            this.Trace("skip for {order} - not connected", request);
             return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
         }
 
-        var queryResult = _queryProcessor.BuildInitOrderQuery(order);
+        var queryResult = _queryProcessor.BuildInitOrderQuery(request);
         if (queryResult.IsFailure)
         {
             this.Trace("query processing failed: {result}", queryResult);
@@ -137,7 +137,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order)
+    public async Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request)
     {
         throw new NotImplementedException();
     }

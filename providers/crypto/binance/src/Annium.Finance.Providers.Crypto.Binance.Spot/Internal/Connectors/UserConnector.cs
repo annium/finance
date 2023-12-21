@@ -47,12 +47,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
+    public Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order)
+    public Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request)
     {
         throw new NotImplementedException();
     }
