@@ -30,6 +30,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly UserConfig _config;
     private readonly QueryProcessor _queryProcessor;
     private readonly SignatureService _signatureService;
+    private readonly IHttpRequestFactory _initOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
     private readonly UserStream _userStream;
     private readonly ICompositeLoader<AccountResponse> _accountLoader;
@@ -39,6 +40,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         UserConfig config,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
+        [FromKeyedServices(Constants.InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
         [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
@@ -54,6 +56,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _config = config;
         _queryProcessor = queryProcessor;
         _signatureService = signatureService;
+        _initOrderRequestFactory = initOrderRequestFactory;
         _getAccountRequestFactory = getAccountRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
@@ -106,9 +109,32 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return UserResult.Ok();
     }
 
-    public Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
+    public async Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest order)
     {
-        throw new NotImplementedException();
+        if (Status is not ConnectorStatus.Connected)
+        {
+            this.Trace("skip for {order} - not connected", order);
+            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
+        }
+
+        var queryResult = _queryProcessor.BuildInitOrderQuery(order);
+        if (queryResult.IsFailure)
+        {
+            this.Trace("query processing failed: {result}", queryResult);
+            return UserResult.From(queryResult, default(OrderDto)!);
+        }
+
+        var result = await _initOrderRequestFactory
+            .New(_config.HttpApi)
+            .Post("/fapi/v1/order")
+            .Params(queryResult.Data)
+            .Sign(_signatureService)
+            .WithLogFrom(this)
+            .AsUserResultAsync(default(OrderDto)!);
+
+        HandleTradeResult(result.IsSuccess);
+
+        return result;
     }
 
     public Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest order)
@@ -146,7 +172,16 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .AsUserResultAsync(new OperationResult(0, string.Empty));
         this.Trace("done");
 
+        HandleTradeResult(result.IsSuccess);
+
         return UserResult.From(result);
+    }
+
+    private void HandleTradeResult(bool isSuccess)
+    {
+        _accountLoader.Request();
+        if (!isSuccess)
+            this.Debug("trigger orders loader");
     }
 
     private async Task<IBaseResult<AccountResponse>> LoadAccount(CancellationToken ct)
