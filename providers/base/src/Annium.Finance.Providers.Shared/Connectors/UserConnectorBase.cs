@@ -169,12 +169,12 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             return;
         }
 
-        this.Trace("unsubscribe readers");
-        UnsubscribeReaders();
-
         this.Trace("schedule sync");
         var scheduled = _executor.TrySchedule(async () =>
         {
+            this.Trace("unsubscribe readers");
+            UnsubscribeReaders();
+
             this.Trace("start sync");
             await _synchronizer.ExecuteAsync(_settings, _userProvider, _assets, _positions, _orders);
 
