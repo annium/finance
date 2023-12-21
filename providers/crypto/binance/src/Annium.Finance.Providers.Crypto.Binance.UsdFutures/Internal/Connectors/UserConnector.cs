@@ -6,6 +6,8 @@ using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base;
@@ -31,6 +33,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly QueryProcessor _queryProcessor;
     private readonly SignatureService _signatureService;
     private readonly IHttpRequestFactory _initOrderRequestFactory;
+    private readonly IHttpRequestFactory _modifyOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
     private readonly UserStream _userStream;
     private readonly ICompositeLoader<AccountResponse> _accountLoader;
@@ -41,6 +44,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         QueryProcessor queryProcessor,
         SignatureService signatureService,
         [FromKeyedServices(Constants.InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
+        [FromKeyedServices(Constants.ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
         [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
@@ -57,6 +61,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _queryProcessor = queryProcessor;
         _signatureService = signatureService;
         _initOrderRequestFactory = initOrderRequestFactory;
+        _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _getAccountRequestFactory = getAccountRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
@@ -139,7 +144,48 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     public async Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request)
     {
-        throw new NotImplementedException();
+        if (Status is not ConnectorStatus.Connected)
+        {
+            this.Trace("skip for {order} - not connected", request);
+            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
+        }
+
+        // non limit orders can only be canceled and created from scratch
+        if (request.Order.Type is not OrderType.Limit)
+        {
+            // try cancel order
+            this.Trace("try cancel order {order}", request.Order);
+            var cancelResult = await CancelOrder(request.Order);
+            if (cancelResult.IsFailure)
+            {
+                this.Trace("cancel of order {order} failed: {result}", request.Order, cancelResult);
+                return UserResult.From(cancelResult, default(OrderDto)!);
+            }
+
+            var initRequest = request.ToInitOrderRequest();
+            var initResult = await InitOrder(initRequest);
+
+            return initResult;
+        }
+
+        var queryResult = _queryProcessor.BuildModifyOrderQuery(request);
+        if (queryResult.IsFailure)
+        {
+            this.Trace("query processing failed: {result}", queryResult);
+            return UserResult.From(queryResult, default(OrderDto)!);
+        }
+
+        var result = await _modifyOrderRequestFactory
+            .New(_config.HttpApi)
+            .Put("/fapi/v1/order")
+            .Params(queryResult.Data)
+            .Sign(_signatureService)
+            .WithLogFrom(this)
+            .AsUserResultAsync(default(OrderDto)!);
+
+        HandleTradeResult(result.IsSuccess);
+
+        return result;
     }
 
     public Task<UserResult> CancelOrder(OrderDto order)
