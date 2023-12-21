@@ -47,7 +47,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
 
-        // subscribe user stream
+        // user stream
         _userStream.OnConnected += HandleConnected;
         Disposable += () => _userStream.OnConnected -= HandleConnected;
 
