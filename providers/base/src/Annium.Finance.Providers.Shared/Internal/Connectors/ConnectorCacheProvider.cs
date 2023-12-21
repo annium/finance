@@ -55,10 +55,10 @@ internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvid
             return;
         }
 
-        this.Warn("dispose no {key} entry for {config}", providerKey, key);
+        this.Warn("dispose {key} entry for {config}", providerKey, key);
         await entry.DisposeAsync();
 
-        this.Warn("resolved no {key} entry for {config}", providerKey, key);
+        this.Warn("resolved {key} entry for {config}", providerKey, key);
     }
 
     private Entry CreateEntry(TSettings config)
