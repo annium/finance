@@ -74,7 +74,7 @@ public sealed class UserStream : IDisposable, ILogSubject
 
         _statusReporter.Connecting();
 
-        var uri = new Uri(_config.WsApi + _config.ListenKeyBase + listenKey);
+        var uri = new Uri(_config.WsApi, _config.ListenKeyBase + listenKey);
         _ws.Connect(uri);
 
         this.Trace("done");
