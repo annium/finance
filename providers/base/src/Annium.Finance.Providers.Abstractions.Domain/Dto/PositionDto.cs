@@ -8,14 +8,14 @@ public sealed record PositionDto : IPositionBase
     public string Symbol { get; }
     public OrientationRange OrientationRange { get; }
     public MarginType MarginType { get; private set; }
-    public byte Leverage { get; private set; }
+    public decimal Leverage { get; private set; }
     public decimal Amount { get; private set; }
 
     public PositionDto(
         string symbol,
         OrientationRange orientationRange,
         MarginType marginType,
-        byte leverage,
+        decimal leverage,
         decimal amount
     )
     {
@@ -26,7 +26,7 @@ public sealed record PositionDto : IPositionBase
         Amount = amount;
     }
 
-    public void Update(MarginType marginType, byte leverage, decimal amount)
+    public void Update(MarginType marginType, decimal leverage, decimal amount)
     {
         MarginType = marginType;
         Leverage = leverage;

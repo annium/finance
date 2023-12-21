@@ -24,7 +24,7 @@ internal class GetAccountResponsePositionConverter : JsonConverter<AccountRespon
         var symbol = string.Empty;
         var direction = OrientationRange.Both;
         var marginType = MarginType.Isolated;
-        var leverage = 0;
+        var leverage = 0m;
         var amount = 0m;
         var averagePrice = 0m;
         var unrealizedPnl = 0m;
@@ -66,7 +66,7 @@ internal class GetAccountResponsePositionConverter : JsonConverter<AccountRespon
                         marginType = reader.GetBoolean() ? MarginType.Isolated : MarginType.Cross;
                         break;
                     case "leverage":
-                        leverage = (int)reader.GetDecimalFromString();
+                        leverage = reader.GetDecimalFromString();
                         break;
                     case "positionAmt":
                         amount = reader.GetDecimalFromString();

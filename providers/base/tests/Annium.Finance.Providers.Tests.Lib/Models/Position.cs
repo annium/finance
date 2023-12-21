@@ -13,7 +13,7 @@ public sealed record Position(
     long CreatedAt,
     OrientationRange OrientationRange,
     MarginType MarginType,
-    byte Leverage,
+    decimal Leverage,
     PositionState State,
     long UpdatedAt,
     decimal TotalQty,
@@ -32,7 +32,7 @@ public sealed record Position(
 {
     public Guid InstrumentId { get; } = Instrument.Id;
     public MarginType MarginType { get; private set; } = MarginType;
-    public byte Leverage { get; private set; } = Leverage;
+    public decimal Leverage { get; private set; } = Leverage;
     public decimal LeveragedPart { get; } = 1m / Leverage;
     public bool IsActive => OrientationType is not null;
     public Orientation Orientation =>

@@ -21,7 +21,7 @@ internal sealed record AccountResponsePosition(
     string Symbol,
     OrientationRange Orientation,
     MarginType MarginType,
-    int Leverage,
+    decimal Leverage,
     decimal Amount,
     decimal AveragePrice,
     decimal UnrealizedPnl,

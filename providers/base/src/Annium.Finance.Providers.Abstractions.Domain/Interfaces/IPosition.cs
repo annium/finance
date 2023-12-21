@@ -22,5 +22,5 @@ public interface IPositionBase
 {
     OrientationRange OrientationRange { get; }
     MarginType MarginType { get; }
-    byte Leverage { get; }
+    decimal Leverage { get; }
 }
