@@ -34,6 +34,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly SignatureService _signatureService;
     private readonly IHttpRequestFactory _initOrderRequestFactory;
     private readonly IHttpRequestFactory _modifyOrderRequestFactory;
+    private readonly IHttpRequestFactory _cancelOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
     private readonly UserStream _userStream;
     private readonly ICompositeLoader<AccountResponse> _accountLoader;
@@ -45,6 +46,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         SignatureService signatureService,
         [FromKeyedServices(Constants.InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
         [FromKeyedServices(Constants.ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
+        [FromKeyedServices(Constants.CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
         [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
@@ -62,6 +64,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _signatureService = signatureService;
         _initOrderRequestFactory = initOrderRequestFactory;
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
+        _cancelOrderRequestFactory = cancelOrderRequestFactory;
         _getAccountRequestFactory = getAccountRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
@@ -118,7 +121,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {order} - not connected", request);
+            this.Trace("skip for {request} - not connected", request);
             return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
         }
 
@@ -146,7 +149,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {order} - not connected", request);
+            this.Trace("skip for {request} - not connected", request);
             return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
         }
 
@@ -188,9 +191,32 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public Task<UserResult> CancelOrder(OrderDto order)
+    public async Task<UserResult> CancelOrder(OrderDto order)
     {
-        throw new NotImplementedException();
+        if (Status is not ConnectorStatus.Connected)
+        {
+            this.Trace("skip for {order} - not connected", order);
+            return UserResult.New(UserOperationStatus.NotConnected);
+        }
+
+        var queryResult = _queryProcessor.BuildCancelOrderQuery(order);
+        if (queryResult.IsFailure)
+        {
+            this.Trace("query processing failed: {result}", queryResult);
+            return UserResult.From(queryResult);
+        }
+
+        var result = await _cancelOrderRequestFactory
+            .New(_config.HttpApi)
+            .Delete("/fapi/v1/order")
+            .Params(queryResult.Data)
+            .Sign(_signatureService)
+            .WithLogFrom(this)
+            .AsUserResultAsync(new OperationResult(0, string.Empty));
+
+        HandleTradeResult(result.IsSuccess);
+
+        return UserResult.From(result);
     }
 
     public async Task<UserResult> CancelAllOrders(string symbol)
