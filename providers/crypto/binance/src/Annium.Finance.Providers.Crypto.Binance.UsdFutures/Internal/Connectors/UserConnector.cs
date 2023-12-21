@@ -28,22 +28,22 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors
 internal class UserConnector : UserConnectorBase, IUserConnector
 {
     private readonly UserConfig _config;
-    private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
-    private readonly UserStream _userStream;
     private readonly QueryProcessor _queryProcessor;
     private readonly SignatureService _signatureService;
-    private readonly IHttpRequestFactory _getAccountRequestFactory;
+    private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
+    private readonly UserStream _userStream;
     private readonly ICompositeLoader<AccountResponse> _accountLoader;
+    private readonly IHttpRequestFactory _getAccountRequestFactory;
 
     public UserConnector(
         UserConfig config,
-        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
-        [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
+        [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
         ILoaderFactory loaderFactory,
+        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
@@ -125,7 +125,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace<string>("skip on {symbol} - not connected", symbol);
+            this.Trace<string>("skip for {symbol} - not connected", symbol);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 

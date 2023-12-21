@@ -21,9 +21,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     public UserConnector(
         UserConfig config,
-        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
+        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
