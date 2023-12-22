@@ -16,7 +16,7 @@ public sealed record InstrumentDto(
     decimal MinSum,
     decimal MaxSum,
     int MaxOrders
-) : IInstrumentBase
+) : IInstrument
 {
     public override string ToString() => Symbol;
 }

@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
 
-public sealed record OrderDto : IOrderBase
+public sealed record OrderDto : IOrder
 {
     public string Id { get; }
     public Guid ClientOrderId { get; }

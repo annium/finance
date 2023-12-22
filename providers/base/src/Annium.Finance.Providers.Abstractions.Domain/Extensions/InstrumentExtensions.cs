@@ -6,13 +6,13 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Extensions;
 public static class InstrumentExtensions
 {
     public static int TickPrecision<TInstrument>(this TInstrument instrument)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         return instrument.TickSize.Align().Decimals();
     }
 
     public static decimal ToValidQty<TInstrument>(this TInstrument instrument, decimal qty)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         var q = instrument.ToLotSize(qty);
 
@@ -22,37 +22,38 @@ public static class InstrumentExtensions
     }
 
     public static bool IsValidQtyPrice<TInstrument>(this TInstrument instrument, decimal qty, decimal price)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         if (qty != instrument.ToValidQty(qty) || price != instrument.ToTickSizeRound(price))
             return false;
 
-        return qty * price >= instrument.MinSum;
+        var sum = qty * price;
+        return sum >= instrument.MinSum && sum <= instrument.MaxSum;
     }
 
     public static decimal ToTickSizeDown<TInstrument>(this TInstrument instrument, decimal price)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         var tick = instrument.TickSize;
         return tick > 0 ? Math.Floor(price / tick) * tick : price;
     }
 
     public static decimal ToTickSizeRound<TInstrument>(this TInstrument instrument, decimal price)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         var tick = instrument.TickSize;
         return tick > 0 ? Math.Round(price / tick) * tick : price;
     }
 
     public static decimal ToTickSizeUp<TInstrument>(this TInstrument instrument, decimal price)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         var tick = instrument.TickSize;
         return tick > 0 ? Math.Ceiling(price / tick) * tick : price;
     }
 
     public static decimal ToLotSize<TInstrument>(this TInstrument instrument, decimal qty)
-        where TInstrument : IInstrumentBase
+        where TInstrument : IInstrument
     {
         var lot = instrument.LotSize;
         return lot > 0 ? Math.Floor(qty / lot) * lot : qty;

@@ -19,7 +19,7 @@ public sealed record Order(
     decimal ExecutedPrice,
     decimal Fee,
     long UpdatedAt
-) : IOrder<Position, Instrument, Resource>
+) : IOrder
 {
     public Guid PositionId { get; } = Position.Id;
 

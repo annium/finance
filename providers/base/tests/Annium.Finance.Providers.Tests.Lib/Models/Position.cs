@@ -28,12 +28,10 @@ public sealed record Position(
     decimal ClosedFee,
     decimal BorrowedQty,
     decimal BorrowedSum
-) : IPosition<Instrument, Resource>
+) : IPosition
 {
-    public Guid InstrumentId { get; } = Instrument.Id;
     public MarginType MarginType { get; private set; } = MarginType;
     public decimal Leverage { get; private set; } = Leverage;
-    public decimal LeveragedPart { get; } = 1m / Leverage;
     public bool IsActive => OrientationType is not null;
     public Orientation Orientation =>
         OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");

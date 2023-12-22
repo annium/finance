@@ -36,20 +36,15 @@ public static class Helper
 
     public static Instrument CreateInstrument(string resource, string currency, decimal lotSize, decimal tickSize) =>
         new(
-            Guid.NewGuid(),
             "fake",
             ProviderEnvironment.Test,
             $"{resource}{currency}",
-            new Resource(Guid.NewGuid(), "fake", ProviderEnvironment.Test, resource, 2),
-            new Resource(Guid.NewGuid(), "fake", ProviderEnvironment.Test, currency, 2),
-            new Resource(Guid.NewGuid(), "fake", ProviderEnvironment.Test, currency, 2),
             lotSize,
             tickSize,
             lotSize * 10,
             lotSize * 100,
             lotSize * tickSize * 1000,
             decimal.MaxValue,
-            int.MaxValue,
-            decimal.MaxValue
+            int.MaxValue
         );
 }

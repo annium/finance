@@ -3,7 +3,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
 
-public sealed record PositionDto : IPositionBase
+public sealed record PositionDto : IPosition
 {
     public string Symbol { get; }
     public OrientationRange OrientationRange { get; }
