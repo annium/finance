@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,12 +20,12 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
-using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
+using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 
@@ -43,6 +44,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _getAccountRequestFactory;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderDto>> _ordersLoader;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
+    private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>> _tradesLoader;
+    private readonly IHttpRequestFactory _getTradeRequestFactory;
 
     public UserConnector(
         UserConfig config,
@@ -56,6 +59,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         UserStream userStream,
         [FromKeyedServices(Constants.GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
         [FromKeyedServices(Constants.GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
+        [FromKeyedServices(Constants.GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,
@@ -74,6 +78,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
         _getAccountRequestFactory = getAccountRequestFactory;
         _getOrderRequestFactory = getOrderRequestFactory;
+        _getTradeRequestFactory = getTradeRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
 
@@ -88,24 +93,24 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         Disposable += () => _userStream.OnMessage -= HandleMessage;
 
         // accounts
-        Disposable += _accountLoader = loaderFactory.CreateCompositeLoader(
-            new SnapshotLoaderConfig(_config.ReloadAccountInterval, _config.ReloadAccountInterval, 0),
-            LoadAccount,
-            _config.ReloadAccountInterval,
-            _config.ReloadAccountDebounce
-        );
+        Disposable += _accountLoader = loaderFactory.CreateCompositeLoader(_config.ReloadAccount, LoadAccount);
         _accountLoader.OnData += HandleAccount;
         Disposable += () => _accountLoader.OnData -= HandleAccount;
 
         // orders
-        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(
-            new SnapshotLoaderConfig(_config.ReloadOrdersInterval, _config.ReloadOrdersInterval, 0),
-            LoadOrders,
-            _config.ReloadOrdersInterval,
-            _config.ReloadOrdersDebounce
-        );
+        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(_config.ReloadOrders, LoadOrders);
         _ordersLoader.OnData += HandleOrders;
         Disposable += () => _ordersLoader.OnData -= HandleOrders;
+
+        // deals
+        Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>>(
+            _config.ReloadTrades,
+            SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds(),
+            LoadTrades,
+            GetTradesContext
+        );
+        _tradesLoader.OnData += HandleTrades;
+        Disposable += () => _tradesLoader.OnData -= HandleTrades;
     }
 
     public ValueTask InitAsync()
@@ -353,6 +358,50 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         foreach (var order in orders)
             OrderWriter.Write(order);
+
+        this.Trace("done");
+    }
+
+    private async Task<IBaseResult<IReadOnlyCollection<TradeResponse>>> LoadTrades(
+        string symbol,
+        long since,
+        CancellationToken ct
+    )
+    {
+        this.Trace("start");
+        var result = await _getTradeRequestFactory
+            .New(_config.HttpApi)
+            .Get("/fapi/v1/userTrades")
+            .Param("symbol", symbol)
+            .Param("startTime", since)
+            .Param("limit", 1000)
+            .WithRateDelay1M()
+            .ReceiveWindow()
+            .Sign(_signatureService)
+            .AsUserResultAsync(Array.Empty<TradeResponse>());
+        this.Trace("done");
+
+        return result;
+    }
+
+    private long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeResponse> trades)
+    {
+        this.Trace("start");
+        var result = trades.Select(x => x.Moment).MaxBy(x => x);
+        this.Trace("done");
+
+        return result;
+    }
+
+    private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeResponse> trades)
+    {
+        this.Trace("start");
+
+        // foreach (var trade in trades)
+        // {
+        //     var order = new OrderDto(trade.);
+        //     OrderWriter.Write(order);
+        // }
 
         this.Trace("done");
     }
