@@ -9,8 +9,6 @@ using Annium.Threading;
 
 namespace Annium.Finance.Providers.Shared.Internal.Services;
 
-public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
-
 internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 {
     public ILogger Logger { get; }
