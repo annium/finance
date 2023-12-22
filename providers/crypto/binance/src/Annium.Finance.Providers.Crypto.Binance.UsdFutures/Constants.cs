@@ -16,6 +16,7 @@ public static class Constants
     internal const string GetTradeKey = $"{Provider}_{nameof(GetTradeKey)}";
 
     // user data trade
+    internal const string SetLeverageKey = $"{Provider}_{nameof(SetLeverageKey)}";
     internal const string InitOrderKey = $"{Provider}_{nameof(InitOrderKey)}";
     internal const string ModifyOrderKey = $"{Provider}_{nameof(ModifyOrderKey)}";
     internal const string CancelOrderKey = $"{Provider}_{nameof(CancelOrderKey)}";

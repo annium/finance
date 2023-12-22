@@ -28,6 +28,12 @@ internal class Contracts
             .AddConverter<GetTradeResponseConverter>()
             .AddConverter<OperationResultConverter>();
 
+    public JsonSerializerOptions SetLeverage { get; } =
+        new JsonSerializerOptions()
+            .ResetConverters()
+            .AddConverter<LeverageResponseConverter>()
+            .AddConverter<OperationResultConverter>();
+
     public JsonSerializerOptions InitOrder { get; } =
         new JsonSerializerOptions()
             .ResetConverters()

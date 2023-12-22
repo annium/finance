@@ -56,6 +56,7 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddHttpRequestFactoryWithJsonSerializer(GetTradeKey, Contracts.User.GetTrade);
 
         // user data trade
+        ctx.AddHttpRequestFactoryWithJsonSerializer(SetLeverageKey, Contracts.User.SetLeverage);
         ctx.AddHttpRequestFactoryWithJsonSerializer(InitOrderKey, Contracts.User.InitOrder);
         ctx.AddHttpRequestFactoryWithJsonSerializer(ModifyOrderKey, Contracts.User.ModifyOrder);
         ctx.AddHttpRequestFactoryWithJsonSerializer(CancelOrderKey, Contracts.User.CancelOrder);
