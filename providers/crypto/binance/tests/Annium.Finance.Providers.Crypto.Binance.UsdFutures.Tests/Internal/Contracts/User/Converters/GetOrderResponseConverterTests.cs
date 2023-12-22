@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
@@ -51,8 +50,8 @@ public class GetOrderResponseConverterTests : ConnectorTestBase
         var deserialized = serializer.Deserialize<OrderResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
-        deserialized.Id.Is(Guid.Parse("4a1f8bb3-724f-462e-9bde-6d0120381ddd"));
-        deserialized.OrderId.Is("1917641");
+        deserialized.Id.Is("1917641");
+        deserialized.ClientOrderId.Is("4a1f8bb3-724f-462e-9bde-6d0120381ddd");
         deserialized.Symbol.Is("BTCUSDT");
         deserialized.Side.Is(OrderSide.Sell);
         deserialized.Type.Is(OrderType.TakeProfitLimit);

@@ -17,8 +17,8 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
 
         var currentDepth = reader.CurrentDepth;
 
-        var id = Guid.Empty;
-        var orderId = string.Empty;
+        var id = string.Empty;
+        var clientOrderId = string.Empty;
         var symbol = string.Empty;
         var type = default(OrderType);
         var side = default(OrderSide);
@@ -35,7 +35,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                if (id == Guid.Empty || string.IsNullOrWhiteSpace(orderId) || string.IsNullOrWhiteSpace(symbol))
+                if (id.IsNullOrWhiteSpace() || clientOrderId.IsNullOrWhiteSpace() || symbol.IsNullOrWhiteSpace())
                 {
                     return default;
                 }
@@ -43,7 +43,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
                 var executedPrice = executedQty != 0 ? executedSum / executedQty : 0m;
                 var order = new OrderResponse(
                     id,
-                    orderId,
+                    clientOrderId,
                     symbol,
                     side,
                     type,
@@ -68,14 +68,14 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
 
                 switch (propertyName)
                 {
-                    case "clientOrderId":
-                        id = reader.TryGetGuid(out var guid) ? guid : Guid.Empty;
-                        break;
                     case "orderId":
-                        orderId = reader.GetInt64().ToString();
+                        id = reader.GetInt64().ToString();
+                        break;
+                    case "clientOrderId":
+                        clientOrderId = reader.GetString();
                         break;
                     case "symbol":
-                        symbol = reader.GetString() ?? string.Empty;
+                        symbol = reader.GetString();
                         break;
                     case "type":
                         type = OrderTypes.StringToValue.MapValue(reader.GetString());
