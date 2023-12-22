@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly UserStream _userStream;
     private readonly ICompositeLoader<AccountResponse> _accountLoader;
     private readonly IHttpRequestFactory _getAccountRequestFactory;
+    private readonly ICompositeLoader<IReadOnlyCollection<OrderDto>> _ordersLoader;
+    private readonly IHttpRequestFactory _getOrderRequestFactory;
 
     public UserConnector(
         UserConfig config,
@@ -52,6 +55,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
         [FromKeyedServices(Constants.GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
+        [FromKeyedServices(Constants.GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,
@@ -69,6 +73,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
         _getAccountRequestFactory = getAccountRequestFactory;
+        _getOrderRequestFactory = getOrderRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
         _userStream = userStream;
 
@@ -91,6 +96,16 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         );
         _accountLoader.OnData += HandleAccount;
         Disposable += () => _accountLoader.OnData -= HandleAccount;
+
+        // orders
+        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(
+            new SnapshotLoaderConfig(_config.ReloadOrdersInterval, _config.ReloadOrdersInterval, 0),
+            LoadOrders,
+            _config.ReloadOrdersInterval,
+            _config.ReloadOrdersDebounce
+        );
+        _ordersLoader.OnData += HandleOrders;
+        Disposable += () => _ordersLoader.OnData -= HandleOrders;
     }
 
     public ValueTask InitAsync()
@@ -275,6 +290,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         if (!isSuccess)
         {
             this.Trace("request orders load");
+            _ordersLoader.Request();
         }
     }
 
@@ -311,6 +327,32 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             var position = new PositionDto(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount);
             PositionWriter.Write(position);
         }
+
+        this.Trace("done");
+    }
+
+    private async Task<IBaseResult<IReadOnlyCollection<OrderDto>>> LoadOrders(CancellationToken ct)
+    {
+        this.Trace("start");
+        var result = await _getOrderRequestFactory
+            .New(_config.HttpApi)
+            .Get("/fapi/v1/openOrders")
+            .WithRateDelay1M()
+            .ReceiveWindow()
+            .Sign(_signatureService)
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .AsUserResultAsync(Array.Empty<OrderDto>());
+        this.Trace("done");
+
+        return result;
+    }
+
+    private void HandleOrders(IReadOnlyCollection<OrderDto> orders)
+    {
+        this.Trace("start");
+
+        foreach (var order in orders)
+            OrderWriter.Write(order);
 
         this.Trace("done");
     }
