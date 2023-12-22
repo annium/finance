@@ -51,9 +51,9 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddHttpRequestFactoryWithJsonSerializer(ServerTimeKey, Contracts.Shared.ServerTime);
 
         // user data load
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetAccount, Contracts.User.GetAccount);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetOrder, Contracts.User.GetOrder);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetTrade, Contracts.User.GetTrade);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetAccountKey, Contracts.User.GetAccount);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetOrderKey, Contracts.User.GetOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetTradeKey, Contracts.User.GetTrade);
 
         // user data trade
         ctx.AddHttpRequestFactoryWithJsonSerializer(InitOrderKey, Contracts.User.InitOrder);

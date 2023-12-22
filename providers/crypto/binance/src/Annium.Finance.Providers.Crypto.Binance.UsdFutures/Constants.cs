@@ -11,9 +11,9 @@ public static class Constants
     internal const string ServerTimeKey = $"{Provider}_{nameof(ServerTimeKey)}";
 
     // user data load
-    internal const string GetAccount = $"{Provider}_{nameof(GetAccount)}";
-    internal const string GetOrder = $"{Provider}_{nameof(GetOrder)}";
-    internal const string GetTrade = $"{Provider}_{nameof(GetTrade)}";
+    internal const string GetAccountKey = $"{Provider}_{nameof(GetAccountKey)}";
+    internal const string GetOrderKey = $"{Provider}_{nameof(GetOrderKey)}";
+    internal const string GetTradeKey = $"{Provider}_{nameof(GetTradeKey)}";
 
     // user data trade
     internal const string InitOrderKey = $"{Provider}_{nameof(InitOrderKey)}";

@@ -94,7 +94,7 @@ public class GetAccountResponseConverterTests : ConnectorTestBase
         }";
 
         // act - deserialize
-        var serializer = this.GetJsonSerializer(Constants.GetAccount);
+        var serializer = this.GetJsonSerializer(Constants.GetAccountKey);
         var deserialized = serializer.Deserialize<AccountResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization

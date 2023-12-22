@@ -47,7 +47,7 @@ public class GetOrderResponseConverterTests : ConnectorTestBase
         }";
 
         // act
-        var serializer = this.GetJsonSerializer(Constants.GetOrder);
+        var serializer = this.GetJsonSerializer(Constants.GetOrderKey);
         var deserialized = serializer.Deserialize<OrderResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert

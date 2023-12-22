@@ -49,7 +49,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(Constants.CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
         [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
-        [FromKeyedServices(Constants.GetAccount)] IHttpRequestFactory getAccountRequestFactory,
+        [FromKeyedServices(Constants.GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,

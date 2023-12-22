@@ -36,7 +36,7 @@ public class GetTradeResponseConverterTests : ConnectorTestBase
         }";
 
         // act
-        var serializer = this.GetJsonSerializer(Constants.GetTrade);
+        var serializer = this.GetJsonSerializer(Constants.GetTradeKey);
         var deserialized = serializer.Deserialize<TradeResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
