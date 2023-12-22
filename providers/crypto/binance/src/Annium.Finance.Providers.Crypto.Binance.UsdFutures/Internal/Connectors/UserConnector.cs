@@ -95,7 +95,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public async Task<UserResult> SetLeverage(PositionDto position, byte leverage)
+    public async Task<UserResult> SetLeverage(PositionDto position, decimal leverage)
     {
         this.Trace("set leverage to {leverage}", leverage);
 

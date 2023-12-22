@@ -42,7 +42,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public Task<UserResult> SetLeverage(PositionDto position, byte leverage)
+    public Task<UserResult> SetLeverage(PositionDto position, decimal leverage)
     {
         throw new NotImplementedException();
     }
