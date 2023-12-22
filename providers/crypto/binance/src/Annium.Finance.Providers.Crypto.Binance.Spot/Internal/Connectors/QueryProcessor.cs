@@ -19,7 +19,7 @@ internal class QueryProcessor : IQueryProcessor
         }
 
         var result = new Dictionary<string, string>();
-        result["newClientOrderId"] = request.Id.ToString();
+        result["newClientOrderId"] = request.Id;
         result["symbol"] = request.Symbol;
         result["side"] = OrderSides.ValueToString[request.Side];
         result["type"] = OrderTypes.ValueToString[request.Type];
@@ -70,8 +70,8 @@ internal class QueryProcessor : IQueryProcessor
         result["cancelReplaceMode"] = "STOP_ON_FAILURE";
         result["timeInForce"] = "GTC";
         result["newOrderRespType"] = "RESULT";
-        result["cancelOrigClientOrderId"] = request.Order.ClientOrderId.ToString();
-        result["newClientOrderId"] = request.Order.ClientOrderId.ToString();
+        result["cancelOrigClientOrderId"] = request.Order.ClientOrderId;
+        result["newClientOrderId"] = request.Order.ClientOrderId;
 
         switch (request.Type)
         {
@@ -109,8 +109,8 @@ internal class QueryProcessor : IQueryProcessor
     {
         var result = new Dictionary<string, string>();
 
-        result["origClientOrderId"] = order.ClientOrderId.ToString();
-        result["newClientOrderId"] = order.ClientOrderId.ToString();
+        result["origClientOrderId"] = order.ClientOrderId;
+        result["newClientOrderId"] = order.ClientOrderId;
         result["symbol"] = order.Symbol;
 
         return UserResult.Ok(result);

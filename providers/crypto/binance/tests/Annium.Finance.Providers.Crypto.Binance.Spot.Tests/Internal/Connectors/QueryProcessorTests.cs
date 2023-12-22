@@ -14,7 +14,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors
 public class QueryProcessorTests : ConnectorTestBase
 {
     private const string Symbol = "BTCUSDT";
-    private static readonly Guid ClientOrderId = Guid.NewGuid();
+    private static readonly string ClientOrderId = Guid.NewGuid().ToString();
 
     public QueryProcessorTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
@@ -31,7 +31,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(8);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("type").Is("LIMIT");
@@ -53,7 +53,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(6);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("type").Is("MARKET");
@@ -73,7 +73,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(7);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("type").Is("STOP_LOSS");
@@ -94,7 +94,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(7);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("type").Is("TAKE_PROFIT");
@@ -115,7 +115,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(9);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("type").Is("STOP_LOSS_LIMIT");
@@ -138,7 +138,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(9);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("type").Is("TAKE_PROFIT_LIMIT");
@@ -170,8 +170,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("11.3");
         data.At("price").Is("12.7");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -194,8 +194,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("timeInForce").Is("GTC");
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("11.3");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -219,8 +219,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("11.3");
         data.At("stopPrice").Is("12.7");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -244,8 +244,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("11.3");
         data.At("stopPrice").Is("12.7");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -270,8 +270,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("price").Is("12.7");
         data.At("stopPrice").Is("12.9");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -296,8 +296,8 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("price").Is("12.7");
         data.At("stopPrice").Is("12.5");
-        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -313,8 +313,8 @@ public class QueryProcessorTests : ConnectorTestBase
         // assert
         data.Has(3);
         data.At("symbol").Is(order.Symbol);
-        data.At("origClientOrderId").Is(order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(order.ClientOrderId.ToString());
+        data.At("origClientOrderId").Is(order.ClientOrderId);
+        data.At("newClientOrderId").Is(order.ClientOrderId);
     }
 
     [Fact]

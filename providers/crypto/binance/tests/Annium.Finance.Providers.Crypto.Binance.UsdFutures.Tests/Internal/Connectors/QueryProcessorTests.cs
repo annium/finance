@@ -15,7 +15,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Conn
 public class QueryProcessorTests : ConnectorTestBase
 {
     private const string Symbol = "BTCUSDT";
-    private static readonly Guid ClientOrderId = Guid.NewGuid();
+    private static readonly string ClientOrderId = Guid.NewGuid().ToString();
 
     public QueryProcessorTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }
@@ -32,7 +32,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(10);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("positionSide").Is("BOTH");
@@ -55,7 +55,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(10);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("positionSide").Is("BOTH");
@@ -79,7 +79,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(8);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("positionSide").Is("BOTH");
@@ -100,7 +100,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(8);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
         data.At("positionSide").Is("BOTH");
@@ -122,7 +122,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(9);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("positionSide").Is("BOTH");
@@ -146,7 +146,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(paramsCount);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("positionSide").Is("BOTH");
@@ -179,7 +179,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(paramsCount);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("positionSide").Is("BOTH");
@@ -210,7 +210,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(11);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("positionSide").Is("BOTH");
@@ -235,7 +235,7 @@ public class QueryProcessorTests : ConnectorTestBase
 
         // assert
         data.Has(11);
-        data.At("newClientOrderId").Is(request.Id.ToString());
+        data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
         data.At("positionSide").Is("BOTH");
@@ -265,7 +265,7 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("side").Is("BUY");
         data.At("quantity").Is("11.3");
         data.At("price").Is("12.7");
-        data.At("origClientOrderId").Is(request.Order.ClientOrderId.ToString());
+        data.At("origClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -341,8 +341,8 @@ public class QueryProcessorTests : ConnectorTestBase
         // assert
         data.Has(3);
         data.At("symbol").Is(order.Symbol);
-        data.At("origClientOrderId").Is(order.ClientOrderId.ToString());
-        data.At("newClientOrderId").Is(order.ClientOrderId.ToString());
+        data.At("origClientOrderId").Is(order.ClientOrderId);
+        data.At("newClientOrderId").Is(order.ClientOrderId);
     }
 
     [Fact]

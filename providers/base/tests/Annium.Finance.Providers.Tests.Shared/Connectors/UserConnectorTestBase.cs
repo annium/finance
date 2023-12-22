@@ -217,7 +217,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         await WaitForMessages();
     }
 
-    protected Guid GenerateClientOrderId() => Guid.NewGuid();
+    protected string GenerateClientOrderId() => Guid.NewGuid().ToString();
 
     protected AssetDto GetBalance(string resource)
     {

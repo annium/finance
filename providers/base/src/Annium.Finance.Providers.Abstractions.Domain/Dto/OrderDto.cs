@@ -1,4 +1,3 @@
-using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
@@ -7,7 +6,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
 public sealed record OrderDto : IOrder
 {
     public string Id { get; }
-    public Guid ClientOrderId { get; }
+    public string ClientOrderId { get; }
     public string Symbol { get; }
     public OrderSide Side { get; private set; }
     public OrderType Type { get; private set; }
@@ -22,7 +21,7 @@ public sealed record OrderDto : IOrder
     public long UpdatedAt { get; private set; }
 
     public OrderDto(
-        Guid clientOrderId,
+        string clientOrderId,
         string id,
         string symbol,
         OrderSide side,

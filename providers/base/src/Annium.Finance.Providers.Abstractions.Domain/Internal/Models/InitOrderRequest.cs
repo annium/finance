@@ -1,4 +1,3 @@
-using System;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
@@ -6,7 +5,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Internal.Models;
 
 internal sealed record InitOrderRequest : IInitOrderRequest
 {
-    public required Guid Id { get; init; }
+    public required string Id { get; init; }
     public required string Symbol { get; init; }
     public required OrderSide Side { get; init; }
     public required OrderType Type { get; init; }

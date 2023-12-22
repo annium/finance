@@ -1,4 +1,3 @@
-using System;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
@@ -9,7 +8,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 public static class RequestBuilder
 {
     public static IInitOrderRequest InitLimitOrder(
-        Guid id,
+        string id,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -28,7 +27,7 @@ public static class RequestBuilder
         };
     }
 
-    public static IInitOrderRequest InitMarketOrder(Guid id, string symbol, OrderSide side, decimal quantity)
+    public static IInitOrderRequest InitMarketOrder(string id, string symbol, OrderSide side, decimal quantity)
     {
         return new InitOrderRequest
         {
@@ -43,7 +42,7 @@ public static class RequestBuilder
     }
 
     public static IInitOrderRequest InitStopLossMarketOrder(
-        Guid id,
+        string id,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -63,7 +62,7 @@ public static class RequestBuilder
     }
 
     public static IInitOrderRequest InitTakeProfitMarketOrder(
-        Guid id,
+        string id,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -83,7 +82,7 @@ public static class RequestBuilder
     }
 
     public static IInitOrderRequest InitStopLossLimitOrder(
-        Guid id,
+        string id,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -104,7 +103,7 @@ public static class RequestBuilder
     }
 
     public static IInitOrderRequest InitTakeProfitLimitOrder(
-        Guid id,
+        string id,
         string symbol,
         OrderSide side,
         decimal quantity,
