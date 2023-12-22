@@ -32,6 +32,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly UserConfig _config;
     private readonly QueryProcessor _queryProcessor;
     private readonly SignatureService _signatureService;
+    private readonly IHttpRequestFactory _setLeverageRequestFactory;
     private readonly IHttpRequestFactory _initOrderRequestFactory;
     private readonly IHttpRequestFactory _modifyOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelOrderRequestFactory;
@@ -44,6 +45,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         UserConfig config,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
+        [FromKeyedServices(Constants.SetLeverageKey)] IHttpRequestFactory setLeverageRequestFactory,
         [FromKeyedServices(Constants.InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
         [FromKeyedServices(Constants.ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
         [FromKeyedServices(Constants.CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
@@ -62,6 +64,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _config = config;
         _queryProcessor = queryProcessor;
         _signatureService = signatureService;
+        _setLeverageRequestFactory = setLeverageRequestFactory;
         _initOrderRequestFactory = initOrderRequestFactory;
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
@@ -97,20 +100,24 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     public async Task<UserResult> SetLeverage(PositionDto position, decimal leverage)
     {
-        this.Trace("set leverage to {leverage}", leverage);
+        if (Status is not ConnectorStatus.Connected)
+        {
+            this.Trace("skip for {position} -> {leverage} - not connected", position, leverage);
+            return UserResult.New(UserOperationStatus.NotConnected);
+        }
 
-        await Task.CompletedTask;
-        // var result = await _
-        //     .New(_httpApiEndpoint)
-        //     .Post("/fapi/v1/leverage")
-        //     .Param("symbol", position.Instrument.Symbol)
-        //     .Param("leverage", leverage)
-        //     .Sign(Config.Key, Config.Secret)
-        //     .WithLogFrom(this, LogData.Headers | LogData.Response)
-        //     .WithRateDelay("1m")
-        //     .AsUserResultAsync<LeverageResponse>();
-        //
-        // RequestUpdateAssetsAndPositions();
+        this.Trace("send request");
+        var result = await _setLeverageRequestFactory
+            .New(_config.HttpApi)
+            .Post("/fapi/v1/leverage")
+            .Param("symbol", position.Symbol)
+            .Param("leverage", leverage.FloorInt32())
+            .Sign(_signatureService)
+            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .AsUserResultAsync(new LeverageResponse(0));
+
+        HandleTradeResult(result.IsSuccess);
 
         this.Trace("done");
 
@@ -132,6 +139,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             return UserResult.From(queryResult, default(OrderDto)!);
         }
 
+        this.Trace("send request");
         var result = await _initOrderRequestFactory
             .New(_config.HttpApi)
             .Post("/fapi/v1/order")
@@ -141,6 +149,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .AsUserResultAsync(default(OrderDto)!);
 
         HandleTradeResult(result.IsSuccess);
+
+        this.Trace("done");
 
         return result;
     }
@@ -166,6 +176,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             }
 
             var initRequest = request.ToInitOrderRequest();
+            this.Trace("init new order {request}", initRequest);
             var initResult = await InitOrder(initRequest);
 
             return initResult;
@@ -178,6 +189,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             return UserResult.From(queryResult, default(OrderDto)!);
         }
 
+        this.Trace("send request");
         var result = await _modifyOrderRequestFactory
             .New(_config.HttpApi)
             .Put("/fapi/v1/order")
@@ -187,6 +199,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .AsUserResultAsync(default(OrderDto)!);
 
         HandleTradeResult(result.IsSuccess);
+
+        this.Trace("done");
 
         return result;
     }
@@ -206,6 +220,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             return UserResult.From(queryResult);
         }
 
+        this.Trace("send request");
         var result = await _cancelOrderRequestFactory
             .New(_config.HttpApi)
             .Delete("/fapi/v1/order")
@@ -215,6 +230,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .AsUserResultAsync(new OperationResult(0, string.Empty));
 
         HandleTradeResult(result.IsSuccess);
+
+        this.Trace("done");
 
         return UserResult.From(result);
     }
@@ -234,7 +251,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             return UserResult.From(queryResult);
         }
 
-        this.Trace("start");
+        this.Trace("send request");
         var result = await _cancelAllOrdersRequestFactory
             .New(_config.HttpApi)
             .Delete("/fapi/v1/allOpenOrders")
@@ -242,18 +259,23 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithLogFrom(this)
             .AsUserResultAsync(new OperationResult(0, string.Empty));
-        this.Trace("done");
 
         HandleTradeResult(result.IsSuccess);
+
+        this.Trace("done");
 
         return UserResult.From(result);
     }
 
     private void HandleTradeResult(bool isSuccess)
     {
+        this.Trace("request account load");
         _accountLoader.Request();
+
         if (!isSuccess)
-            this.Debug("trigger orders loader");
+        {
+            this.Trace("request orders load");
+        }
     }
 
     private async Task<IBaseResult<AccountResponse>> LoadAccount(CancellationToken ct)
