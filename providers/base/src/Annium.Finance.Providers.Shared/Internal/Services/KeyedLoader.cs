@@ -14,7 +14,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     where TKey : notnull
 {
     public ILogger Logger { get; }
-    public event Action<TKey, TData> OnData = delegate { };
+    public event Action<TKey, TContext, TData> OnData = delegate { };
     private readonly IServiceProvider _sp;
     private readonly CompositeLoaderConfig _config;
     private readonly TContext _initialContext;
@@ -127,8 +127,8 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         loader.OnData += data =>
         {
             var context = _getContext(entry.Key, entry.Context, data);
+            OnData(entry.Key, entry.Context, data);
             entry.UpdateContext(context);
-            OnData(entry.Key, data);
         };
 
         this.Trace("start {key} loader", key);
