@@ -120,11 +120,9 @@ public static class ProviderRegistrationContextExtensions
             ListenKeyBase = "/ws/",
             ListenKeyFetchInterval = providerConfig.ListenKeyFetchInterval,
             ListenKeyConfirmInterval = providerConfig.ListenKeyConfirmInterval,
-            ReloadAccountInterval = providerConfig.ReloadAccountInterval,
-            ReloadAccountDebounce = providerConfig.ReloadAccountDebounce,
-            ReloadOrdersInterval = providerConfig.ReloadOrdersInterval,
-            ReloadOrdersDebounce = providerConfig.ReloadOrdersDebounce,
-            ReloadDealsDebounce = providerConfig.ReloadDealsDebounce,
+            ReloadAccount = providerConfig.ReloadAccount,
+            ReloadOrders = providerConfig.ReloadOrders,
+            ReloadTrades = providerConfig.ReloadTrades,
         };
     }
 

@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Logging;
 using Xunit;
@@ -16,11 +17,9 @@ public class UserConnectorTests : UserConnectorPositionalTestBase
                 ctx.WithBinanceUsdFutures(
                     new ProviderConfiguration
                     {
-                        ReloadAccountInterval = 1_000,
-                        ReloadAccountDebounce = 100,
-                        ReloadOrdersInterval = 10_000,
-                        ReloadOrdersDebounce = 100,
-                        ReloadDealsDebounce = 100
+                        ReloadAccount = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                        ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                        ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                     }
                 ),
             new UserSettings(

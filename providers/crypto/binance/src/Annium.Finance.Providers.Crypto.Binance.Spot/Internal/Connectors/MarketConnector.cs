@@ -7,7 +7,6 @@ using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
-using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 
@@ -30,10 +29,8 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         : base(config.Provider, config.Environment, tableFactory, monitor, synchronizer, logger)
     {
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
-            new SnapshotLoaderConfig(3000, 10000, 5),
-            async _ => await marketProvider.LoadContextAsync(config.Environment),
-            600_000,
-            0
+            new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
+            async _ => await marketProvider.LoadContextAsync(config.Environment)
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
