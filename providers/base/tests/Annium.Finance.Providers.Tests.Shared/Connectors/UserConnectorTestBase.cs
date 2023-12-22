@@ -293,10 +293,10 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 
     private async Task EnsureOrderReported(OrderDto order, OrderStatus status)
     {
-        this.Trace("ensure order {order} is reported and has status {status}", order.OrderId, status);
+        this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
         await Expect.To(() =>
         {
-            var orderMessage = Connector.Orders.Single(x => x.OrderId == order.OrderId);
+            var orderMessage = Connector.Orders.Single(x => x.Id == order.Id);
             orderMessage.ShouldMatch(order);
             orderMessage.Status.Is(status);
         });

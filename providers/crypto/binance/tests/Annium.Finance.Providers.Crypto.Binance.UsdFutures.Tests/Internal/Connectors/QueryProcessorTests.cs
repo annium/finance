@@ -265,7 +265,7 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("side").Is("BUY");
         data.At("quantity").Is("11.3");
         data.At("price").Is("12.7");
-        data.At("origClientOrderId").Is(request.Order.Id.ToString());
+        data.At("origClientOrderId").Is(request.Order.ClientOrderId.ToString());
     }
 
     [Fact]
@@ -341,8 +341,8 @@ public class QueryProcessorTests : ConnectorTestBase
         // assert
         data.Has(3);
         data.At("symbol").Is(order.Symbol);
-        data.At("origClientOrderId").Is(order.Id.ToString());
-        data.At("newClientOrderId").Is(order.Id.ToString());
+        data.At("origClientOrderId").Is(order.ClientOrderId.ToString());
+        data.At("newClientOrderId").Is(order.ClientOrderId.ToString());
     }
 
     [Fact]

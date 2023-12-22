@@ -77,7 +77,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += _orders = tableFactory
             .New<OrderDto>()
             .Allow(TablePermission.All)
-            .Key(x => x.Id)
+            .Key(x => x.ClientOrderId)
             .UpdateWith(OrderHasChanged, OrderUpdate)
             .Keep(x => x.Status is OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Filled)
             .Build();

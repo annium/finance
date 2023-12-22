@@ -9,7 +9,7 @@ public static class OrderRequestExtensions
     {
         return new InitOrderRequest
         {
-            Id = request.Order.Id,
+            Id = request.Order.ClientOrderId,
             Symbol = request.Order.Symbol,
             Side = request.Side,
             Type = request.Type,

@@ -70,8 +70,8 @@ internal class QueryProcessor : IQueryProcessor
         result["cancelReplaceMode"] = "STOP_ON_FAILURE";
         result["timeInForce"] = "GTC";
         result["newOrderRespType"] = "RESULT";
-        result["cancelOrigClientOrderId"] = request.Order.Id.ToString();
-        result["newClientOrderId"] = request.Order.Id.ToString();
+        result["cancelOrigClientOrderId"] = request.Order.ClientOrderId.ToString();
+        result["newClientOrderId"] = request.Order.ClientOrderId.ToString();
 
         switch (request.Type)
         {
@@ -109,8 +109,8 @@ internal class QueryProcessor : IQueryProcessor
     {
         var result = new Dictionary<string, string>();
 
-        result["origClientOrderId"] = order.Id.ToString();
-        result["newClientOrderId"] = order.Id.ToString();
+        result["origClientOrderId"] = order.ClientOrderId.ToString();
+        result["newClientOrderId"] = order.ClientOrderId.ToString();
         result["symbol"] = order.Symbol;
 
         return UserResult.Ok(result);

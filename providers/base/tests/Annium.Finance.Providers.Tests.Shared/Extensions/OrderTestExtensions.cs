@@ -8,8 +8,8 @@ public static class OrderTestExtensions
 {
     public static void ShouldMatch(this OrderDto order, IInitOrderRequest request)
     {
-        order.Id.IsNotDefault();
-        order.OrderId.IsNullOrWhiteSpace().IsFalse();
+        order.ClientOrderId.IsNotDefault();
+        order.Id.IsNullOrWhiteSpace().IsFalse();
         order.Symbol.Is(request.Symbol);
         order.Side.Is(request.Side);
         order.Type.Is(request.Type);
@@ -20,8 +20,8 @@ public static class OrderTestExtensions
 
     public static void ShouldMatch(this OrderDto order, IModifyOrderRequest request)
     {
-        order.Id.IsNotDefault();
-        order.OrderId.IsNullOrWhiteSpace().IsFalse();
+        order.ClientOrderId.IsNotDefault();
+        order.Id.IsNullOrWhiteSpace().IsFalse();
         order.Symbol.Is(request.Order.Symbol);
         order.Side.Is(request.Side);
         order.Type.Is(request.Type);
@@ -32,8 +32,8 @@ public static class OrderTestExtensions
 
     public static void ShouldMatch(this OrderDto order, OrderDto original)
     {
+        order.ClientOrderId.Is(original.ClientOrderId);
         order.Id.Is(original.Id);
-        order.OrderId.Is(original.OrderId);
         order.Symbol.Is(original.Symbol);
         order.Side.Is(original.Side);
         order.Type.Is(original.Type);

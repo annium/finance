@@ -99,7 +99,7 @@ internal class QueryProcessor : IQueryProcessor
             return UserResult.New(UserOperationStatus.BadRequest, result, "Only limit orders are supported");
         }
 
-        result["origClientOrderId"] = request.Order.Id.ToString();
+        result["origClientOrderId"] = request.Order.ClientOrderId.ToString();
         result["symbol"] = request.Order.Symbol;
         result["side"] = OrderSides.ValueToString[request.Side];
         result["quantity"] = request.Qty.ToGeneralInvariantString();
@@ -112,8 +112,8 @@ internal class QueryProcessor : IQueryProcessor
     {
         var result = new Dictionary<string, string>();
 
-        result["origClientOrderId"] = order.Id.ToString();
-        result["newClientOrderId"] = order.Id.ToString();
+        result["origClientOrderId"] = order.ClientOrderId.ToString();
+        result["newClientOrderId"] = order.ClientOrderId.ToString();
         result["symbol"] = order.Symbol;
 
         return UserResult.Ok(result);

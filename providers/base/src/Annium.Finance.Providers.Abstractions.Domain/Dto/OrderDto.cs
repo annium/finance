@@ -6,8 +6,8 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
 
 public sealed record OrderDto : IOrderBase
 {
-    public Guid Id { get; }
-    public string OrderId { get; }
+    public string Id { get; }
+    public Guid ClientOrderId { get; }
     public string Symbol { get; }
     public OrderSide Side { get; private set; }
     public OrderType Type { get; private set; }
@@ -22,8 +22,8 @@ public sealed record OrderDto : IOrderBase
     public long UpdatedAt { get; private set; }
 
     public OrderDto(
-        Guid id,
-        string orderId,
+        Guid clientOrderId,
+        string id,
         string symbol,
         OrderSide side,
         OrderType type,
@@ -38,8 +38,8 @@ public sealed record OrderDto : IOrderBase
         long updatedAt
     )
     {
+        ClientOrderId = clientOrderId;
         Id = id;
-        OrderId = orderId;
         Symbol = symbol;
         Side = side;
         Type = type;
