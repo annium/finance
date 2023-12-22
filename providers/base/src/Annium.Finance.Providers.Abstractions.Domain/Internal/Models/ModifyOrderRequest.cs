@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Internal.Models;
 
-internal class ModifyOrderRequest : IModifyOrderRequest
+internal sealed record ModifyOrderRequest : IModifyOrderRequest
 {
     public required OrderDto Order { get; init; }
     public required OrderSide Side { get; init; }

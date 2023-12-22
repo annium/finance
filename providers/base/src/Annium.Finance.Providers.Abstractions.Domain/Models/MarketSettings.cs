@@ -3,4 +3,4 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public record MarketSettings(string Provider, ProviderEnvironment Environment) : IConnectorSettings;
+public sealed record MarketSettings(string Provider, ProviderEnvironment Environment) : IConnectorSettings;

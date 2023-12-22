@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Internal.Models;
 
-internal class InitOrderRequest : IInitOrderRequest
+internal sealed record InitOrderRequest : IInitOrderRequest
 {
     public required Guid Id { get; init; }
     public required string Symbol { get; init; }
