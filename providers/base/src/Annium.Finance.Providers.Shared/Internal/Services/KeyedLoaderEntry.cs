@@ -19,19 +19,17 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
     public KeyedLoaderEntry(
         TKey key,
         TContext context,
-        SnapshotLoaderConfig loaderConfig,
+        CompositeLoaderConfig config,
         Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
         IStatusReporter statusReporter,
-        ILogger logger,
-        int intervalPeriod,
-        int debouncePeriod
+        ILogger logger
     )
     {
         Key = key;
         Context = context;
         _getLoad = getLoad;
-        var snapshotLoader = new SnapshotLoader<TData>(loaderConfig, GetLoad, statusReporter, logger);
-        Loader = new CompositeLoader<TData>(snapshotLoader, intervalPeriod, debouncePeriod, logger);
+        var snapshotLoader = new SnapshotLoader<TData>(config, GetLoad, statusReporter, logger);
+        Loader = new CompositeLoader<TData>(snapshotLoader, config.Interval, config.Debounce, logger);
     }
 
     public void UpdateContext(TContext context)

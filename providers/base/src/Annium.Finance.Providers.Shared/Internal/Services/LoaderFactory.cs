@@ -31,36 +31,23 @@ internal class LoaderFactory : ILoaderFactory
     }
 
     public ICompositeLoader<T> CreateCompositeLoader<T>(
-        SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load,
-        int intervalPeriod,
-        int debouncePeriod
+        CompositeLoaderConfig cfg,
+        Func<CancellationToken, Task<IBaseResult<T>>> load
     )
     {
         var loader = CreateSnapshotLoader(cfg, load);
 
-        return new CompositeLoader<T>(loader, intervalPeriod, debouncePeriod, _logger);
+        return new CompositeLoader<T>(loader, cfg.Interval, cfg.Debounce, _logger);
     }
 
     public IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
+        CompositeLoaderConfig cfg,
         TContext initialContext,
-        SnapshotLoaderConfig cfg,
         Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
-        Func<TKey, TContext, TData, TContext> getContext,
-        int intervalPeriod,
-        int debouncePeriod
+        Func<TKey, TContext, TData, TContext> getContext
     )
         where TKey : notnull
     {
-        return new KeyedLoader<TKey, TContext, TData>(
-            _sp,
-            initialContext,
-            cfg,
-            getLoad,
-            getContext,
-            intervalPeriod,
-            debouncePeriod,
-            _logger
-        );
+        return new KeyedLoader<TKey, TContext, TData>(_sp, cfg, initialContext, getLoad, getContext, _logger);
     }
 }

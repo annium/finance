@@ -16,34 +16,28 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     public ILogger Logger { get; }
     public event Action<TKey, TData> OnData = delegate { };
     private readonly IServiceProvider _sp;
+    private readonly CompositeLoaderConfig _config;
+    private readonly TContext _initialContext;
     private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> _getLoad;
     private readonly Func<TKey, TContext, TData, TContext> _getContext;
-    private readonly int _intervalPeriod;
-    private readonly int _debouncePeriod;
     private readonly ConcurrentDictionary<TKey, KeyedLoaderEntry<TKey, TContext, TData>> _entries = new();
-    private readonly TContext _initialContext;
-    private readonly SnapshotLoaderConfig _loaderConfig;
     private State _state;
 
     public KeyedLoader(
         IServiceProvider sp,
+        CompositeLoaderConfig config,
         TContext initialContext,
-        SnapshotLoaderConfig loaderConfig,
         Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
         Func<TKey, TContext, TData, TContext> getContext,
-        int intervalPeriod,
-        int debouncePeriod,
         ILogger logger
     )
     {
         Logger = logger;
         _sp = sp;
+        _config = config;
         _initialContext = initialContext;
-        _loaderConfig = loaderConfig;
         _getLoad = getLoad;
         _getContext = getContext;
-        _intervalPeriod = intervalPeriod;
-        _debouncePeriod = debouncePeriod;
     }
 
     public void Dispose()
@@ -124,12 +118,10 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         var entry = new KeyedLoaderEntry<TKey, TContext, TData>(
             key,
             _initialContext,
-            _loaderConfig,
+            _config,
             _getLoad,
             _sp.Resolve<IStatusReporter>(),
-            Logger,
-            _intervalPeriod,
-            _debouncePeriod
+            Logger
         );
         var loader = entry.Loader;
         loader.OnData += data =>

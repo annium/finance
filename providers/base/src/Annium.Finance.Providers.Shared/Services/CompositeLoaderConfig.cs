@@ -6,4 +6,4 @@ public sealed record CompositeLoaderConfig(
     int SlowInterval,
     int Interval,
     int Debounce
-);
+) : SnapshotLoaderConfig(FastInterval, FastRequestsLimit, SlowInterval);

@@ -5,7 +5,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
-using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Testing;
 using Xunit;
@@ -34,7 +33,7 @@ public class CompositeLoaderTests : TestBase
     [Fact]
     public async Task Works()
     {
-        var cfg = new SnapshotLoaderConfig(1, 2, 5);
+        var cfg = new CompositeLoaderConfig(1, 5, 2, 20, 30);
         var attempt = 0;
         var log = Get<TestLog<int>>();
         async Task<MarketResult<int>> Load()
@@ -47,7 +46,7 @@ public class CompositeLoaderTests : TestBase
                 ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
                 : MarketResult.Ok(attempt++);
         }
-        using var loader = Get<ILoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load(), 20, 30);
+        using var loader = Get<ILoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load());
         loader.OnData += log.Add;
 
         loader.Start();

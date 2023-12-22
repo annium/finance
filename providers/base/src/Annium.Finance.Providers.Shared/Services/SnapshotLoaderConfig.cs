@@ -1,3 +1,3 @@
 namespace Annium.Finance.Providers.Shared.Services;
 
-public sealed record SnapshotLoaderConfig(int FastInterval, int SlowInterval, int FastRequestsLimit);
+public record SnapshotLoaderConfig(int FastInterval, int FastRequestsLimit, int SlowInterval);

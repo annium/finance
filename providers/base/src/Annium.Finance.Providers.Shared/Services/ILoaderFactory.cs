@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared.Internal.Services;
 
 namespace Annium.Finance.Providers.Shared.Services;
 
@@ -14,19 +13,15 @@ public interface ILoaderFactory
     );
 
     ICompositeLoader<T> CreateCompositeLoader<T>(
-        SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load,
-        int intervalPeriod,
-        int debouncePeriod
+        CompositeLoaderConfig cfg,
+        Func<CancellationToken, Task<IBaseResult<T>>> load
     );
 
     IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
+        CompositeLoaderConfig cfg,
         TContext initialContext,
-        SnapshotLoaderConfig cfg,
         Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
-        Func<TKey, TContext, TData, TContext> getContext,
-        int intervalPeriod,
-        int debouncePeriod
+        Func<TKey, TContext, TData, TContext> getContext
     )
         where TKey : notnull;
 }
