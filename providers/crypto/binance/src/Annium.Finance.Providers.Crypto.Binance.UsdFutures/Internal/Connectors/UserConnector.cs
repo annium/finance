@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
@@ -23,9 +23,12 @@ using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
+using Annium.Serialization.Abstractions;
 using Annium.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
+using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 
@@ -46,22 +49,25 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>> _tradesLoader;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
+    private readonly ISerializer<ReadOnlyMemory<byte>> _balanceAndPositionUpdateEventSerializer;
+    private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
     public UserConnector(
+        IServiceProvider sp,
         UserConfig config,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
-        [FromKeyedServices(Constants.SetLeverageKey)] IHttpRequestFactory setLeverageRequestFactory,
-        [FromKeyedServices(Constants.InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
-        [FromKeyedServices(Constants.ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
-        [FromKeyedServices(Constants.CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
-        [FromKeyedServices(Constants.CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
+        [FromKeyedServices(SetLeverageKey)] IHttpRequestFactory setLeverageRequestFactory,
+        [FromKeyedServices(InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
+        [FromKeyedServices(ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
+        [FromKeyedServices(CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
+        [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
-        [FromKeyedServices(Constants.GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
-        [FromKeyedServices(Constants.GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
-        [FromKeyedServices(Constants.GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
+        [FromKeyedServices(GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
+        [FromKeyedServices(GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
+        [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
-        [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
+        [FromKeyedServices(Provider)] IUserProvider userProvider,
         ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
@@ -80,9 +86,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
-        _userStream = userStream;
 
         // user stream
+        _userStream = userStream;
         _userStream.OnConnected += HandleConnected;
         Disposable += () => _userStream.OnConnected -= HandleConnected;
 
@@ -91,6 +97,14 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         _userStream.OnMessage += HandleMessage;
         Disposable += () => _userStream.OnMessage -= HandleMessage;
+
+        _balanceAndPositionUpdateEventSerializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
+            SerializerKey.Create(BalanceAndPositionUpdateKey, Application.Json)
+        );
+
+        _orderUpdateEventSerializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
+            SerializerKey.Create(OrderUpdateKey, Application.Json)
+        );
 
         // accounts
         Disposable += _accountLoader = loaderFactory.CreateCompositeLoader(_config.ReloadAccount, LoadAccount);
@@ -410,6 +424,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         foreach (var item in items)
         {
             var trade = new TradeDto(
+                item.Id,
                 item.OrderId,
                 item.Symbol,
                 item.Price,
@@ -443,8 +458,70 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("done");
     }
 
-    private void HandleMessage(ReadOnlyMemory<byte> raw)
+    private void HandleMessage(ReadOnlyMemory<byte> data)
     {
-        this.Trace<string>("message: {msg}", Encoding.UTF8.GetString(raw.Span));
+        this.Trace("start");
+
+        // handle order update
+        var orderUpdate = _orderUpdateEventSerializer.Deserialize<OrderUpdateEvent?>(data);
+        if (orderUpdate is not null)
+        {
+            HandleOrderUpdate(orderUpdate);
+            return;
+        }
+
+        // handle balance and position update
+        var balanceAndPositionUpdate =
+            _balanceAndPositionUpdateEventSerializer.Deserialize<BalanceAndPositionUpdateEvent?>(data);
+        if (balanceAndPositionUpdate is not null)
+        {
+            HandleBalanceAndPositionUpdate(balanceAndPositionUpdate);
+        }
+    }
+
+    private void HandleOrderUpdate(OrderUpdateEvent e)
+    {
+        this.Trace("start");
+
+        if (e.Status is OrderStatus.PartiallyFilled or OrderStatus.Filled)
+        {
+            // as far as pnl is not available here - request reload by http
+            _tradesLoader.RequestUpdate(e.Symbol);
+        }
+
+        var order = new OrderDto(
+            e.OrderId,
+            e.ClientOrderId,
+            e.Symbol,
+            e.Side,
+            e.Type,
+            e.TotalQty,
+            e.Price,
+            e.LevelPrice,
+            e.CreatedAt,
+            e.Status,
+            e.ExecutedQty,
+            e.ExecutedPrice,
+            e.UpdatedAt
+        );
+        OrderWriter.Write(order);
+
+        this.Trace("done");
+    }
+
+    private void HandleBalanceAndPositionUpdate(BalanceAndPositionUpdateEvent e)
+    {
+        this.Trace("start");
+
+        // account info in event is almost useless, so request account reload
+        _accountLoader.Request();
+
+        foreach (var x in e.Positions)
+        {
+            var position = new PositionDto(x.Symbol, x.Orientation, x.MarginType, -1, x.Amount);
+            PositionWriter.Write(position);
+        }
+
+        this.Trace("done");
     }
 }
