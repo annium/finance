@@ -403,15 +403,24 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeResponse> trades)
+    private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeResponse> items)
     {
         this.Trace("start");
 
-        // foreach (var trade in trades)
-        // {
-        //     var order = new OrderDto(trade.);
-        //     OrderWriter.Write(order);
-        // }
+        foreach (var item in items)
+        {
+            var trade = new TradeDto(
+                item.OrderId,
+                item.Symbol,
+                item.Price,
+                item.Qty,
+                item.CommissionAsset,
+                item.Commission,
+                item.Maker,
+                item.Moment
+            );
+            TradeWriter.Write(trade);
+        }
 
         this.Trace("done");
     }
