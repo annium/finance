@@ -40,6 +40,7 @@ public class GetTradeResponseConverterTests : ConnectorTestBase
         var deserialized = serializer.Deserialize<TradeResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
+        deserialized.Id.Is("698759");
         deserialized.OrderId.Is("25851813");
         deserialized.Symbol.Is("BTCUSDT");
         deserialized.Price.Is(7819.01m);

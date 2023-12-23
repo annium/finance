@@ -26,13 +26,13 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
         var clientOrderId = string.Empty;
         var type = default(OrderType);
         var side = default(OrderSide);
-        var quantity = 0m;
+        var totalQty = 0m;
         var price = 0m;
-        var triggerPrice = 0m;
+        var levelPrice = 0m;
         var status = default(OrderStatus);
-        var executedQuantity = 0m;
+        var executedQty = 0m;
         var executedSum = 0m;
-        var lastExecutedQuantity = 0m;
+        var lastExecutedQty = 0m;
         var lastExecutedPrice = 0m;
         var commissionAmount = 0m;
         var commissionAsset = string.Empty;
@@ -56,13 +56,13 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                     clientOrderId ?? string.Empty,
                     type,
                     side,
-                    quantity,
+                    totalQty,
                     price,
-                    triggerPrice,
+                    levelPrice,
                     status,
-                    executedQuantity,
-                    executedQuantity == 0 ? 0 : executedSum / executedQuantity,
-                    lastExecutedQuantity,
+                    executedQty,
+                    executedQty == 0 ? 0 : executedSum / executedQty,
+                    lastExecutedQty,
                     lastExecutedPrice,
                     commissionAmount,
                     commissionAsset ?? string.Empty,
@@ -115,25 +115,25 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                         side = OrderSides.StringToValue.MapValue(reader.GetString());
                         break;
                     case "q":
-                        quantity = reader.GetDecimalFromString();
+                        totalQty = reader.GetDecimalFromString();
                         break;
                     case "p":
                         price = reader.GetDecimalFromString();
                         break;
                     case "P":
-                        triggerPrice = reader.GetDecimalFromString();
+                        levelPrice = reader.GetDecimalFromString();
                         break;
                     case "X":
                         status = OrderStatuses.StringToValue.MapValue(reader.GetString());
                         break;
                     case "z":
-                        executedQuantity = reader.GetDecimalFromString();
+                        executedQty = reader.GetDecimalFromString();
                         break;
                     case "Z":
                         executedSum = reader.GetDecimalFromString();
                         break;
                     case "l":
-                        lastExecutedQuantity = reader.GetDecimalFromString();
+                        lastExecutedQty = reader.GetDecimalFromString();
                         break;
                     case "L":
                         lastExecutedPrice = reader.GetDecimalFromString();

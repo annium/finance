@@ -71,14 +71,14 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
         deserialized.ClientOrderId.Is("mUvoqJxFIILMdfAW5iGSOW");
         deserialized.Type.Is(OrderType.StopLossMarket);
         deserialized.Side.Is(OrderSide.Sell);
-        deserialized.Quantity.Is(1.7m);
+        deserialized.TotalQty.Is(1.7m);
         deserialized.Price.Is(10264.410m);
-        deserialized.TriggerPrice.Is(7103.04m);
+        deserialized.LevelPrice.Is(7103.04m);
         deserialized.ReduceOnly.IsTrue();
         deserialized.Status.Is(OrderStatus.New);
-        deserialized.ExecutedQuantity.Is(10.5m);
+        deserialized.ExecutedQty.Is(10.5m);
         deserialized.ExecutedPrice.Is(12305.6m);
-        deserialized.LastExecutedQuantity.Is(2.4m);
+        deserialized.LastExecutedQty.Is(2.4m);
         deserialized.LastExecutedPrice.Is(11742.3m);
         deserialized.CommissionAsset.Is("USDT");
         deserialized.CommissionAmount.Is(3.6m);

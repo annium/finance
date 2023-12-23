@@ -67,13 +67,13 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
         deserialized.ClientOrderId.Is("mUvoqJxFIILMdfAW5iGSOW");
         deserialized.Type.Is(OrderType.Limit);
         deserialized.Side.Is(OrderSide.Buy);
-        deserialized.Quantity.Is(1.7m);
+        deserialized.TotalQty.Is(1.7m);
         deserialized.Price.Is(0.10264410m);
-        deserialized.TriggerPrice.Is(0.3m);
+        deserialized.LevelPrice.Is(0.3m);
         deserialized.Status.Is(OrderStatus.New);
-        deserialized.ExecutedQuantity.Is(1.2m);
+        deserialized.ExecutedQty.Is(1.2m);
         deserialized.ExecutedPrice.Is(2m);
-        deserialized.LastExecutedQuantity.Is(2.1m);
+        deserialized.LastExecutedQty.Is(2.1m);
         deserialized.LastExecutedPrice.Is(3.3m);
         deserialized.CommissionAsset.Is("BTC");
         deserialized.CommissionAmount.Is(5.4m);

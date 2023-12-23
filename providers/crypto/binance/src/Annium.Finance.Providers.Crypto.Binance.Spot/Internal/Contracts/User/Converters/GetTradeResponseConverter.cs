@@ -15,6 +15,7 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
 
         var currentDepth = reader.CurrentDepth;
 
+        var id = string.Empty;
         var orderId = string.Empty;
         var symbol = string.Empty;
         var qty = 0m;
@@ -38,6 +39,7 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
                 }
 
                 var trade = new TradeResponse(
+                    id,
                     orderId,
                     symbol,
                     price,
@@ -59,6 +61,9 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
 
                 switch (propertyName)
                 {
+                    case "id":
+                        id = reader.GetInt64().ToString();
+                        break;
                     case "orderId":
                         orderId = reader.GetInt64().ToString();
                         break;
