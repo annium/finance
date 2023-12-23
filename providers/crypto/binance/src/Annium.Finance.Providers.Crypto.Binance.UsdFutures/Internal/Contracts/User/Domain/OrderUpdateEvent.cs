@@ -21,6 +21,6 @@ internal sealed record OrderUpdateEvent(
     decimal CommissionAmount,
     string CommissionAsset,
     bool IsMaker,
-    long CreatedDate,
-    long UpdatedDate
+    long CreatedAt,
+    long UpdatedAt
 );

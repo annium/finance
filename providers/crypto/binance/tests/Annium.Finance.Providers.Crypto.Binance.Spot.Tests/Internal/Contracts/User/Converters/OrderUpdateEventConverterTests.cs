@@ -78,8 +78,8 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
         deserialized.CommissionAsset.Is("BTC");
         deserialized.CommissionAmount.Is(5.4m);
         deserialized.IsMaker.IsTrue();
-        deserialized.CreatedDate.Is(1499405658657);
-        deserialized.UpdatedDate.Is(1499405658677);
+        deserialized.CreatedAt.Is(1499405658657);
+        deserialized.UpdatedAt.Is(1499405658677);
     }
 
     [Fact]
