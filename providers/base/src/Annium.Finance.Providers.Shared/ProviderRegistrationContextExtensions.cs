@@ -24,7 +24,7 @@ public static class ProviderRegistrationContextExtensions
         JsonSerializerOptions contracts
     )
     {
-        ctx.Container.AddHttpRequestFactory(key);
+        ctx.Container.AddSerializers(key).WithJson(contracts);
 
         return ctx;
     }
