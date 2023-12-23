@@ -9,8 +9,8 @@ public static class InitOrderRequestTestExtensions
     public static OrderDto ToOrder(this IInitOrderRequest request)
     {
         return new OrderDto(
-            request.Id,
             string.Empty,
+            request.Id,
             request.Symbol,
             request.Side,
             request.Type,

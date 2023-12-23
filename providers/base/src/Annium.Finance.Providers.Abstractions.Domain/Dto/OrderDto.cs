@@ -21,8 +21,8 @@ public sealed record OrderDto : IOrder
     public long UpdatedAt { get; private set; }
 
     public OrderDto(
-        string clientOrderId,
         string id,
+        string clientOrderId,
         string symbol,
         OrderSide side,
         OrderType type,
@@ -37,8 +37,8 @@ public sealed record OrderDto : IOrder
         long updatedAt
     )
     {
-        ClientOrderId = clientOrderId;
         Id = id;
+        ClientOrderId = clientOrderId;
         Symbol = symbol;
         Side = side;
         Type = type;
