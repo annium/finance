@@ -1,14 +1,14 @@
 ﻿namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
-internal sealed record AccountConfigurationUpdateEvent(
+internal sealed record AccountConfigUpdateEvent(
     long Date,
-    AccountConfigurationUpdateEventType Type,
+    AccountConfigUpdateEventType Type,
     bool MultiAssetsMode,
     string Symbol,
     int Leverage
 );
 
-public enum AccountConfigurationUpdateEventType
+public enum AccountConfigUpdateEventType
 {
     MultiAssetsModeChange,
     LeverageChange

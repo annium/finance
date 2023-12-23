@@ -5,9 +5,9 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountConfigurationUpdateEvent?>
+internal class AccountConfigUpdateEventConverter : JsonConverter<AccountConfigUpdateEvent?>
 {
-    public override AccountConfigurationUpdateEvent? Read(
+    public override AccountConfigUpdateEvent? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
@@ -22,7 +22,7 @@ internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountC
 
         var canConvert = true;
         var date = 0L;
-        var type = AccountConfigurationUpdateEventType.MultiAssetsModeChange;
+        var type = AccountConfigUpdateEventType.MultiAssetsModeChange;
         var multiAssetsMode = false;
         var symbol = string.Empty;
         var leverage = 0;
@@ -36,7 +36,7 @@ internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountC
                     return default;
                 }
 
-                var result = new AccountConfigurationUpdateEvent(
+                var result = new AccountConfigUpdateEvent(
                     date,
                     type,
                     multiAssetsMode,
@@ -73,10 +73,10 @@ internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountC
                         date = reader.GetInt64();
                         break;
                     case "ai":
-                        type = AccountConfigurationUpdateEventType.MultiAssetsModeChange;
+                        type = AccountConfigUpdateEventType.MultiAssetsModeChange;
                         break;
                     case "ac":
-                        type = AccountConfigurationUpdateEventType.LeverageChange;
+                        type = AccountConfigUpdateEventType.LeverageChange;
                         break;
                     case "j":
                         multiAssetsMode = reader.GetBoolean();
@@ -100,7 +100,7 @@ internal class AccountConfigurationUpdateEventConverter : JsonConverter<AccountC
 
     public override void Write(
         Utf8JsonWriter writer,
-        AccountConfigurationUpdateEvent? value,
+        AccountConfigUpdateEvent? value,
         JsonSerializerOptions options
     )
     {

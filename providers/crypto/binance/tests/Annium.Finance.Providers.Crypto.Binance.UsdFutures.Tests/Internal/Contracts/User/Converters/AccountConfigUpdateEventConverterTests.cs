@@ -8,9 +8,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Contracts.User.Converters;
 
-public class AccountConfigurationUpdateEventConverterTests : ConnectorTestBase
+public class AccountConfigUpdateEventConverterTests : ConnectorTestBase
 {
-    public AccountConfigurationUpdateEventConverterTests(ITestOutputHelper outputHelper)
+    public AccountConfigUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }
 
     [Fact]
@@ -30,12 +30,12 @@ public class AccountConfigurationUpdateEventConverterTests : ConnectorTestBase
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.AccountConfigurationUpdateKey);
         var deserialized = serializer
-            .Deserialize<AccountConfigurationUpdateEvent>(Encoding.UTF8.GetBytes(raw))
+            .Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw))
             .NotNull();
 
         // assert - deserialization
         deserialized.Date.Is(1611646737476);
-        deserialized.Type.Is(AccountConfigurationUpdateEventType.MultiAssetsModeChange);
+        deserialized.Type.Is(AccountConfigUpdateEventType.MultiAssetsModeChange);
         deserialized.MultiAssetsMode.IsTrue();
     }
 
@@ -57,12 +57,12 @@ public class AccountConfigurationUpdateEventConverterTests : ConnectorTestBase
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.AccountConfigurationUpdateKey);
         var deserialized = serializer
-            .Deserialize<AccountConfigurationUpdateEvent>(Encoding.UTF8.GetBytes(raw))
+            .Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw))
             .NotNull();
 
         // assert - deserialization
         deserialized.Date.Is(1611646737476);
-        deserialized.Type.Is(AccountConfigurationUpdateEventType.LeverageChange);
+        deserialized.Type.Is(AccountConfigUpdateEventType.LeverageChange);
         deserialized.Symbol.Is("BTCUSDT");
         deserialized.Leverage.Is(25);
     }
@@ -78,7 +78,7 @@ public class AccountConfigurationUpdateEventConverterTests : ConnectorTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.AccountConfigurationUpdateKey);
-        var deserialized = serializer.Deserialize<AccountConfigurationUpdateEvent>(Encoding.UTF8.GetBytes(raw));
+        var deserialized = serializer.Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw));
 
         // assert - deserialization
         deserialized.IsDefault();

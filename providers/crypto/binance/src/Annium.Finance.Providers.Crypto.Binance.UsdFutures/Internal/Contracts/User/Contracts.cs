@@ -62,7 +62,7 @@ internal class Contracts
             .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions AccountConfigurationUpdate { get; } =
-        new JsonSerializerOptions().ResetConverters().AddConverter<AccountConfigurationUpdateEventConverter>();
+        new JsonSerializerOptions().ResetConverters().AddConverter<AccountConfigUpdateEventConverter>();
 
     public JsonSerializerOptions BalanceAndPositionUpdate { get; } =
         new JsonSerializerOptions()
