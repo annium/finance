@@ -132,9 +132,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Post("/fapi/v1/leverage")
             .Param("symbol", position.Symbol)
             .Param("leverage", leverage.FloorInt32())
+            .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
             .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(new LeverageResponse(0));
 
         HandleTradeResult(result.IsSuccess);
@@ -164,8 +165,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .New(_config.HttpApi)
             .Post("/fapi/v1/order")
             .Params(queryResult.Data)
+            .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(default(OrderDto)!);
 
         HandleTradeResult(result.IsSuccess);
@@ -214,8 +217,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .New(_config.HttpApi)
             .Put("/fapi/v1/order")
             .Params(queryResult.Data)
+            .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(default(OrderDto)!);
 
         HandleTradeResult(result.IsSuccess);
@@ -245,8 +250,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .New(_config.HttpApi)
             .Delete("/fapi/v1/order")
             .Params(queryResult.Data)
+            .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(new OperationResult(0, string.Empty));
 
         HandleTradeResult(result.IsSuccess);
@@ -276,8 +283,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .New(_config.HttpApi)
             .Delete("/fapi/v1/allOpenOrders")
             .Params(queryResult.Data)
+            .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(new OperationResult(0, string.Empty));
 
         HandleTradeResult(result.IsSuccess);
@@ -305,10 +314,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var result = await _getAccountRequestFactory
             .New(_config.HttpApi)
             .Get("/fapi/v2/account")
-            .WithRateDelay1M()
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithLogFrom(this)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers)
             .AsUserResultAsync(
                 new AccountResponse(Array.Empty<AccountResponseBalance>(), Array.Empty<AccountResponsePosition>())
             );
@@ -342,9 +351,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var result = await _getOrderRequestFactory
             .New(_config.HttpApi)
             .Get("/fapi/v1/openOrders")
-            .WithRateDelay1M()
             .ReceiveWindow()
             .Sign(_signatureService)
+            .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(Array.Empty<OrderDto>());
         this.Trace("done");
@@ -375,9 +384,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Param("symbol", symbol)
             .Param("startTime", since)
             .Param("limit", 1000)
-            .WithRateDelay1M()
             .ReceiveWindow()
             .Sign(_signatureService)
+            .WithRateDelay1M()
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync(Array.Empty<TradeResponse>());
         this.Trace("done");
 
