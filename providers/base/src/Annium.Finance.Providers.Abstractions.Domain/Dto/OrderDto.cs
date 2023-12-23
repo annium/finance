@@ -17,7 +17,6 @@ public sealed record OrderDto : IOrder
     public OrderStatus Status { get; private set; }
     public decimal ExecutedQty { get; private set; }
     public decimal ExecutedPrice { get; private set; }
-    public decimal Fee { get; private set; }
     public long UpdatedAt { get; private set; }
 
     public OrderDto(
@@ -33,7 +32,6 @@ public sealed record OrderDto : IOrder
         OrderStatus status,
         decimal executedQty,
         decimal executedPrice,
-        decimal fee,
         long updatedAt
     )
     {
@@ -49,7 +47,6 @@ public sealed record OrderDto : IOrder
         Status = status;
         ExecutedQty = executedQty;
         ExecutedPrice = executedPrice;
-        Fee = fee;
         UpdatedAt = updatedAt;
     }
 
@@ -63,7 +60,6 @@ public sealed record OrderDto : IOrder
         OrderStatus status,
         decimal executedQty,
         decimal executedPrice,
-        decimal fee,
         long updatedAt
     )
     {
@@ -76,7 +72,6 @@ public sealed record OrderDto : IOrder
         Status = status;
         ExecutedQty = executedQty;
         ExecutedPrice = executedPrice;
-        Fee = fee;
         UpdatedAt = updatedAt;
     }
 }

@@ -21,7 +21,6 @@ public static class InitOrderRequestTestExtensions
             OrderStatus.New,
             0m,
             0m,
-            0m,
             0L
         );
     }

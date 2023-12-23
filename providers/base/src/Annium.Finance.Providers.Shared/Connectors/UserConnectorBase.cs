@@ -139,7 +139,6 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             || a.Status != b.Status
             || a.ExecutedQty != b.ExecutedQty
             || a.ExecutedPrice != b.ExecutedPrice
-            || a.Fee != b.Fee
             || a.UpdatedAt != b.UpdatedAt;
     }
 
@@ -155,7 +154,6 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             value.Status,
             value.ExecutedQty,
             value.ExecutedPrice,
-            value.Fee,
             value.UpdatedAt
         );
     }
