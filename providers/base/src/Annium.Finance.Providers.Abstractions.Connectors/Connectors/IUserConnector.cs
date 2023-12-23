@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -11,6 +12,7 @@ public interface IUserConnector : IConnectorBase
     ITableView<AssetDto> Assets { get; }
     ITableView<PositionDto> Positions { get; }
     ITableView<OrderDto> Orders { get; }
+    ChannelReader<TradeDto> Trades { get; }
     Task<UserResult> SetLeverage(PositionDto position, decimal leverage);
     Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request);
     Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request);

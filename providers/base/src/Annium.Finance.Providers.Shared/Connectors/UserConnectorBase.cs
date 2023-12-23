@@ -21,11 +21,13 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public ITableView<AssetDto> Assets => _assets;
     public ITableView<PositionDto> Positions => _positions;
     public ITableView<OrderDto> Orders => _orders;
+    public ChannelReader<TradeDto> Trades { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     protected readonly ChannelWriter<AssetDto> AssetWriter;
     protected readonly ChannelWriter<PositionDto> PositionWriter;
     protected readonly ChannelWriter<OrderDto> OrderWriter;
+    protected readonly ChannelWriter<TradeDto> TradeWriter;
     protected AsyncDisposableBox Disposable;
     private readonly ITable<AssetDto> _assets;
     private readonly ITable<PositionDto> _positions;
@@ -33,6 +35,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelReader<AssetDto> _assetReader;
     private readonly ChannelReader<PositionDto> _positionReader;
     private readonly ChannelReader<OrderDto> _orderReader;
+    private readonly ChannelReader<TradeDto> _tradeSource;
+    private readonly ChannelWriter<TradeDto> _tradeTarget;
     private readonly IExecutor _executor;
     private readonly IUserSynchronizer _synchronizer;
     private readonly UserSettings _settings;
@@ -97,6 +101,14 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var orderChannel = Channel.CreateUnbounded<OrderDto>();
         OrderWriter = orderChannel.Writer;
         _orderReader = orderChannel.Reader;
+
+        var tradeSourceChannel = Channel.CreateUnbounded<TradeDto>();
+        TradeWriter = tradeSourceChannel.Writer;
+        _tradeSource = tradeSourceChannel.Reader;
+
+        var tradeTargetChannel = Channel.CreateUnbounded<TradeDto>();
+        _tradeTarget = tradeTargetChannel.Writer;
+        Trades = tradeTargetChannel.Reader;
 
         SubscribeReaders();
     }
@@ -204,6 +216,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         _sourceSubscriptions += _assetReader.AsObservable().Subscribe(_assets.Set);
         _sourceSubscriptions += _positionReader.AsObservable().Subscribe(_positions.Set);
         _sourceSubscriptions += _orderReader.AsObservable().Subscribe(_orders.Set);
+        _sourceSubscriptions += _tradeSource.Pipe(_tradeTarget);
     }
 
     private void UnsubscribeReaders()
