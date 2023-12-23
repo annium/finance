@@ -62,9 +62,9 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddHttpRequestFactoryWithJsonSerializer(CancelAllOrdersKey, Contracts.User.CancelAllOrders);
 
         // user data updates
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ListenKeyKey, Contracts.User.ListenKey);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(AccountUpdateKey, Contracts.User.AccountUpdate);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
+        ctx.AddJsonSerializer(ListenKeyKey, Contracts.User.ListenKey);
+        ctx.AddJsonSerializer(AccountUpdateKey, Contracts.User.AccountUpdate);
+        ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
