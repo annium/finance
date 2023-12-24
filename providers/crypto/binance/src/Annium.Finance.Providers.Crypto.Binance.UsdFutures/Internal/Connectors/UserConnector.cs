@@ -445,6 +445,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("start");
 
         _accountLoader.Start();
+        _ordersLoader.Start();
 
         this.Trace("done");
     }
@@ -454,6 +455,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("start");
 
         _accountLoader.Stop();
+        _ordersLoader.Stop();
 
         this.Trace("done");
     }
