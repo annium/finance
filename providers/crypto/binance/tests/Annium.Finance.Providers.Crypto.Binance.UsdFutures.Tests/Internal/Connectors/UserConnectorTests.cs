@@ -14,7 +14,16 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Conn
 public class UserConnectorTests : UserConnectorPositionalTestBase
 {
     private decimal ExtremeHighQty => Instrument.MaxQty * 1_000_000;
-    private decimal LowPrice => Ticker.Price() * 0.7m;
+    private decimal LowPrice => Instrument.ToTickSizeDown(Ticker.Price() * 0.7m);
+
+    private decimal MinQty
+    {
+        get
+        {
+            var minQty = Instrument.ToValidQty(Instrument.MinSum / LowPrice);
+            return minQty + (minQty * LowPrice > Instrument.MinSum ? 0 : Instrument.LotSize);
+        }
+    }
 
     public UserConnectorTests(ITestOutputHelper output)
         : base(
@@ -50,6 +59,25 @@ public class UserConnectorTests : UserConnectorPositionalTestBase
             LowPrice
         );
         await InitInvalidOrder(request);
+
+        this.Trace("done");
+    }
+
+    [Fact]
+    public async Task InitOrder_Valid()
+    {
+        this.Trace("start");
+
+        // arrange
+        var request = InitLimitOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, MinQty, LowPrice);
+
+        // act
+        var order = await InitValidOrder(request, OrderStatus.New);
+        await EnsureBalanceIsLocked();
+
+        // cleanup
+        await CancelValidOrder(order);
+        await EnsureBalanceIsReleased();
 
         this.Trace("done");
     }
