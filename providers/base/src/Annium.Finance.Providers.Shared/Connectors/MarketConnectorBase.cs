@@ -52,20 +52,71 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += ResourcesTable = tableFactory
             .New<ResourceDto>()
             .Allow(TablePermission.All)
-            .Key(x => x.Code)
+            .Key(x => x.Code.GetHashCode())
+            .Set(ResourceHasChanged, ResourceUpdate)
             .Build();
         Disposable += InstrumentsTable = tableFactory
             .New<InstrumentDto>()
             .Allow(TablePermission.All)
-            .Key(x => x.Symbol)
+            .Key(x => x.Symbol.GetHashCode())
+            .Set(InstrumentHasChanged, InstrumentUpdate)
             .Build();
         Disposable += TickersTable = tableFactory
             .New<InstrumentTicker>()
             .Allow(TablePermission.All)
-            .Key(x => x.Symbol)
+            .Key(x => x.Symbol.GetHashCode())
+            .Set(TickerHasChanged, TickerUpdate)
             .Build();
 
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+    }
+
+    private bool ResourceHasChanged(ResourceDto a, ResourceDto b)
+    {
+        return a.Precision != b.Precision;
+    }
+
+    private void ResourceUpdate(ResourceDto source, ResourceDto value)
+    {
+        source.Update(value.Precision);
+    }
+
+    private bool InstrumentHasChanged(InstrumentDto a, InstrumentDto b)
+    {
+        return a.MinQty != b.MinQty
+            || a.MaxQty != b.MaxQty
+            || a.LotSize != b.LotSize
+            || a.MinPrice != b.MinPrice
+            || a.MaxPrice != b.MaxPrice
+            || a.TickSize != b.TickSize
+            || a.MinSum != b.MinSum
+            || a.MaxSum != b.MaxSum
+            || a.MaxOrders != b.MaxOrders;
+    }
+
+    private void InstrumentUpdate(InstrumentDto source, InstrumentDto value)
+    {
+        source.Update(
+            value.MinQty,
+            value.MaxQty,
+            value.LotSize,
+            value.MinPrice,
+            value.MaxPrice,
+            value.TickSize,
+            value.MinSum,
+            value.MaxSum,
+            value.MaxOrders
+        );
+    }
+
+    private bool TickerHasChanged(InstrumentTicker a, InstrumentTicker b)
+    {
+        return a.BidPrice != b.BidPrice || a.AskPrice != b.AskPrice;
+    }
+
+    private void TickerUpdate(InstrumentTicker source, InstrumentTicker value)
+    {
+        source.Update(value.BidPrice, value.AskPrice);
     }
 
     public async ValueTask DisposeAsync()

@@ -69,20 +69,20 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += _assets = tableFactory
             .New<AssetDto>()
             .Allow(TablePermission.All)
-            .Key(x => x.Resource)
-            .UpdateWith(AssetHasChanged, AssetUpdate)
+            .Key(x => x.Resource.GetHashCode())
+            .Set(AssetHasChanged, AssetUpdate)
             .Build();
         Disposable += _positions = tableFactory
             .New<PositionDto>()
             .Allow(TablePermission.All)
-            .Key(x => new { x.Symbol, x.OrientationRange })
-            .UpdateWith(PositionHasChanged, PositionUpdate)
+            .Key(x => HashCode.Combine(x.Symbol, x.OrientationRange))
+            .Set(PositionHasChanged, PositionUpdate)
             .Build();
         Disposable += _orders = tableFactory
             .New<OrderDto>()
             .Allow(TablePermission.All)
-            .Key(x => x.Id)
-            .UpdateWith(OrderHasChanged, OrderUpdate)
+            .Key(x => x.Id.GetHashCode())
+            .Set(OrderHasChanged, OrderUpdate)
             .Keep(x => x.Status is OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Filled)
             .Build();
 
