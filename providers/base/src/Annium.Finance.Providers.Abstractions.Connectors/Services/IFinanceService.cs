@@ -17,8 +17,7 @@ public interface IFinanceService : IAsyncDisposable
         decimal positionPrice,
         OrderSide side,
         decimal qty,
-        decimal price,
-        decimal fee
+        decimal price
     );
 
     // calculate cost of purchasing instrument qty at price

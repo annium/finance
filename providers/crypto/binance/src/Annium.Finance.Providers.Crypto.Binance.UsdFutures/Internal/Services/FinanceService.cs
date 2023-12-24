@@ -25,8 +25,7 @@ internal class FinanceService : IFinanceService
         decimal positionPrice,
         OrderSide side,
         decimal qty,
-        decimal price,
-        decimal fee
+        decimal price
     )
     {
         throw new NotImplementedException();
