@@ -21,7 +21,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public ITableView<AssetDto> Assets => _assets;
     public ITableView<PositionDto> Positions => _positions;
     public ITableView<OrderDto> Orders => _orders;
-    public ChannelReader<TradeDto> Trades { get; }
+    public IObservable<TradeDto> Trades { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     protected readonly ChannelWriter<AssetDto> AssetWriter;
@@ -108,7 +108,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
         var tradeTargetChannel = Channel.CreateUnbounded<TradeDto>();
         _tradeTarget = tradeTargetChannel.Writer;
-        Trades = tradeTargetChannel.Reader;
+        Trades = tradeTargetChannel.Reader.AsObservable();
 
         SubscribeReaders();
     }
