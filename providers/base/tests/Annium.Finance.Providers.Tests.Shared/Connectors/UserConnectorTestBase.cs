@@ -21,6 +21,7 @@ namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 public abstract class UserConnectorTestBase : ConnectorTestBase
 {
     protected InstrumentDto Instrument { get; private set; } = default!;
+    protected InstrumentTicker Ticker { get; private set; } = default!;
     protected IUserConnector Connector { get; private set; } = default!;
     protected AsyncDisposableBox Disposable { get; set; }
     private readonly UserSettings _config;
@@ -49,13 +50,24 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         this.Trace("get market connector for {config}", marketConfig);
         var marketConnectorRef = await Get<IObjectCache<MarketSettings, IMarketConnector>>().GetAsync(marketConfig);
         Disposable += marketConnectorRef;
+        var market = marketConnectorRef.Value;
 
         this.Trace("await until market connector is ready");
-        await marketConnectorRef.Value.WhenConnected();
+        await market.WhenConnected();
 
         this.Trace<string>("find instrument {symbol}", _symbol);
-        Instrument = marketConnectorRef.Value.Instruments.Single(x => x.Symbol == _symbol);
+        Instrument = market.Instruments.Single(x => x.Symbol == _symbol);
         this.Trace("found instrument {instrument}", Instrument);
+
+        this.Trace<string>("subscribe and wait for ticker for {symbol}", _symbol);
+        market.SubscribeTickers(new[] { Instrument.Symbol });
+        await Expect.To(
+            () => market.Tickers.FirstOrDefault(x => x.Symbol == Instrument.Symbol).IsNotDefault(),
+            pollDelay: 100
+        );
+        this.Trace<string>("find ticker for {symbol}", _symbol);
+        Ticker = market.Tickers.Single(x => x.Symbol == _symbol);
+        this.Trace("found ticker for {instrument}", Instrument);
 
         this.Trace("get user connector for {config}", _config);
         var userConnectorRef = await Get<IObjectCache<UserSettings, IUserConnector>>().GetAsync(_config);
