@@ -44,56 +44,6 @@ public static class OrderExtensions
         return 0;
     }
 
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal LeveragedTotalValue<TPosition, TInstrument, TResource>(this IOrder<TPosition, TInstrument, TResource> order)
-    //     where TPosition : IPosition<TInstrument, TResource>
-    //     where TInstrument : IInstrument<TResource>
-    //     where TResource : IResource
-    //     =>
-    //         order.TotalQty * order.TargetPrice() * order.Position.LeveragedPart();
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal FullExpenseSum<TOrder>(this TOrder order)
-    //     where TOrder : IOrderBase
-    //     =>
-    //         order.FullExecutedSum() + order.Fee;
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal LeveragedExpenseSum<TPosition, TInstrument, TResource>(this IOrder<TPosition, TInstrument, TResource> order)
-    //     where TPosition : IPosition<TInstrument, TResource>
-    //     where TInstrument : IInstrument<TResource>
-    //     where TResource : IResource
-    //     =>
-    //         order.LeveragedExecutedSum() + order.Fee;
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal FullRevenueSum<TOrder>(this TOrder order)
-    //     where TOrder : IOrderBase
-    //     =>
-    //         order.FullExecutedSum() - order.Fee;
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal LeveragedRevenueSum<TPosition, TInstrument, TResource>(this IOrder<TPosition, TInstrument, TResource> order)
-    //     where TPosition : IPosition<TInstrument, TResource>
-    //     where TInstrument : IInstrument<TResource>
-    //     where TResource : IResource
-    //     =>
-    //         order.LeveragedExecutedSum() - order.Fee;
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal FullExecutedSum<TOrder>(this TOrder order)
-    //     where TOrder : IOrderBase
-    //     =>
-    //         order.ExecutedQty * order.ExecutedPrice;
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static decimal LeveragedExecutedSum<TPosition, TInstrument, TResource>(this IOrder<TPosition, TInstrument, TResource> order)
-    //     where TPosition : IPosition<TInstrument, TResource>
-    //     where TInstrument : IInstrument<TResource>
-    //     where TResource : IResource
-    //     =>
-    //         order.ExecutedQty * order.ExecutedPrice * order.Position.LeveragedPart();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static decimal PotentialQty<TOrder>(this TOrder order)
         where TOrder : IOrder => order.Status is OrderStatus.Canceled ? order.ExecutedQty : order.TotalQty;
