@@ -1,6 +1,6 @@
 ﻿using System.Text;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
@@ -46,7 +46,7 @@ public class InitOrderResponseConverterTests : ConnectorTestBase
 
         // act
         var serializer = this.GetJsonSerializer(Constants.InitOrderKey);
-        var deserialized = serializer.Deserialize<OrderResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
+        var deserialized = serializer.Deserialize<OrderDto>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
         deserialized.Id.Is("20072994037");

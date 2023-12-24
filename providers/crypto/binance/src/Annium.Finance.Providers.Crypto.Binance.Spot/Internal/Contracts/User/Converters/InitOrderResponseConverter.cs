@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 using Annium.Linq;
@@ -8,9 +9,9 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
+internal class InitOrderResponseConverter : JsonConverter<OrderDto?>
 {
-    public override OrderResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override OrderDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("deserialization failed");
@@ -41,7 +42,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
                 }
 
                 var executedPrice = executedQty != 0 ? executedSum / executedQty : 0m;
-                var order = new OrderResponse(
+                var order = new OrderDto(
                     id,
                     clientOrderId,
                     symbol,
@@ -117,7 +118,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderResponse?>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, OrderResponse? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, OrderDto? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }
