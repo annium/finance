@@ -106,7 +106,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         this.Trace("done");
     }
 
-    public void RequestUpdate(TKey key)
+    public void Request(TKey key)
     {
         this.Trace("request {key} load", key);
         _entries.GetOrAdd(key, CreateLoader).Loader.Request();

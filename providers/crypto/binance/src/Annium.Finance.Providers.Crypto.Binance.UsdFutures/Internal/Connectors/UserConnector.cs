@@ -486,7 +486,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         if (e.Status is OrderStatus.PartiallyFilled or OrderStatus.Filled)
         {
             // as far as pnl is not available here - request reload by http
-            _tradesLoader.RequestUpdate(e.Symbol);
+            _tradesLoader.Request(e.Symbol);
         }
 
         var order = new OrderDto(
