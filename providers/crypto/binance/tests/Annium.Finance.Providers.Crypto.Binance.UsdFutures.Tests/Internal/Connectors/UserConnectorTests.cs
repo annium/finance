@@ -72,11 +72,17 @@ public class UserConnectorTests : UserConnectorPositionalTestBase
         var request = InitLimitOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, MinQty, LowPrice);
 
         // act
+        this.Trace("init order");
         var order = await InitValidOrder(request, OrderStatus.New);
+
+        this.Trace("ensure balance is locked");
         await EnsureBalanceIsLocked();
 
         // cleanup
+        this.Trace("cancel order");
         await CancelValidOrder(order);
+
+        this.Trace("ensure balance is released");
         await EnsureBalanceIsReleased();
 
         this.Trace("done");

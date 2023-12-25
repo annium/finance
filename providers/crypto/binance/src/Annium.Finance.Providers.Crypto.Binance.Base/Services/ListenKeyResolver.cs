@@ -81,7 +81,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
                 .New(_config.HttpApi)
                 .Post(_endpoint)
                 .Key(_signatureService)
-                .WithLogFrom(this)
+                .WithLogFrom(this, LogData.Response)
                 .AsUserResultAsync(new ListenKey(string.Empty));
 
             // but here it can already be disposed

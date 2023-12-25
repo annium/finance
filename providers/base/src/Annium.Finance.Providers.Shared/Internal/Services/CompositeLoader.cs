@@ -40,7 +40,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 
         if (debouncePeriod != Timeout.Infinite)
         {
-            this.Trace("create debounce timer with period {0}", intervalPeriod);
+            this.Trace("create debounce timer with period {0}", debouncePeriod);
             _debounceTimer = Timers.Debounce(InitDebounceLoad, Timeout.Infinite);
         }
         else
