@@ -144,6 +144,15 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 
             if (result.IsSuccess)
             {
+                this.Trace("change state to {state}", State.Inactive);
+                _state = State.Inactive;
+
+                this.Trace("cancel cts");
+                _cts.Cancel();
+
+                this.Trace("stop timer");
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+
                 this.Trace("send data");
                 OnData(result.Data);
 
@@ -152,26 +161,20 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 // when snapshot load fails without socket disconnect
                 this.Trace("signal connected state");
                 _statusReporter.Connected();
-
-                this.Trace("cancel cts");
-                _cts.Cancel();
-
-                this.Trace("stop timer");
-                _timer.Change(Timeout.Infinite, Timeout.Infinite);
             }
             else
             {
-                this.Trace("signal connecting state");
-                _statusReporter.Connecting();
-
-                this.Trace("write error");
-                this.Error(result.Message);
-
                 if (_requestCounter >= _cfg.FastRequestsLimit)
                 {
                     this.Trace("switch to long-delayed snapshot requests");
                     _timer.Change(_cfg.SlowInterval, _cfg.SlowInterval);
                 }
+
+                this.Trace("signal connecting state");
+                _statusReporter.Connecting();
+
+                this.Trace("write error");
+                this.Error(result.Message);
             }
         }
 
