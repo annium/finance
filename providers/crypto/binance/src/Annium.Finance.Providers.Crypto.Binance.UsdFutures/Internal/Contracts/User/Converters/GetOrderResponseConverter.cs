@@ -26,6 +26,7 @@ internal class GetOrderResponseConverter : JsonConverter<OrderDto?>
         var totalQty = 0m;
         var price = 0m;
         var levelPrice = 0m;
+        var reduceOnly = false;
         var status = default(OrderStatus);
         var executedQty = 0m;
         var executedPrice = 0m;
@@ -50,6 +51,7 @@ internal class GetOrderResponseConverter : JsonConverter<OrderDto?>
                     totalQty,
                     price,
                     levelPrice,
+                    reduceOnly,
                     createdAt,
                     status,
                     executedQty,
@@ -91,6 +93,9 @@ internal class GetOrderResponseConverter : JsonConverter<OrderDto?>
                         break;
                     case "stopPrice":
                         levelPrice = reader.GetDecimalFromString();
+                        break;
+                    case "reduceOnly":
+                        reduceOnly = reader.GetBoolean();
                         break;
                     case "status":
                         status = OrderStatuses.StringToValue.MapValue(reader.GetString());

@@ -58,6 +58,7 @@ public class GetOrderResponseConverterTests : ConnectorTestBase
         deserialized.TotalQty.Is(10.5m);
         deserialized.Price.Is(10200.4m);
         deserialized.LevelPrice.Is(9300.5m);
+        deserialized.ReduceOnly.IsTrue();
         deserialized.CreatedAt.Is(1579276756075);
         deserialized.Status.Is(OrderStatus.PartiallyFilled);
         deserialized.ExecutedQty.Is(3.1m);

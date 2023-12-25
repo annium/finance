@@ -13,6 +13,7 @@ public sealed record OrderDto : IOrder
     public decimal TotalQty { get; private set; }
     public decimal Price { get; private set; }
     public decimal LevelPrice { get; private set; }
+    public bool ReduceOnly { get; private set; }
     public long CreatedAt { get; private set; }
     public OrderStatus Status { get; private set; }
     public decimal ExecutedQty { get; private set; }
@@ -28,6 +29,7 @@ public sealed record OrderDto : IOrder
         decimal totalQty,
         decimal price,
         decimal levelPrice,
+        bool reduceOnly,
         long createdAt,
         OrderStatus status,
         decimal executedQty,
@@ -43,6 +45,7 @@ public sealed record OrderDto : IOrder
         TotalQty = totalQty;
         Price = price;
         LevelPrice = levelPrice;
+        ReduceOnly = reduceOnly;
         CreatedAt = createdAt;
         Status = status;
         ExecutedQty = executedQty;

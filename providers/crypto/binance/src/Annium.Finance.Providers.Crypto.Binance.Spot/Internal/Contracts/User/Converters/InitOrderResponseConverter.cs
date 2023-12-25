@@ -51,6 +51,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderDto?>
                     totalQty,
                     price,
                     levelPrice,
+                    false,
                     createdAt,
                     status,
                     executedQty,
