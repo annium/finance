@@ -26,8 +26,6 @@ internal class QueryProcessor : IQueryProcessor
         result["type"] = OrderTypes.ValueToString[request.Type];
         result["newOrderRespType"] = "RESULT";
 
-        // TODO: inline reduceOnly where applicable
-
         switch (request.Type)
         {
             case OrderType.Limit:
@@ -41,29 +39,11 @@ internal class QueryProcessor : IQueryProcessor
                 TrySetReduceOnly(request, result);
                 break;
             case OrderType.StopLossMarket:
-                if (request.Qty == 0)
-                {
-                    result["closePosition"] = "true";
-                }
-                else
-                {
-                    result["quantity"] = request.Qty.ToGeneralInvariantString();
-                    TrySetReduceOnly(request, result);
-                }
-
+                SetQtyOrClosePosition(request, result);
                 result["stopPrice"] = request.LevelPrice.ToGeneralInvariantString();
                 break;
             case OrderType.TakeProfitMarket:
-                if (request.Qty == 0)
-                {
-                    result["closePosition"] = "true";
-                }
-                else
-                {
-                    result["quantity"] = request.Qty.ToGeneralInvariantString();
-                    TrySetReduceOnly(request, result);
-                }
-
+                SetQtyOrClosePosition(request, result);
                 result["stopPrice"] = request.LevelPrice.ToGeneralInvariantString();
                 break;
             case OrderType.StopLossLimit:
@@ -84,9 +64,23 @@ internal class QueryProcessor : IQueryProcessor
 
         return UserResult.Ok(result);
 
+        static void SetQtyOrClosePosition(IInitOrderRequest request, IDictionary<string, string> result)
+        {
+            if (request.Qty == 0)
+            {
+                result["closePosition"] = "true";
+            }
+            else
+            {
+                result["quantity"] = request.Qty.ToGeneralInvariantString();
+                TrySetReduceOnly(request, result);
+            }
+        }
+
         static void TrySetReduceOnly(IInitOrderRequest request, IDictionary<string, string> result)
         {
-            result["reduceOnly"] = "true";
+            if (request.ReduceOnly)
+                result["reduceOnly"] = "true";
         }
     }
 

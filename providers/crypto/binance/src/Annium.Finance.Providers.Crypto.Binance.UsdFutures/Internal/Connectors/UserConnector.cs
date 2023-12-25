@@ -500,6 +500,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             e.TotalQty,
             e.Price,
             e.LevelPrice,
+            e.ReduceOnly,
             e.CreatedAt,
             e.Status,
             e.ExecutedQty,
