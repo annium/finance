@@ -92,10 +92,10 @@ public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, I
         this.Trace("done");
     }
 
-    protected async Task AwaitForInitialPositionsAndLeverages()
+    protected Task AwaitForInitialPositionsAndLeverages()
     {
         this.Trace("await for positions");
-        await Expect.To(() => Connector.Positions.Count.IsGreater(0));
+        return Expect.To(() => Connector.Positions.Count.IsGreater(0));
     }
 
     protected decimal GetPositionAmount()
@@ -106,7 +106,7 @@ public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, I
         return Instrument.ToLotSize(amount);
     }
 
-    protected async Task EnsurePositionIsIncreased()
+    protected Task EnsurePositionIsIncreased()
     {
         var originalPosition = _position;
 
@@ -115,14 +115,14 @@ public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, I
             JsonSerializer.Serialize(originalPosition)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentPosition = GetPosition();
             currentPosition.Amount.IsGreater(originalPosition.Amount);
         });
     }
 
-    protected async Task EnsurePositionIsDecreased()
+    protected Task EnsurePositionIsDecreased()
     {
         var originalPosition = _position;
 
@@ -131,7 +131,7 @@ public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, I
             JsonSerializer.Serialize(originalPosition)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentPosition = GetPosition();
             currentPosition.Amount.IsLess(originalPosition.Amount);

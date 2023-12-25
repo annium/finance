@@ -92,7 +92,7 @@ public abstract class UserConnectorSpotTestBase : UserConnectorTestBase, IAsyncL
         return Instrument.ToLotSize(free);
     }
 
-    protected async Task EnsureAssetIsIncreased()
+    protected Task EnsureAssetIsIncreased()
     {
         var originalBalance = _assetBalance;
 
@@ -101,14 +101,14 @@ public abstract class UserConnectorSpotTestBase : UserConnectorTestBase, IAsyncL
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Quote.Code);
             currentBalance.Free.IsGreater(originalBalance.Free);
         });
     }
 
-    protected async Task EnsureAssetIsDecreased()
+    protected Task EnsureAssetIsDecreased()
     {
         var originalBalance = _assetBalance;
 
@@ -117,7 +117,7 @@ public abstract class UserConnectorSpotTestBase : UserConnectorTestBase, IAsyncL
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Quote.Code);
             currentBalance.Free.IsLess(originalBalance.Free);

@@ -233,11 +233,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 
     protected AssetDto GetBalance(string resource)
     {
-        this.Trace<string>("get {resource} last balance of {0}", resource);
-        return Connector.Assets.Single(x => x.Resource == resource);
+        this.Trace<string>("get {resource} last balance", resource);
+        var asset = Connector.Assets.Single(x => x.Resource == resource) with { };
+        this.Trace("got {resource} last balance: {asset}", resource, asset);
+
+        return asset;
     }
 
-    protected async Task EnsureBalanceIsLocked()
+    protected Task EnsureBalanceIsLocked()
     {
         var originalBalance = _balance;
 
@@ -246,7 +249,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsLess(originalBalance.Free);
@@ -254,7 +257,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         });
     }
 
-    protected async Task EnsureBalanceIsReleased()
+    protected Task EnsureBalanceIsReleased()
     {
         var originalBalance = _balance;
 
@@ -263,7 +266,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsGreater(originalBalance.Free);
@@ -271,7 +274,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         });
     }
 
-    protected async Task EnsureBalanceIsIncreased()
+    protected Task EnsureBalanceIsIncreased()
     {
         var originalBalance = _balance;
 
@@ -280,14 +283,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsGreater(originalBalance.Free);
         });
     }
 
-    protected async Task EnsureBalanceIsDecreased()
+    protected Task EnsureBalanceIsDecreased()
     {
         var originalBalance = _balance;
 
@@ -296,17 +299,17 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
             JsonSerializer.Serialize(originalBalance)
         );
 
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsLess(originalBalance.Free);
         });
     }
 
-    private async Task EnsureOrderReported(OrderDto order, OrderStatus status)
+    private Task EnsureOrderReported(OrderDto order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
-        await Expect.To(() =>
+        return Expect.To(() =>
         {
             var orderMessage = Connector.Orders.Single(x => x.Id == order.Id);
             orderMessage.ShouldMatch(order);

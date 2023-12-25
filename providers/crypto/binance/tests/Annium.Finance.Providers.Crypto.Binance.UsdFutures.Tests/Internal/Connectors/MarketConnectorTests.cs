@@ -13,8 +13,8 @@ public class MarketConnectorTests : MarketConnectorTestBase
 
     [Theory]
     [ClassData(typeof(ProviderMarketEnvironments))]
-    public async Task MarketConnectorAsync(ProviderKey providerKey)
+    public Task MarketConnectorAsync(ProviderKey providerKey)
     {
-        await MarketConnectorBaseAsync(providerKey);
+        return MarketConnectorBaseAsync(providerKey);
     }
 }
