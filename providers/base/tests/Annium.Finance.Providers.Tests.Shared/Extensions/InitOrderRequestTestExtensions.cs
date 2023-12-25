@@ -17,6 +17,7 @@ public static class InitOrderRequestTestExtensions
             request.Qty,
             request.Price,
             request.LevelPrice,
+            request.ReduceOnly,
             0L,
             OrderStatus.New,
             0m,

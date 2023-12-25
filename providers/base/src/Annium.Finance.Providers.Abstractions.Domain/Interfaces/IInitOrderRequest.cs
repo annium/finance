@@ -11,4 +11,5 @@ public interface IInitOrderRequest
     decimal Qty { get; }
     decimal Price { get; }
     decimal LevelPrice { get; }
+    bool ReduceOnly { get; }
 }
