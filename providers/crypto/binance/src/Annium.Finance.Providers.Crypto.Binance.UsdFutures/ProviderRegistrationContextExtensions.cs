@@ -39,7 +39,7 @@ public static class ProviderRegistrationContextExtensions
         );
 
         // settings
-        ctx.Container.Add<ProviderConfiguration>().AsSelf().Singleton();
+        ctx.Container.Add(cfg).AsSelf().Singleton();
         ctx.Container.Add(MarketConfigFactory).AsSelf().Scoped();
         ctx.Container.Add(UserConfigFactory).AsSelf().Scoped();
 
