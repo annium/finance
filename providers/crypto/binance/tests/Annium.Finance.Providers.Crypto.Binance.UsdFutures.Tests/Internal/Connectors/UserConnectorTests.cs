@@ -31,9 +31,9 @@ public class UserConnectorTests : UserConnectorTestBase
                 ctx.WithBinanceUsdFutures(
                     new ProviderConfiguration
                     {
-                        ReloadAccount = new CompositeLoaderConfig(200, 5, 1000, 0, 100),
-                        ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 0, 100),
-                        ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 0, 100),
+                        ReloadAccount = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                        ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                        ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                     }
                 ),
             new UserSettings(
@@ -84,6 +84,86 @@ public class UserConnectorTests : UserConnectorTestBase
 
         this.Trace("ensure balance is released");
         await EnsureBalanceIsReleased();
+
+        this.Trace("done");
+    }
+
+    [Fact]
+    public async Task ModifyOrder_Invalid()
+    {
+        this.Trace("start");
+
+        // arrange
+        this.Trace("init order");
+        var initRequest = InitLimitOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var initOrder = await InitValidOrder(initRequest, OrderStatus.New);
+        var modifyRequest = ModifyToLimitOrder(initOrder, initOrder.Side, ExtremeHighQty, initOrder.Price);
+
+        // act
+        this.Trace("modify invalid order");
+        await ModifyInvalidOrder(modifyRequest);
+
+        this.Trace("done");
+    }
+
+    [Fact]
+    public async Task ModifyOrder_Valid()
+    {
+        this.Trace("start");
+
+        // arrange
+        this.Trace("init order");
+        var initRequest = InitLimitOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var initialOrder = await InitValidOrder(initRequest, OrderStatus.New);
+        var modifyRequest = ModifyToLimitOrder(
+            initialOrder,
+            initialOrder.Side,
+            initialOrder.TotalQty + Instrument.LotSize,
+            initialOrder.Price + Instrument.TickSize
+        );
+
+        // act
+        this.Trace("modify invalid order");
+        var modifiedOrder = await ModifyValidOrder(modifyRequest, OrderStatus.New);
+
+        this.Trace("ensure balance is locked");
+        await EnsureBalanceIsLocked();
+
+        // cleanup
+        this.Trace("cancel valid order");
+        await CancelValidOrder(modifiedOrder);
+
+        this.Trace("ensure balance is released");
+        await EnsureBalanceIsReleased();
+
+        this.Trace("done");
+    }
+
+    [Fact]
+    public async Task CancelOrder()
+    {
+        this.Trace("start");
+
+        // arrange
+        var request = InitLimitOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, MinQty, LowPrice);
+
+        // act
+        this.Trace("init order");
+        var order = await InitValidOrder(request, OrderStatus.New);
+
+        this.Trace("ensure balance is locked");
+        await EnsureBalanceIsLocked();
+
+        // cleanup
+        this.Trace("cancel valid order");
+        await CancelValidOrder(order);
+
+        this.Trace("ensure balance is released");
+        await EnsureBalanceIsReleased();
+
+        // assert
+        this.Trace("cancel invalid order");
+        await CancelInvalidOrder(order);
 
         this.Trace("done");
     }

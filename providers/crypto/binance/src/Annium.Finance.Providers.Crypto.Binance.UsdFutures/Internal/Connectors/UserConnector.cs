@@ -15,6 +15,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
@@ -265,7 +266,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(new OperationResult(0, string.Empty));
+            .AsUserResultAsync(new CancelOrderResponse(Guid.Empty, string.Empty));
 
         HandleTradeResult(result.IsSuccess);
 
