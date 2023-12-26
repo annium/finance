@@ -98,11 +98,7 @@ internal class AccountConfigUpdateEventConverter : JsonConverter<AccountConfigUp
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        AccountConfigUpdateEvent? value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, AccountConfigUpdateEvent? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

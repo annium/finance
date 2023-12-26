@@ -29,9 +29,7 @@ public class AccountConfigUpdateEventConverterTests : ConnectorTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.AccountConfigurationUpdateKey);
-        var deserialized = serializer
-            .Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw))
-            .NotNull();
+        var deserialized = serializer.Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization
         deserialized.Date.Is(1611646737476);
@@ -56,9 +54,7 @@ public class AccountConfigUpdateEventConverterTests : ConnectorTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.AccountConfigurationUpdateKey);
-        var deserialized = serializer
-            .Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw))
-            .NotNull();
+        var deserialized = serializer.Deserialize<AccountConfigUpdateEvent>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization
         deserialized.Date.Is(1611646737476);
