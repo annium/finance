@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -6,6 +7,8 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Services;
+using Annium.Linq;
+using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,10 +33,14 @@ public class CompositeLoaderTests : TestBase
         monitor.OnStatusChanged += _statuses.Enqueue;
     }
 
-    [Fact]
-    public async Task Works()
+    [Theory]
+    [InlineData(100, 3000)]
+    [InlineData(100, 0)]
+    [InlineData(3000, 10)]
+    [InlineData(0, 10)]
+    public async Task Works(int interval, int debounce)
     {
-        var cfg = new CompositeLoaderConfig(1, 5, 2, 20, 30);
+        var cfg = new CompositeLoaderConfig(1, 5, 2, interval, debounce);
         var attempt = 0;
         var log = Get<TestLog<int>>();
         async Task<MarketResult<int>> Load()
@@ -42,7 +49,7 @@ public class CompositeLoaderTests : TestBase
 
             await Task.Delay(5, CancellationToken.None);
 
-            return attempt != 10
+            return attempt != 3
                 ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
                 : MarketResult.Ok(attempt++);
         }
@@ -50,11 +57,14 @@ public class CompositeLoaderTests : TestBase
         loader.OnData += log.Add;
 
         loader.Start();
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 10; i++)
             loader.Request();
 
         await Expect.To(() => log.Has(1));
-        log.At(0).Is(10);
-        _statuses.IsEqual(new[] { Connecting, Connected });
+        log.At(0).Is(3);
+        this.Trace<string>("statuses: {statuses}", _statuses.Select(x => x.ToString()).Join(", "));
+        _statuses.Has(2);
+        _statuses.At(0).Is(Connecting);
+        _statuses.At(1).Is(Connected);
     }
 }
