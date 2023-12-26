@@ -8,6 +8,7 @@ using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
@@ -15,6 +16,7 @@ using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit.Abstractions;
+using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
@@ -22,12 +24,17 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 {
     protected InstrumentDto Instrument { get; private set; } = default!;
     protected InstrumentTicker Ticker { get; private set; } = default!;
-    protected IUserConnector Connector { get; private set; } = default!;
-    protected AsyncDisposableBox Disposable { get; set; }
+    private IUserConnector Connector { get; set; } = default!;
+    private AsyncDisposableBox Disposable { get; set; }
     private readonly UserSettings _config;
     private readonly string _symbol;
+    private readonly ConcurrentQueue<AssetDto> _assets = new();
+    private readonly ConcurrentQueue<PositionDto> _positions = new();
+    private readonly ConcurrentQueue<OrderDto> _orders = new();
+    private readonly ConcurrentQueue<TradeDto> _trades = new();
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
     private AssetDto _balance = default!;
+    private PositionDto _position = default!;
 
     protected UserConnectorTestBase(
         Action<ProviderRegistrationContext> registerProvider,
@@ -74,11 +81,31 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         Disposable += userConnectorRef;
         Connector = userConnectorRef.Value;
 
+        this.Trace("subscribe to connector data");
+        Disposable += Connector.Assets.Subscribe(_assets.Enqueue);
+        Disposable += Connector.Positions.Subscribe(_positions.Enqueue);
+        Disposable += Connector.Orders.Subscribe(_orders.Enqueue);
+        Disposable += Connector.Trades.Subscribe(_trades.Enqueue);
+
         this.Trace("subscribe to connector errors");
         Connector.OnError += _errors.Enqueue;
 
         this.Trace("await until user connector is ready");
         await Connector.WhenConnected();
+
+        this.Trace("cancel open orders");
+        await CancelOpenOrders();
+
+        this.Trace("await for balances");
+        await AwaitForInitialBalances();
+
+        this.Trace("await for positions and leverages (before closing)");
+        await AwaitForInitialPositionsAndLeverages();
+
+        this.Trace("close active positions");
+        await CloseActivePositions();
+
+        EnsureNoErrors();
 
         this.Trace("done");
     }
@@ -87,8 +114,28 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
     {
         this.Trace("start");
 
+        this.Trace("cancel open orders");
+        await CancelOpenOrders();
+
+        this.Trace("try close position if any");
+        var amount = GetPositionAmount();
+        if (amount > 0)
+        {
+            this.Trace("close position amount: {0}", amount);
+            await InitValidOrder(
+                InitMarketOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Sell, amount),
+                OrderStatus.Filled
+            );
+            await EnsureBalanceIsIncreased();
+            await EnsurePositionIsDecreased();
+        }
+
+        EnsureNoErrors();
+
         this.Trace("dispose disposables");
         await Disposable.DisposeAsync();
+
+        EnsureNoErrors();
 
         this.Trace("done");
     }
@@ -98,13 +145,49 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         _errors.IsEmpty();
     }
 
-    protected virtual void Snapshot()
+    protected void Snapshot()
     {
         this.Trace("start");
 
         _balance = GetBalance(Instrument.Currency.Code);
+        _position = GetPosition();
 
         this.Trace("done");
+    }
+
+    private async Task CloseActivePositions()
+    {
+        this.Trace("start");
+
+        var activePositions = _positions
+            .DistinctBy(x => new { x.Symbol, x.OrientationRange })
+            .Where(x => x.Amount > 0)
+            .ToArray();
+
+        if (activePositions.Length == 0)
+        {
+            this.Trace("no active positions, break");
+            return;
+        }
+
+        foreach (var position in activePositions)
+        {
+            this.Trace("close {0} position with amount {1}", Instrument, position.Amount);
+            await Connector
+                .InitOrder(
+                    InitMarketOrder(
+                        GenerateClientOrderId(),
+                        Instrument.Symbol,
+                        position.Amount < 0 ? OrderSide.Buy : OrderSide.Sell,
+                        Math.Abs(position.Amount)
+                    )
+                )
+                .Unwrap();
+        }
+
+        EnsureNoErrors();
+
+        this.Trace("close active positions - done");
     }
 
     protected async Task InitInvalidOrder(IInitOrderRequest request)
@@ -225,8 +308,22 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
     {
         // await until balances arrive and a second more before starting test
         this.Trace("await for balances");
-        await Expect.To(() => Connector.Assets.IsNotEmpty());
+        await Expect.To(() => _assets.IsNotEmpty());
         await WaitForMessages();
+    }
+
+    protected Task AwaitForInitialPositionsAndLeverages()
+    {
+        this.Trace("await for positions");
+        return Expect.To(() => _positions.IsNotEmpty());
+    }
+
+    protected decimal GetPositionAmount()
+    {
+        this.Trace<string>("get size of {symbol} position", Instrument.Symbol);
+        var amount = GetPosition().Amount;
+
+        return Instrument.ToLotSize(amount);
     }
 
     protected string GenerateClientOrderId() => Guid.NewGuid().ToString();
@@ -234,10 +331,16 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
     protected AssetDto GetBalance(string resource)
     {
         this.Trace<string>("get {resource} last balance", resource);
-        var asset = Connector.Assets.Single(x => x.Resource == resource) with { };
+        var asset = _assets.Last(x => x.Resource == resource);
         this.Trace("got {resource} last balance: {asset}", resource, asset);
 
         return asset;
+    }
+
+    private PositionDto GetPosition()
+    {
+        this.Trace<string>("get {0} position", Instrument.Symbol);
+        return _positions.Last(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Instrument.Symbol);
     }
 
     protected Task EnsureBalanceIsLocked()
@@ -306,12 +409,44 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         });
     }
 
+    protected Task EnsurePositionIsIncreased()
+    {
+        var originalPosition = _position;
+
+        this.Trace<string>(
+            "ensure position amount is increased compared to original {0}",
+            JsonSerializer.Serialize(originalPosition)
+        );
+
+        return Expect.To(() =>
+        {
+            var currentPosition = GetPosition();
+            currentPosition.Amount.IsGreater(originalPosition.Amount);
+        });
+    }
+
+    protected Task EnsurePositionIsDecreased()
+    {
+        var originalPosition = _position;
+
+        this.Trace<string>(
+            "ensure position amount is decreased compared to original {0}",
+            JsonSerializer.Serialize(originalPosition)
+        );
+
+        return Expect.To(() =>
+        {
+            var currentPosition = GetPosition();
+            currentPosition.Amount.IsLess(originalPosition.Amount);
+        });
+    }
+
     private Task EnsureOrderReported(OrderDto order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
         return Expect.To(() =>
         {
-            var orderMessage = Connector.Orders.Single(x => x.Id == order.Id);
+            var orderMessage = _orders.Last(x => x.Id == order.Id);
             orderMessage.ShouldMatch(order);
             orderMessage.Status.Is(status);
         });

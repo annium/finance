@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
-using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -68,12 +67,11 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
-        ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.GetSettings(), userProvider, tableFactory, monitor, synchronizer, logger)
+        : base(config.GetSettings(), userProvider, monitor, synchronizer, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;

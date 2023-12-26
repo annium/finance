@@ -11,7 +11,7 @@ using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors;
 
-public class UserConnectorTests : UserConnectorPositionalTestBase
+public class UserConnectorTests : UserConnectorTestBase
 {
     private decimal ExtremeHighQty => Instrument.MaxQty * 1_000_000;
     private decimal LowPrice => Instrument.ToTickSizeDown(Ticker.Price() * 0.7m);

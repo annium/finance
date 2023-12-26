@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -24,12 +23,11 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         QueryProcessor queryProcessor,
         SignatureService signatureService,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
-        ITableFactory tableFactory,
         IStatusMonitor monitor,
         IUserSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.GetSettings(), userProvider, tableFactory, monitor, synchronizer, logger)
+        : base(config.GetSettings(), userProvider, monitor, synchronizer, logger)
     {
         _queryProcessor = queryProcessor;
         _signatureService = signatureService;
