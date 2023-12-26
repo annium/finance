@@ -29,14 +29,6 @@ public static class ProviderRegistrationContextExtensions
         return ctx;
     }
 
-    public static ProviderRegistrationContext WithMarketSynchronizer<T>(this ProviderRegistrationContext ctx)
-        where T : IMarketSynchronizer
-    {
-        ctx.Container.Add<IMarketSynchronizer, T>().Scoped();
-
-        return ctx;
-    }
-
     public static ProviderRegistrationContext WithUserSynchronizer<T>(this ProviderRegistrationContext ctx)
         where T : IUserSynchronizer
     {

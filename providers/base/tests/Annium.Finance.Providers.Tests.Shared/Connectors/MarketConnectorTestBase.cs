@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
@@ -71,9 +72,7 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
 
         // assert - tickers
         this.Trace("ensure tickers are loaded");
-        await Expect.To(() => market.Tickers.Has(1));
-        market.Tickers.At(0).Symbol.Is(_symbol);
-
+        var ticker = await market.Tickers.FirstAsync(x => x.Symbol == _symbol);
         this.Trace("done");
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Core.Mapper;
@@ -68,12 +69,8 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 
         this.Trace<string>("subscribe and wait for ticker for {symbol}", _symbol);
         market.SubscribeTickers(new[] { Instrument.Symbol });
-        await Expect.To(
-            () => market.Tickers.FirstOrDefault(x => x.Symbol == Instrument.Symbol).IsNotDefault(),
-            pollDelay: 100
-        );
         this.Trace<string>("find ticker for {symbol}", _symbol);
-        Ticker = market.Tickers.Single(x => x.Symbol == _symbol);
+        Ticker = await market.Tickers.FirstAsync(x => x.Symbol == Instrument.Symbol);
         this.Trace("found ticker for {instrument}", Instrument);
 
         this.Trace("get user connector for {config}", _config);

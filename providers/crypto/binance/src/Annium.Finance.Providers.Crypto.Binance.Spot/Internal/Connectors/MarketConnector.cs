@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
+using Annium.Threading.Channels;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
@@ -18,15 +17,13 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
 
     public MarketConnector(
         MarketConfig config,
-        ITableFactory tableFactory,
         MarketProvider marketProvider,
         ILoaderFactory loaderFactory,
         BookTickerService bookTickerService,
         IStatusMonitor monitor,
-        IMarketSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.Provider, config.Environment, tableFactory, monitor, synchronizer, logger)
+        : base(config.Provider, config.Environment, monitor, logger)
     {
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
@@ -61,13 +58,12 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     {
         this.Trace("start");
 
-        this.Trace("init {count} resources", ctx.Resources.Count);
-        ResourcesTable.Init(ctx.Resources);
-
-        this.Trace("init {count} instruments", ctx.Instruments.Count);
-        InstrumentsTable.Init(ctx.Instruments);
-
-        ScheduleSync();
+        this.Trace(
+            "schedule sync with {resources} resources and {instruments} instruments",
+            ctx.Resources.Count,
+            ctx.Instruments.Count
+        );
+        ScheduleSync(ctx.Resources, ctx.Instruments);
 
         this.Trace("done");
     }
@@ -76,8 +72,8 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     {
         this.Trace("start");
 
-        this.Trace("set {ticker}", ticker);
-        TickersTable.Set(ticker);
+        this.Trace("write {ticker}", ticker);
+        TickerWriter.Write(ticker);
 
         this.Trace("done");
     }

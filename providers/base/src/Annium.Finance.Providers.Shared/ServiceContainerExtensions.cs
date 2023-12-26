@@ -42,7 +42,6 @@ public static class ServiceContainerExtensions
 
         var ctx = new ProviderRegistrationContext(container);
 
-        ctx.WithMarketSynchronizer<NoopMarketSynchronizer>();
         ctx.WithUserSynchronizer<NoopUserSynchronizer>();
 
         return ctx;
