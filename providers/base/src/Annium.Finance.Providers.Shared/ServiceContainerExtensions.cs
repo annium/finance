@@ -4,7 +4,6 @@ using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Services;
-using Annium.Finance.Providers.Shared.Internal.Sync;
 using Annium.Finance.Providers.Shared.Services;
 
 // ReSharper disable once CheckNamespace
@@ -41,8 +40,6 @@ public static class ServiceContainerExtensions
         container.AddTables();
 
         var ctx = new ProviderRegistrationContext(container);
-
-        ctx.WithUserSynchronizer<NoopUserSynchronizer>();
 
         return ctx;
     }

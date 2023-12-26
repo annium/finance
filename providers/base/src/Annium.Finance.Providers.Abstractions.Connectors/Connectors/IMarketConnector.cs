@@ -8,10 +8,10 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IMarketConnector : IConnectorBase
 {
-    event Func<MarketSettings, IReadOnlyCollection<ResourceDto>, IReadOnlyCollection<InstrumentDto>, Task> OnSync;
     IReadOnlyCollection<ResourceDto> Resources { get; }
     IReadOnlyCollection<InstrumentDto> Instruments { get; }
     IObservable<InstrumentTicker> Tickers { get; }
+    event Func<MarketSettings, IReadOnlyCollection<ResourceDto>, IReadOnlyCollection<InstrumentDto>, Task> OnSync;
     void SubscribeTickers(IReadOnlyCollection<string> symbols);
     void UnsubscribeTickers(IReadOnlyCollection<string> symbols);
 }

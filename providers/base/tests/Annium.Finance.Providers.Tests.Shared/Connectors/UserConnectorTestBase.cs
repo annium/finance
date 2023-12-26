@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Core.Mapper;
+using Annium.Data.Tables;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
@@ -16,12 +17,13 @@ using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Logging;
 using Annium.Testing;
+using Xunit;
 using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
-public abstract class UserConnectorTestBase : ConnectorTestBase
+public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 {
     protected InstrumentDto Instrument { get; private set; } = default!;
     protected InstrumentTicker Ticker { get; private set; } = default!;
@@ -50,7 +52,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         _symbol = symbol;
     }
 
-    protected async Task InitializeBaseAsync()
+    public async Task InitializeAsync()
     {
         this.Trace("start");
 
@@ -79,9 +81,22 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         Connector = userConnectorRef.Value;
 
         this.Trace("subscribe to connector data");
-        Disposable += Connector.Assets.Subscribe(_assets.Enqueue);
-        Disposable += Connector.Positions.Subscribe(_positions.Enqueue);
-        Disposable += Connector.Orders.Subscribe(_orders.Enqueue);
+        Disposable += Connector.Assets
+            .Where(x => x.Type is ChangeEventType.Init)
+            .SelectMany(x => x.Items)
+            .Subscribe(_assets.Enqueue);
+        Disposable += Connector.Positions
+            .Where(x => x.Type is ChangeEventType.Init)
+            .SelectMany(x => x.Items)
+            .Subscribe(_positions.Enqueue);
+        Disposable += Connector.Orders.Subscribe(x =>
+        {
+            if (x.Type is ChangeEventType.Init)
+                foreach (var item in x.Items)
+                    _orders.Enqueue(item);
+            else
+                _orders.Enqueue(x.Item);
+        });
         Disposable += Connector.Trades.Subscribe(_trades.Enqueue);
 
         this.Trace("subscribe to connector errors");
@@ -107,7 +122,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         this.Trace("done");
     }
 
-    protected async Task DisposeBaseAsync()
+    public async Task DisposeAsync()
     {
         this.Trace("start");
 
@@ -118,7 +133,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
         var amount = GetPositionAmount();
         if (amount > 0)
         {
-            this.Trace("close position amount: {0}", amount);
+            this.Trace("close position amount: {amount}", amount);
             await InitValidOrder(
                 InitMarketOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Sell, amount),
                 OrderStatus.Filled
@@ -169,7 +184,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 
         foreach (var position in activePositions)
         {
-            this.Trace("close {0} position with amount {1}", Instrument, position.Amount);
+            this.Trace("close {instrument} position with amount {amount}", Instrument, position.Amount);
             await Connector
                 .InitOrder(
                     InitMarketOrder(
@@ -336,8 +351,13 @@ public abstract class UserConnectorTestBase : ConnectorTestBase
 
     private PositionDto GetPosition()
     {
-        this.Trace<string>("get {0} position", Instrument.Symbol);
-        return _positions.Last(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Instrument.Symbol);
+        this.Trace("get {instrument} position", Instrument);
+        var position = _positions.Last(
+            x => x.OrientationRange is OrientationRange.Both && x.Symbol == Instrument.Symbol
+        );
+        this.Trace("got {instrument} last position: {position}", Instrument, position);
+
+        return position;
     }
 
     protected Task EnsureBalanceIsLocked()

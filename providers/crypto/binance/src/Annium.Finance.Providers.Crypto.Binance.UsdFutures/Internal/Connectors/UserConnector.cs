@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
+using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Connectors.Sync;
 using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
@@ -68,10 +68,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
         IStatusMonitor monitor,
-        IUserSynchronizer synchronizer,
         ILogger logger
     )
-        : base(config.GetSettings(), userProvider, monitor, synchronizer, logger)
+        : base(config.GetSettings(), userProvider, monitor, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;
@@ -342,17 +341,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
-        foreach (var x in response.Balances)
-        {
-            var asset = new AssetDto(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin);
-            AssetWriter.Write(asset);
-        }
+        var assets = response.Balances
+            .Select(x => new AssetDto(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin))
+            .ToArray();
+        AssetWriter.Write(ChangeEvent.Init(assets));
 
-        foreach (var x in response.Positions)
-        {
-            var position = new PositionDto(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount);
-            PositionWriter.Write(position);
-        }
+        var positions = response.Positions
+            .Select(x => new PositionDto(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount))
+            .ToArray();
+        PositionWriter.Write(ChangeEvent.Init(positions));
 
         this.Trace("done");
     }
@@ -377,8 +374,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
-        foreach (var order in orders)
-            OrderWriter.Write(order);
+        OrderWriter.Write(ChangeEvent.Init(orders));
 
         this.Trace("done");
     }
@@ -505,23 +501,22 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             e.ExecutedPrice,
             e.UpdatedAt
         );
-        OrderWriter.Write(order);
+
+        var item = order.Status is OrderStatus.New or OrderStatus.PartiallyFilled
+            ? ChangeEvent.Set(order)
+            : ChangeEvent.Delete(order);
+
+        OrderWriter.Write(item);
 
         this.Trace("done");
     }
 
-    private void HandleBalanceAndPositionUpdate(BalanceAndPositionUpdateEvent e)
+    private void HandleBalanceAndPositionUpdate(BalanceAndPositionUpdateEvent _)
     {
         this.Trace("start");
 
-        // account info in event is almost useless, so request account reload
+        // account info in event is almost useless (and position info lacks leverage value), so request account reload
         _accountLoader.Request();
-
-        foreach (var x in e.Positions)
-        {
-            var position = new PositionDto(x.Symbol, x.Orientation, x.MarginType, -1, x.Amount);
-            PositionWriter.Write(position);
-        }
 
         this.Trace("done");
     }
