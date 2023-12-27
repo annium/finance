@@ -35,7 +35,7 @@ public readonly struct ProviderRegistrationContext
         Container.Add<TMarketProvider>().AsKeyed<IMarketProvider>(provider).AsSelf().Singleton();
         Container.Add<TMarketConnector>().AsSelf().Transient();
         Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Singleton();
-        Container.Add<IQueryProcessor, TQueryProcessor>().AsSelf().Transient();
+        Container.Add<TQueryProcessor>().AsSelf().Singleton();
         Container.Add<TUserConnector>().AsSelf().Transient();
         Container.Add<TFinanceService>().AsSelf().Transient();
 
