@@ -14,7 +14,9 @@ using OneOf;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 
-internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvider<TSettings, TConnector>, ILogSubject
+internal abstract class ConnectorCacheProvider<TSettings, TConnector>
+    : ObjectCacheProvider<TSettings, TConnector>,
+        ILogSubject
     where TSettings : class, IConnectorSettings
     where TConnector : IConnectorBase
 {
@@ -22,7 +24,7 @@ internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvid
     private readonly IServiceProvider _sp;
     private readonly ConcurrentDictionary<TSettings, Entry> _scopes = new();
 
-    public ConnectorCacheProvider(IServiceProvider sp, ILogger logger)
+    protected ConnectorCacheProvider(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;
         _sp = sp;
@@ -35,10 +37,10 @@ internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvid
     {
         var providerKey = key.GetProviderKey();
 
-        this.Trace("{key} - resolve entry for {config}", providerKey, key);
+        this.Trace("{key} - resolve entry for {settings}", providerKey, key);
         var entry = _scopes.GetOrAdd(key, CreateEntry);
 
-        this.Trace("{key} - init {key} connector for {config}", providerKey, key);
+        this.Trace("{key} - init {key} connector for {settings}", providerKey, key);
         await entry.Connector.InitAsync(); // this must not be called twice by design
 
         return entry.Connector;
@@ -48,31 +50,32 @@ internal class ConnectorCacheProvider<TSettings, TConnector> : ObjectCacheProvid
     {
         var providerKey = key.GetProviderKey();
 
-        this.Trace("resolve {key} entry for {config}", providerKey, key);
+        this.Trace("resolve {key} entry for {settings}", providerKey, key);
         if (!_scopes.TryGetValue(key, out var entry))
         {
-            this.Warn("resolved no {key} entry for {config}", providerKey, key);
+            this.Warn("resolved no {key} entry for {settings}", providerKey, key);
             return;
         }
 
-        this.Warn("dispose {key} entry for {config}", providerKey, key);
+        this.Warn("dispose {key} entry for {settings}", providerKey, key);
         await entry.DisposeAsync();
 
-        this.Warn("resolved {key} entry for {config}", providerKey, key);
+        this.Warn("resolved {key} entry for {settings}", providerKey, key);
     }
 
-    private Entry CreateEntry(TSettings config)
-    {
-        var providerKey = ProviderKey.Create(config.Provider, config.Environment);
+    protected abstract void Inject(IServiceProvider scopeProvider, TSettings settings);
 
-        this.Trace("create new {key} scope for {config}", providerKey, config);
+    private Entry CreateEntry(TSettings settings)
+    {
+        var providerKey = ProviderKey.Create(settings.Provider, settings.Environment);
+
+        this.Trace("create new {key} scope for {settings}", providerKey, settings);
         var scope = _sp.CreateAsyncScope();
 
-        this.Trace("{key} - provide {config} into scope", providerKey, config);
-        var injected = scope.ServiceProvider.Resolve<Injected<TSettings>>();
-        injected.Init(config);
+        this.Trace("{key} - provide {settings} into scope", providerKey, settings);
+        Inject(scope.ServiceProvider, settings);
 
-        this.Trace("create new {key} connector for {config}", providerKey, config);
+        this.Trace("create new {key} connector for {settings}", providerKey, settings);
         var factory = _sp.ResolveKeyed<Func<IServiceProvider, TConnector>>(providerKey);
         var connector = factory(scope.ServiceProvider);
 

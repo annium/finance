@@ -14,17 +14,13 @@ public static class ServiceContainerExtensions
     public static ProviderRegistrationContext AddProviders(this IServiceContainer container)
     {
         // market
-        container.AddObjectCache<
-            MarketSettings,
-            IMarketConnector,
-            ConnectorCacheProvider<MarketSettings, IMarketConnector>
-        >(ServiceLifetime.Singleton);
+        container.AddObjectCache<MarketSettings, IMarketConnector, MarketConnectorCacheProvider>(
+            ServiceLifetime.Singleton
+        );
         container.Add<Injected<MarketSettings>>().AsSelf().Scoped();
 
         // user
-        container.AddObjectCache<UserSettings, IUserConnector, ConnectorCacheProvider<UserSettings, IUserConnector>>(
-            ServiceLifetime.Singleton
-        );
+        container.AddObjectCache<UserSettings, IUserConnector, UserConnectorCacheProvider>(ServiceLifetime.Singleton);
         container.Add<Injected<UserSettings>>().AsSelf().Scoped();
 
         // status
