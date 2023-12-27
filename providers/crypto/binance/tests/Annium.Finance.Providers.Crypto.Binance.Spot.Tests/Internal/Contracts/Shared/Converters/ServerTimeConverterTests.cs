@@ -8,9 +8,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.Shared.Converters;
 
-public class ServerTimeResponseTests : ConnectorTestBase
+public class ServerTimeConverterTests : ConnectorTestBase
 {
-    public ServerTimeResponseTests(ITestOutputHelper outputHelper)
+    public ServerTimeConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
 
     [Fact]
@@ -24,9 +24,26 @@ public class ServerTimeResponseTests : ConnectorTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.ServerTimeKey);
-        var deserialized = serializer.Deserialize<ServerTime>(Encoding.UTF8.GetBytes(raw)).NotNull();
+        var deserialized = serializer.Deserialize<ServerTime?>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization
         deserialized.Value.Is(123);
+    }
+
+    [Fact]
+    public void InvalidDataReturnsEmpty()
+    {
+        // arrange
+        var raw =
+            @"{
+            ""time"":123
+        }";
+
+        // act - deserialize
+        var serializer = this.GetJsonSerializer(Constants.ServerTimeKey);
+        var deserialized = serializer.Deserialize<ServerTime?>(Encoding.UTF8.GetBytes(raw));
+
+        // assert - deserialization
+        deserialized.IsDefault();
     }
 }

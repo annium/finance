@@ -7,5 +7,5 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.
 internal class Contracts
 {
     public JsonSerializerOptions ServerTime { get; } =
-        new JsonSerializerOptions().ResetConverters().AddConverter<ServerTimeResponseConverter>();
+        new JsonSerializerOptions().ResetConverters().AddConverter<ServerTimeConverter>();
 }
