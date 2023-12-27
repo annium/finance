@@ -47,7 +47,7 @@ public class UserConnectorTests : UserConnectorTestBase
         ) { }
 
     [Fact]
-    public async Task InitOrder_Invalid()
+    public async Task InitOrder_Limit_Invalid()
     {
         this.Trace("start");
 
@@ -64,7 +64,7 @@ public class UserConnectorTests : UserConnectorTestBase
     }
 
     [Fact]
-    public async Task InitOrder_Valid()
+    public async Task InitOrder_Limit_Valid()
     {
         this.Trace("start");
 
