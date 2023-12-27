@@ -1,5 +1,6 @@
 using System;
 using System.Net.Mime;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 
@@ -13,5 +14,11 @@ public static class TestBaseExtensions
         var serializer = testBase.GetKeyed<ISerializer<ReadOnlyMemory<byte>>>(serializerKey);
 
         return serializer;
+    }
+
+    public static void Inject<T>(this TestBase testBase, T value)
+        where T : class
+    {
+        testBase.Get<Injected<T>>().Init(value);
     }
 }

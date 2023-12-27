@@ -5,23 +5,19 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestSignatureExtensions
 {
-    public static IHttpRequest Sign(this IHttpRequest request, SignatureService ss) =>
-        request.Timestamp(ss).Key(ss).Signature(ss);
+    public static IHttpRequest Sign(this IHttpRequest request, SignatureService ss) => request.Key(ss).Signature(ss);
 
     public static IHttpRequest Key(this IHttpRequest request, SignatureService ss) =>
         request.Header("x-mbx-apikey", ss.GetKey());
 
-    public static IHttpRequest Timestamp(this IHttpRequest request, long timestamp) =>
-        request.Param("timestamp", timestamp);
-
-    public static IHttpRequest Timestamp(this IHttpRequest request, SignatureService ss) =>
-        request.Timestamp(ss.ServerTime);
-
     public static IHttpRequest ReceiveWindow(this IHttpRequest request) => request.Param("recvWindow", 30_000);
 
-    public static IHttpRequest Signature(this IHttpRequest request, SignatureService ss) =>
+    private static IHttpRequest Signature(this IHttpRequest request, SignatureService ss) =>
         request.Configure(req =>
         {
+            // set timestamp
+            req.Param("timestamp", ss.ServerTime);
+
             // calculate signature
             req.NoParam("signature");
             var query = req.Uri.Query.TrimStart('?');

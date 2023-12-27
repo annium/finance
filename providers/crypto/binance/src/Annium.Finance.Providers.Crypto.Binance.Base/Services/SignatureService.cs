@@ -2,20 +2,21 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using Annium.Security;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
 public sealed class SignatureService
 {
-    public long ServerTime => SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
+    public long ServerTime => _serverTimeWatcher.ServerTime;
     private readonly SecureString _key;
     private readonly SecureString _secret;
+    private readonly ServerTimeWatcher _serverTimeWatcher;
 
-    public SignatureService(string apiKey, string apiSecret)
+    public SignatureService(UserConfigBase config, ServerTimeWatcher serverTimeWatcher)
     {
-        _key = apiKey.AsSecureString();
-        _secret = apiSecret.AsSecureString();
+        _key = config.Key.AsSecureString();
+        _secret = config.Secret.AsSecureString();
+        _serverTimeWatcher = serverTimeWatcher;
     }
 
     public string GetKey()
