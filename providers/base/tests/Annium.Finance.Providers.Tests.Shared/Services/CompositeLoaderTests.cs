@@ -34,10 +34,10 @@ public class CompositeLoaderTests : TestBase
     }
 
     [Theory]
-    [InlineData(100, 3000)]
-    [InlineData(100, 0)]
-    [InlineData(3000, 10)]
-    [InlineData(0, 10)]
+    [InlineData(200, 3000)]
+    [InlineData(200, 0)]
+    [InlineData(3000, 50)]
+    [InlineData(0, 50)]
     public async Task Works(int interval, int debounce)
     {
         var cfg = new CompositeLoaderConfig(1, 5, 2, interval, debounce);
