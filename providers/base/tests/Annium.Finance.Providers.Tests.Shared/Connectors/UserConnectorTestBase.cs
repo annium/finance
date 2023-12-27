@@ -26,11 +26,11 @@ namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 {
     protected InstrumentDto Instrument { get; private set; } = default!;
+    protected string Symbol { get; }
     protected InstrumentTicker Ticker { get; private set; } = default!;
     private IUserConnector Connector { get; set; } = default!;
     private AsyncDisposableBox Disposable { get; set; }
     private readonly UserSettings _config;
-    private readonly string _symbol;
     private readonly ConcurrentQueue<AssetDto> _assets = new();
     private readonly ConcurrentQueue<PositionDto> _positions = new();
     private readonly ConcurrentQueue<OrderDto> _orders = new();
@@ -49,7 +49,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     {
         Disposable = Annium.Disposable.AsyncBox(Logger);
         _config = config;
-        _symbol = symbol;
+        Symbol = symbol;
     }
 
     public async Task InitializeAsync()
@@ -65,14 +65,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("await until market connector is ready");
         await market.WhenConnected();
 
-        this.Trace<string>("find instrument {symbol}", _symbol);
-        Instrument = market.Instruments.Single(x => x.Symbol == _symbol);
+        this.Trace<string>("find instrument {symbol}", Symbol);
+        Instrument = market.Instruments.Single(x => x.Symbol == Symbol);
         this.Trace("found instrument {instrument}", Instrument);
 
-        this.Trace<string>("subscribe and wait for ticker for {symbol}", _symbol);
-        market.SubscribeTickers(new[] { Instrument.Symbol });
-        this.Trace<string>("find ticker for {symbol}", _symbol);
-        Ticker = await market.Tickers.FirstAsync(x => x.Symbol == Instrument.Symbol);
+        this.Trace<string>("subscribe and wait for ticker for {symbol}", Symbol);
+        market.SubscribeTickers(new[] { Symbol });
+        this.Trace<string>("find ticker for {symbol}", Symbol);
+        Ticker = await market.Tickers.FirstAsync(x => x.Symbol == Symbol);
         this.Trace("found ticker for {instrument}", Instrument);
 
         this.Trace("get user connector for {config}", _config);
@@ -135,7 +135,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         {
             this.Trace("close position amount: {amount}", amount);
             await InitValidOrder(
-                InitMarketOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Sell, amount),
+                InitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, amount),
                 OrderStatus.Filled
             );
             await EnsureBalanceIsIncreased();
@@ -189,7 +189,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
                 .InitOrder(
                     InitMarketOrder(
                         GenerateClientOrderId(),
-                        Instrument.Symbol,
+                        Symbol,
                         position.Amount < 0 ? OrderSide.Buy : OrderSide.Sell,
                         Math.Abs(position.Amount)
                     )
@@ -309,7 +309,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("cancel all orders - start");
 
         // cancel existing orders
-        await Connector.CancelAllOrders(Instrument.Symbol).Unwrap();
+        await Connector.CancelAllOrders(Symbol).Unwrap();
 
         EnsureNoErrors();
 
@@ -332,7 +332,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 
     protected decimal GetPositionAmount()
     {
-        this.Trace<string>("get size of {symbol} position", Instrument.Symbol);
+        this.Trace<string>("get size of {symbol} position", Symbol);
         var amount = GetPosition().Amount;
 
         return Instrument.ToLotSize(amount);
@@ -352,9 +352,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     private PositionDto GetPosition()
     {
         this.Trace("get {instrument} position", Instrument);
-        var position = _positions.Last(
-            x => x.OrientationRange is OrientationRange.Both && x.Symbol == Instrument.Symbol
-        );
+        var position = _positions.Last(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Symbol);
         this.Trace("got {instrument} last position: {position}", Instrument, position);
 
         return position;
