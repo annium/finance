@@ -67,6 +67,7 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
+        ctx.Container.Add(ServerTimeWatcherFactory).AsSelf().Scoped();
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
@@ -88,6 +89,7 @@ public static class ProviderRegistrationContextExtensions
             Environment = marketSettings.Environment,
             HttpApi = httpApi,
             WsApi = wsApi,
+            ServerTimeEndpoint = "/api/v1/time",
             WsMarketEndpoint = "/stream",
         };
     }
@@ -118,6 +120,18 @@ public static class ProviderRegistrationContextExtensions
         };
     }
 
+    private static ServerTimeWatcher ServerTimeWatcherFactory(IServiceProvider sp)
+    {
+        var config = sp.Resolve<MarketConfig>();
+        var requestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ServerTimeKey);
+        var statusReporter = sp.Resolve<IStatusReporter>();
+        var logger = sp.Resolve<ILogger>();
+
+        var providerConfig = sp.Resolve<ProviderConfiguration>();
+
+        return new ServerTimeWatcher(config, requestFactory, providerConfig.ServerTime, statusReporter, logger);
+    }
+
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<MarketConfig>();
@@ -132,8 +146,9 @@ public static class ProviderRegistrationContextExtensions
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<UserConfig>();
+        var serverTimeWatcher = sp.Resolve<ServerTimeWatcher>();
 
-        return new SignatureService(config.Key, config.Secret);
+        return new SignatureService(config, serverTimeWatcher);
     }
 
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)
