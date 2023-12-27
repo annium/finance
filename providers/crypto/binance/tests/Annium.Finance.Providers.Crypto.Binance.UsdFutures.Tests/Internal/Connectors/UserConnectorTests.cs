@@ -89,6 +89,17 @@ public class UserConnectorTests : UserConnectorTestBase
     }
 
     [Fact]
+    public async Task InitOrder_Market_Invalid()
+    {
+        this.Trace("start");
+
+        var request = InitMarketOrder(GenerateClientOrderId(), Instrument.Symbol, OrderSide.Buy, ExtremeHighQty);
+        await InitInvalidOrder(request);
+
+        this.Trace("done");
+    }
+
+    [Fact]
     public async Task ModifyOrder_Invalid()
     {
         this.Trace("start");
