@@ -35,7 +35,11 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         var marketCache = Get<IObjectCache<MarketSettings, IMarketConnector>>();
 
         // arrange - resolve market ref
-        var marketConfig = new MarketSettings(providerKey.Provider, providerKey.Environment);
+        var marketConfig = new MarketSettings
+        {
+            Provider = providerKey.Provider,
+            Environment = providerKey.Environment
+        };
         this.Trace("get market connector for {config}", marketConfig);
         await using var marketRef = await marketCache.GetAsync(marketConfig);
         var market = marketRef.Value;
@@ -72,7 +76,7 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
 
         // assert - tickers
         this.Trace("ensure tickers are loaded");
-        var ticker = await market.Tickers.FirstAsync(x => x.Symbol == _symbol);
+        await market.Tickers.FirstAsync(x => x.Symbol == _symbol);
         this.Trace("done");
     }
 }

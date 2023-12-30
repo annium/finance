@@ -20,5 +20,11 @@ public abstract record UserConfigBase
 public static class UserConfigBaseExtensions
 {
     public static UserSettings GetSettings(this UserConfigBase config) =>
-        new UserSettings(config.Provider, config.Environment, config.Key, config.Secret);
+        new()
+        {
+            Provider = config.Provider,
+            Environment = config.Environment,
+            Key = config.Key,
+            Secret = config.Secret,
+        };
 }

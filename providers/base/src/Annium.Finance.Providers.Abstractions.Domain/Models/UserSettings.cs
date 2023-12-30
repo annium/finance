@@ -3,5 +3,10 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record UserSettings(string Provider, ProviderEnvironment Environment, string Key, string Secret)
-    : IConnectorSettings;
+public sealed record UserSettings : IConnectorSettings
+{
+    public string Provider { get; init; } = string.Empty;
+    public ProviderEnvironment Environment { get; init; }
+    public string Key { get; init; } = string.Empty;
+    public string Secret { get; init; } = string.Empty;
+}

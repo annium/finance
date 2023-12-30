@@ -43,7 +43,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        _settings = new MarketSettings(provider, environment);
+        _settings = new MarketSettings { Provider = provider, Environment = environment };
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
