@@ -13,8 +13,7 @@ public abstract record UserConfigBase
     public required Uri HttpApi { get; init; }
     public required Uri WsApi { get; init; }
     public required string ListenKeyBase { get; init; }
-    public required int ListenKeyFetchInterval { get; init; }
-    public required int ListenKeyConfirmInterval { get; init; }
+    public required ListenKeyConfiguration ListenKey { get; init; }
 }
 
 public static class UserConfigBaseExtensions
@@ -27,4 +26,10 @@ public static class UserConfigBaseExtensions
             Key = config.Key,
             Secret = config.Secret,
         };
+}
+
+public sealed record ListenKeyConfiguration
+{
+    public int FetchInterval { get; init; } = 5_000;
+    public int ConfirmInterval { get; init; } = 60_000;
 }
