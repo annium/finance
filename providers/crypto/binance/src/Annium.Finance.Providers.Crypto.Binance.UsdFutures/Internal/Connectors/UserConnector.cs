@@ -148,7 +148,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(new LeverageResponse(0));
+            .AsUserResultAsync<LeverageResponse>();
 
         HandleTradeResult(result.IsSuccess);
 
@@ -157,19 +157,19 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return UserResult.Ok();
     }
 
-    public async Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request)
+    public async Task<UserResult<OrderDto?>> InitOrder(IInitOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
             this.Trace("skip for {request} - not connected", request);
-            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
+            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto));
         }
 
         var queryResult = _queryProcessor.BuildInitOrderQuery(request);
         if (queryResult.IsFailure)
         {
             this.Trace("query processing failed: {result}", queryResult);
-            return UserResult.From(queryResult, default(OrderDto)!);
+            return UserResult.From(queryResult, default(OrderDto));
         }
 
         this.Trace("send request");
@@ -181,7 +181,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(default(OrderDto)!);
+            .AsUserResultAsync<OrderDto>();
 
         HandleTradeResult(result.IsSuccess);
 
@@ -190,12 +190,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public async Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request)
+    public async Task<UserResult<OrderDto?>> ModifyOrder(IModifyOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
             this.Trace("skip for {request} - not connected", request);
-            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto)!);
+            return UserResult.New(UserOperationStatus.NotConnected, default(OrderDto));
         }
 
         // non limit orders can only be canceled and created from scratch
@@ -207,7 +207,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             if (cancelResult.IsFailure)
             {
                 this.Trace("cancel of order {order} failed: {result}", request.Order, cancelResult);
-                return UserResult.From(cancelResult, default(OrderDto)!);
+                return UserResult.From(cancelResult, default(OrderDto));
             }
 
             var initRequest = request.ToInitOrderRequest();
@@ -221,7 +221,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         if (queryResult.IsFailure)
         {
             this.Trace("query processing failed: {result}", queryResult);
-            return UserResult.From(queryResult, default(OrderDto)!);
+            return UserResult.From(queryResult, default(OrderDto));
         }
 
         this.Trace("send request");
@@ -233,7 +233,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(default(OrderDto)!);
+            .AsUserResultAsync<OrderDto>();
 
         HandleTradeResult(result.IsSuccess);
 
@@ -266,7 +266,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(new CancelOrderResponse(Guid.Empty, string.Empty));
+            .AsUserResultAsync<CancelOrderResponse>();
 
         HandleTradeResult(result.IsSuccess);
 
@@ -299,7 +299,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(new OperationResult(0, string.Empty));
+            .AsUserResultAsync<OperationResult>();
 
         HandleTradeResult(result.IsSuccess);
 
@@ -320,7 +320,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
     }
 
-    private async Task<IBaseResult<AccountResponse>> LoadAccount(CancellationToken ct)
+    private async Task<IBaseResult<AccountResponse?>> LoadAccount(CancellationToken ct)
     {
         this.Trace("start");
         var result = await _getAccountRequestFactory
@@ -330,9 +330,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers)
-            .AsUserResultAsync(
-                new AccountResponse(Array.Empty<AccountResponseBalance>(), Array.Empty<AccountResponsePosition>())
-            );
+            .AsUserResultAsync<AccountResponse>();
         this.Trace("done");
 
         return result;
@@ -355,7 +353,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("done");
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<OrderDto>>> LoadOrders(CancellationToken ct)
+    private async Task<IBaseResult<IReadOnlyCollection<OrderDto>?>> LoadOrders(CancellationToken ct)
     {
         this.Trace("start");
         var result = await _getOrderRequestFactory
@@ -365,7 +363,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(Array.Empty<OrderDto>());
+            .AsUserResultAsync<IReadOnlyCollection<OrderDto>>();
         this.Trace("done");
 
         return result;
@@ -380,7 +378,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("done");
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<TradeResponse>>> LoadTrades(
+    private async Task<IBaseResult<IReadOnlyCollection<TradeResponse>?>> LoadTrades(
         string symbol,
         long since,
         CancellationToken ct
@@ -397,7 +395,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync(Array.Empty<TradeResponse>());
+            .AsUserResultAsync<IReadOnlyCollection<TradeResponse>>();
         this.Trace("done");
 
         return result;

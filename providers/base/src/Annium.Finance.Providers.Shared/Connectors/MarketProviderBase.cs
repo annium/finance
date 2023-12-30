@@ -30,7 +30,7 @@ public abstract class MarketProviderBase
         Instant start,
         Instant end,
         int chunkSize,
-        Func<string, Instant, int, Task<MarketResult<List<CandleDto>>>> fetch,
+        Func<string, Instant, int, Task<MarketResult<List<CandleDto>?>>> fetch,
         [EnumeratorCancellation] CancellationToken ct
     )
     {
@@ -63,7 +63,7 @@ public abstract class MarketProviderBase
         Instant start,
         Instant end,
         int chunkSize,
-        Func<string, Instant, int, Task<MarketResult<List<CandleDto>>>> fetch,
+        Func<string, Instant, int, Task<MarketResult<List<CandleDto>?>>> fetch,
         CandleDto? last
     )
     {

@@ -8,22 +8,23 @@ namespace Annium.Finance.Providers.Shared.Connectors.Extensions;
 
 public static class HttpRequestResultExtensions
 {
-    public static async Task<MarketResult<TData>> AsMarketResultAsync<TData, TError>(
+    public static async Task<MarketResult<TData?>> AsMarketResultAsync<TData, TError>(
         this IHttpRequest request,
-        TData defaultValue,
+        TError defaultError,
         Func<TError, string> getError
     )
+        where TData : class
     {
-        var response = await request.AsResponseAsync<TData, TError>(defaultValue);
+        var response = await request.AsResponseAsync<TData, TError>(defaultError);
 
-        return response.Data.Match(
-            MarketResult.Ok,
+        return response.Data.Match<MarketResult<TData?>>(
+            MarketResult.Ok!,
             error =>
             {
                 var operationStatus = MapHttpStatusCodeToOperationStatus(response.StatusCode);
                 var errorMessage = getError(error);
 
-                return MarketResult.New(operationStatus, defaultValue, errorMessage);
+                return MarketResult.New<TData?>(operationStatus, null, errorMessage);
             }
         );
     }

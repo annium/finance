@@ -35,7 +35,7 @@ public class ServerTimeWatcher : ServerTimeWatcherBase
             .New(_config.HttpApi)
             .Get(_config.ServerTimeEndpoint)
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsMarketResultAsync(new ServerTime(0L));
+            .AsMarketResultAsync<ServerTime>();
 
         return MarketResult.From(result, result.IsSuccess ? result.Data.Value : 0L);
     }

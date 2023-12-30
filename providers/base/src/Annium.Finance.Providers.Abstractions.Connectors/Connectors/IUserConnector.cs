@@ -16,8 +16,8 @@ public interface IUserConnector : IConnectorBase
     IObservable<TradeDto> Trades { get; }
     event Func<UserSettings, IUserProvider, Task> OnSync;
     Task<UserResult> SetLeverage(PositionDto position, decimal leverage);
-    Task<UserResult<OrderDto>> InitOrder(IInitOrderRequest request);
-    Task<UserResult<OrderDto>> ModifyOrder(IModifyOrderRequest request);
+    Task<UserResult<OrderDto?>> InitOrder(IInitOrderRequest request);
+    Task<UserResult<OrderDto?>> ModifyOrder(IModifyOrderRequest request);
     Task<UserResult> CancelOrder(OrderDto order);
     Task<UserResult> CancelAllOrders(string symbol);
 }

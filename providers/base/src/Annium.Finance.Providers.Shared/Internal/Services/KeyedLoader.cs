@@ -18,7 +18,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     private readonly IServiceProvider _sp;
     private readonly CompositeLoaderConfig _config;
     private readonly TContext _initialContext;
-    private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> _getLoad;
+    private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> _getLoad;
     private readonly Func<TKey, TContext, TData, TContext> _getContext;
     private readonly ConcurrentDictionary<TKey, KeyedLoaderEntry<TKey, TContext, TData>> _entries = new();
     private State _state;
@@ -27,7 +27,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         IServiceProvider sp,
         CompositeLoaderConfig config,
         TContext initialContext,
-        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> getLoad,
         Func<TKey, TContext, TData, TContext> getContext,
         ILogger logger
     )

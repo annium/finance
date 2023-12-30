@@ -14,7 +14,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     public ILogger Logger { get; }
     public event Action<T> OnData = delegate { };
     private readonly SnapshotLoaderConfig _cfg;
-    private readonly Func<CancellationToken, Task<IBaseResult<T>>> _load;
+    private readonly Func<CancellationToken, Task<IBaseResult<T?>>> _load;
     private readonly IStatusReporter _statusReporter;
     private readonly IAsyncTimer _timer;
     private readonly object _locker = new();
@@ -24,7 +24,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 
     public SnapshotLoader(
         SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load,
+        Func<CancellationToken, Task<IBaseResult<T?>>> load,
         IStatusReporter statusReporter,
         ILogger logger
     )

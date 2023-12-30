@@ -71,7 +71,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
 
     private async ValueTask GetListenKeyAsync()
     {
-        UserResult<ListenKey>? result = null;
+        UserResult<ListenKey?>? result = null;
         try
         {
             this.Trace("start");
@@ -82,7 +82,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
                 .Post(_endpoint)
                 .Key(_signatureService)
                 .WithLogFrom(this, LogData.Response)
-                .AsUserResultAsync(new ListenKey(string.Empty));
+                .AsUserResultAsync<ListenKey>();
 
             // but here it can already be disposed
             if (_disposable.IsDisposed)

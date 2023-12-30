@@ -8,9 +8,19 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestResultExtensions
 {
-    public static Task<MarketResult<T>> AsMarketResultAsync<T>(this IHttpRequest request, T defaultValue) =>
-        request.AsMarketResultAsync<T, OperationResult>(defaultValue, x => x.Message);
+    private static readonly OperationResult DefaultError = new(1, "unknown failure");
 
-    public static Task<UserResult<T>> AsUserResultAsync<T>(this IHttpRequest request, T defaultValue) =>
-        request.AsUserResultAsync<T, OperationResult>(defaultValue, x => x.Message);
+    public static Task<MarketResult<T?>> AsMarketResultAsync<T>(this IHttpRequest request)
+        where T : class
+    {
+        return request.AsMarketResultAsync<T, OperationResult>(DefaultError, GetError);
+    }
+
+    public static Task<UserResult<T?>> AsUserResultAsync<T>(this IHttpRequest request)
+        where T : class
+    {
+        return request.AsUserResultAsync<T, OperationResult>(DefaultError, GetError);
+    }
+
+    private static string GetError(OperationResult result) => result.Message;
 }

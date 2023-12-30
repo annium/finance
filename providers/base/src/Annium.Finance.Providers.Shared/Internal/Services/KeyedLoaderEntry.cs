@@ -14,13 +14,13 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
     public TKey Key { get; }
     public TContext Context { get; private set; }
     public CompositeLoader<TData> Loader { get; }
-    private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> _getLoad;
+    private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> _getLoad;
 
     public KeyedLoaderEntry(
         TKey key,
         TContext context,
         CompositeLoaderConfig config,
-        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> getLoad,
         IStatusReporter statusReporter,
         ILogger logger
     )
@@ -37,7 +37,7 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
         Context = context;
     }
 
-    private Task<IBaseResult<TData>> GetLoad(CancellationToken ct)
+    private Task<IBaseResult<TData?>> GetLoad(CancellationToken ct)
     {
         return _getLoad(Key, Context, ct);
     }

@@ -9,18 +9,18 @@ public interface ILoaderFactory
 {
     ISnapshotLoader<T> CreateSnapshotLoader<T>(
         SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load
+        Func<CancellationToken, Task<IBaseResult<T?>>> load
     );
 
     ICompositeLoader<T> CreateCompositeLoader<T>(
         CompositeLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load
+        Func<CancellationToken, Task<IBaseResult<T?>>> load
     );
 
     IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
         CompositeLoaderConfig cfg,
         TContext initialContext,
-        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> getLoad,
         Func<TKey, TContext, TData, TContext> getContext
     )
         where TKey : notnull;

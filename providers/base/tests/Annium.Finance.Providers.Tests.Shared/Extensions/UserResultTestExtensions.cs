@@ -6,7 +6,7 @@ namespace Annium.Finance.Providers.Tests.Shared.Extensions;
 
 public static class UserResultTestExtensions
 {
-    public static async Task<T> Unwrap<T>(this Task<UserResult<T>> task)
+    public static async Task<T> Unwrap<T>(this Task<UserResult<T?>> task)
         where T : class
     {
         var result = await task;

@@ -8,22 +8,23 @@ namespace Annium.Finance.Providers.Shared.Connectors.Extensions;
 
 public static class HttpRequestUserResultExtensions
 {
-    public static async Task<UserResult<TData>> AsUserResultAsync<TData, TError>(
+    public static async Task<UserResult<TData?>> AsUserResultAsync<TData, TError>(
         this IHttpRequest request,
-        TData defaultValue,
+        TError defaultError,
         Func<TError, string> getError
     )
+        where TData : class
     {
-        var response = await request.AsResponseAsync<TData, TError>(defaultValue);
+        var response = await request.AsResponseAsync<TData, TError>(defaultError);
 
-        return response.Data.Match(
-            UserResult.Ok,
+        return response.Data.Match<UserResult<TData?>>(
+            UserResult.Ok!,
             error =>
             {
                 var operationStatus = MapHttpStatusCodeToOperationStatus(response.StatusCode);
                 var errorMessage = getError(error);
 
-                return UserResult.New(operationStatus, defaultValue, errorMessage);
+                return UserResult.New<TData?>(operationStatus, null, errorMessage);
             }
         );
     }

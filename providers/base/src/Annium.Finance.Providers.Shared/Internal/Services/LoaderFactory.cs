@@ -22,7 +22,7 @@ internal class LoaderFactory : ILoaderFactory
 
     public ISnapshotLoader<T> CreateSnapshotLoader<T>(
         SnapshotLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load
+        Func<CancellationToken, Task<IBaseResult<T?>>> load
     )
     {
         var reporter = _sp.Resolve<IStatusReporter>();
@@ -32,7 +32,7 @@ internal class LoaderFactory : ILoaderFactory
 
     public ICompositeLoader<T> CreateCompositeLoader<T>(
         CompositeLoaderConfig cfg,
-        Func<CancellationToken, Task<IBaseResult<T>>> load
+        Func<CancellationToken, Task<IBaseResult<T?>>> load
     )
     {
         var loader = CreateSnapshotLoader(cfg, load);
@@ -43,7 +43,7 @@ internal class LoaderFactory : ILoaderFactory
     public IKeyedLoader<TKey, TContext, TData> CreateKeyedLoader<TKey, TContext, TData>(
         CompositeLoaderConfig cfg,
         TContext initialContext,
-        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData>>> getLoad,
+        Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> getLoad,
         Func<TKey, TContext, TData, TContext> getContext
     )
         where TKey : notnull

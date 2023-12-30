@@ -46,7 +46,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
             .Get("fapi/v1/exchangeInfo")
             .WithLogFrom(this)
             .WithRateDelay1M()
-            .AsMarketResultAsync<ExchangeInfo?>(null);
+            .AsMarketResultAsync<ExchangeInfo>();
 
         if (result.IsFailure || result.Data is null)
         {
@@ -80,7 +80,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         await foreach (var candles in LoadCandlesBaseAsync(instrument, start, end, 1000, Fetch, ct))
             yield return candles;
 
-        Task<MarketResult<List<CandleDto>>> Fetch(string symbol, Instant from, int count) =>
+        Task<MarketResult<List<CandleDto>?>> Fetch(string symbol, Instant from, int count) =>
             _candleRequestFactory
                 .New(Endpoints.GetHttpApi(env))
                 .Get("fapi/v1/klines")
@@ -90,6 +90,6 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
                 .Param("startTime", from.ToUnixTimeMilliseconds())
                 .WithLogFrom(this)
                 .WithRateDelay1M()
-                .AsMarketResultAsync(new List<CandleDto>());
+                .AsMarketResultAsync<List<CandleDto>>();
     }
 }
