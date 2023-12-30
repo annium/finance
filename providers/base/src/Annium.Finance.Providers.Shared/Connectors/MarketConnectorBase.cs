@@ -15,7 +15,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
+    public ConnectorStatus Status { get; private set; }
     public IReadOnlyCollection<ResourceDto> Resources { get; private set; } = Array.Empty<ResourceDto>();
     public IReadOnlyCollection<InstrumentDto> Instruments { get; private set; } = Array.Empty<InstrumentDto>();
     public IObservable<InstrumentTicker> Tickers { get; }
@@ -46,6 +46,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         _settings = new MarketSettings { Provider = provider, Environment = environment };
 
         Disposable = Annium.Disposable.AsyncBox(logger);
+
+        Status = monitor.Status;
 
         monitor.OnStatusChanged += HandleStatusChanged;
         Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;

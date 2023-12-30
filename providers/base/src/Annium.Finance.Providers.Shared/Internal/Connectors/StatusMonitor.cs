@@ -11,11 +11,11 @@ namespace Annium.Finance.Providers.Shared.Internal.Connectors;
 internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
+    public ConnectorStatus Status { get; private set; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     private readonly object _locker = new();
     private readonly Dictionary<string, ConnectorStatus> _targets = new();
-    private ConnectorStatus _status;
 
     public StatusMonitor(ILogger logger)
     {
@@ -72,14 +72,14 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         this.Trace<string>("state: {statuses}", GetStateDescription(_targets));
         var newStatus = ResolveStatus(_targets.Values);
 
-        if (newStatus == _status)
+        if (newStatus == Status)
         {
             this.Trace("same resolved status - {status}", newStatus);
             return;
         }
 
-        this.Trace("update status {oldStatus} -> {newStatus}", _status, newStatus);
-        OnStatusChanged(_status = newStatus);
+        this.Trace("update status {oldStatus} -> {newStatus}", Status, newStatus);
+        OnStatusChanged(Status = newStatus);
     }
 
     private static string GetStateDescription(IReadOnlyDictionary<string, ConnectorStatus> targets) =>

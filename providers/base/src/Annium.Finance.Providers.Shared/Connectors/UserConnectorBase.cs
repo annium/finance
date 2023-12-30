@@ -57,6 +57,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
+        Status = monitor.Status;
+
         monitor.OnStatusChanged += HandleStatusChanged;
         Disposable += () => monitor.OnStatusChanged -= HandleStatusChanged;
 
