@@ -58,7 +58,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
             this.Trace("dispose timer");
             _timer.Dispose();
 
-            this.Trace("signal disconnected status");
+            this.Trace("signal disconnected state");
             _statusReporter.Disconnected();
         }
 
@@ -111,11 +111,14 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 return;
             }
 
+            this.Trace("change state to {state}", State.Inactive);
+            _state = State.Inactive;
+
             this.Trace("cancel cts");
             _cts.Cancel();
 
-            this.Trace("signal disconnected status");
-            _statusReporter.Disconnected();
+            this.Trace("signal connecting state");
+            _statusReporter.Connecting();
 
             this.Trace("stop timer");
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
