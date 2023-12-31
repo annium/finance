@@ -49,7 +49,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>> _tradesLoader;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
-    private readonly ISerializer<ReadOnlyMemory<byte>> _balanceAndPositionUpdateEventSerializer;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
     public UserConnector(
@@ -95,10 +94,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         _userStream.OnMessage += HandleMessage;
         Disposable += () => _userStream.OnMessage -= HandleMessage;
-
-        _balanceAndPositionUpdateEventSerializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
-            SerializerKey.Create(BalanceAndPositionUpdateKey, Application.Json)
-        );
 
         _orderUpdateEventSerializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
             SerializerKey.Create(OrderUpdateKey, Application.Json)
@@ -457,21 +452,13 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
+        // account info in event is almost useless (and position info lacks leverage value), so request account reload
+        _accountLoader.Request();
+
         // handle order update
         var orderUpdate = _orderUpdateEventSerializer.Deserialize<OrderUpdateEvent?>(data);
         if (orderUpdate is not null)
-        {
             HandleOrderUpdate(orderUpdate);
-            return;
-        }
-
-        // handle balance and position update
-        var balanceAndPositionUpdate =
-            _balanceAndPositionUpdateEventSerializer.Deserialize<BalanceAndPositionUpdateEvent?>(data);
-        if (balanceAndPositionUpdate is not null)
-        {
-            HandleBalanceAndPositionUpdate(balanceAndPositionUpdate);
-        }
     }
 
     private void HandleOrderUpdate(OrderUpdateEvent e)
@@ -506,16 +493,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             : ChangeEvent.Delete(order);
 
         OrderWriter.Write(item);
-
-        this.Trace("done");
-    }
-
-    private void HandleBalanceAndPositionUpdate(BalanceAndPositionUpdateEvent _)
-    {
-        this.Trace("start");
-
-        // account info in event is almost useless (and position info lacks leverage value), so request account reload
-        _accountLoader.Request();
 
         this.Trace("done");
     }
