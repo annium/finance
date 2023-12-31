@@ -329,7 +329,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers)
+            .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<AccountResponse>();
         this.Trace("done");
 
