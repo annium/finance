@@ -56,7 +56,7 @@ internal class GetAccountResponseBalanceConverter : JsonConverter<AccountRespons
                     case "marginBalance":
                         totalBalance = reader.GetDecimalFromString();
                         break;
-                    case "availableBalance":
+                    case "maxWithdrawAmount":
                         availableBalance = reader.GetDecimalFromString();
                         break;
                     case "initialMargin":
