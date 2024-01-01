@@ -10,9 +10,9 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IMarketProvider
 {
-    Task<MarketResult<MarketContext>> LoadContextAsync(ProviderEnvironment env);
+    Task<MarketResult<MarketContext?>> LoadContextAsync(ProviderEnvironment env);
 
-    IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>>> LoadCandlesAsync(
+    IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
         string instrument,
         ProviderEnvironment env,
         Instant start,

@@ -25,7 +25,7 @@ public abstract class MarketProviderBase
         return result.Values;
     }
 
-    protected async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>>> LoadCandlesBaseAsync(
+    protected async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesBaseAsync(
         string instrument,
         Instant start,
         Instant end,
@@ -58,7 +58,7 @@ public abstract class MarketProviderBase
         }
     }
 
-    private async Task<MarketResult<IReadOnlyCollection<CandleModel>>> LoadCandlesBaseAsync(
+    private async Task<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesBaseAsync(
         string instrument,
         Instant start,
         Instant end,
@@ -74,11 +74,7 @@ public abstract class MarketProviderBase
 
         // fast return if failed or empty
         if (result.IsFailure || result.Data.Count == 0)
-            return MarketResult.New<IReadOnlyCollection<CandleModel>>(
-                result.Status,
-                Array.Empty<CandleModel>(),
-                result.Message
-            );
+            return MarketResult.New(result.Status, default(IReadOnlyCollection<CandleModel>), result.Message);
 
         var candles = result.Data;
 
@@ -100,6 +96,6 @@ public abstract class MarketProviderBase
         }
 
         // return processed candles
-        return MarketResult.Ok<IReadOnlyCollection<CandleModel>>(candles);
+        return MarketResult.Ok<IReadOnlyCollection<CandleModel>?>(candles);
     }
 }

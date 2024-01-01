@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -35,7 +34,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         _candleRequestFactory = candleRequestFactory;
     }
 
-    public async Task<MarketResult<MarketContext>> LoadContextAsync(ProviderEnvironment env)
+    public async Task<MarketResult<MarketContext?>> LoadContextAsync(ProviderEnvironment env)
     {
         this.Trace("start");
 
@@ -51,10 +50,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         {
             this.Trace("exchange info load failed");
 
-            return MarketResult.From(
-                result,
-                new MarketContext(Array.Empty<ResourceModel>(), Array.Empty<InstrumentModel>())
-            );
+            return MarketResult.From(result, default(MarketContext));
         }
 
         this.Trace("resolve resources");
@@ -65,10 +61,10 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         this.Trace("done");
 
-        return MarketResult.Ok(new MarketContext(resources, result.Data.Instruments));
+        return MarketResult.Ok<MarketContext?>(new MarketContext(resources, result.Data.Instruments));
     }
 
-    public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>>> LoadCandlesAsync(
+    public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
         string instrument,
         ProviderEnvironment env,
         Instant start,
