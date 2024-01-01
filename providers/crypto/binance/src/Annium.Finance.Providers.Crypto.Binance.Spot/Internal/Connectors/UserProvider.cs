@@ -10,7 +10,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 internal class UserProvider : IUserProvider
 {
     public Task<UserResult<IReadOnlyCollection<OrderModel>>> LoadOrdersAsync(
-        UserSettings config,
+        UserSettings settings,
         IReadOnlyCollection<string> instruments,
         long? since
     )
@@ -19,7 +19,7 @@ internal class UserProvider : IUserProvider
     }
 
     public Task<UserResult<IReadOnlyCollection<TradeModel>>> LoadTradesAsync(
-        UserSettings config,
+        UserSettings settings,
         IReadOnlyCollection<string> instruments,
         long? since
     )

@@ -8,13 +8,13 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 public interface IUserProvider
 {
     Task<UserResult<IReadOnlyCollection<OrderModel>>> LoadOrdersAsync(
-        UserSettings config,
+        UserSettings settings,
         IReadOnlyCollection<string> instruments,
         long? since
     );
 
     Task<UserResult<IReadOnlyCollection<TradeModel>>> LoadTradesAsync(
-        UserSettings config,
+        UserSettings settings,
         IReadOnlyCollection<string> instruments,
         long? since
     );
