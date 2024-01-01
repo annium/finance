@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
 
-public class CandleConverter : JsonConverter<CandleDto>
+public class CandleConverter : JsonConverter<CandleModel>
 {
-    public override CandleDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override CandleModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
         {
@@ -34,7 +34,7 @@ public class CandleConverter : JsonConverter<CandleDto>
                     return default;
                 }
 
-                var candle = new CandleDto(timestamp, open, high, low, close, volume);
+                var candle = new CandleModel(timestamp, open, high, low, close, volume);
 
                 return candle;
             }
@@ -70,7 +70,7 @@ public class CandleConverter : JsonConverter<CandleDto>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, CandleDto value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, CandleModel value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

@@ -2,24 +2,24 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderDto?>
+internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderModel?>
 {
     private static readonly JsonSerializerOptions OrderResponseDeserializerOptions = new JsonSerializerOptions()
         .ResetConverters()
         .AddConverter<InitOrderResponseConverter>();
 
-    public override OrderDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override OrderModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("deserialization failed");
 
         var currentDepth = reader.CurrentDepth;
 
-        OrderDto? order = null;
+        OrderModel? order = null;
 
         while (reader.Read())
         {
@@ -37,7 +37,7 @@ internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderDto?>
                 switch (propertyName)
                 {
                     case "newOrderResponse":
-                        order = JsonSerializer.Deserialize<OrderDto?>(ref reader, OrderResponseDeserializerOptions);
+                        order = JsonSerializer.Deserialize<OrderModel?>(ref reader, OrderResponseDeserializerOptions);
                         break;
                     default:
                         reader.Skip();
@@ -49,7 +49,7 @@ internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderDto?>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, OrderDto? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, OrderModel? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

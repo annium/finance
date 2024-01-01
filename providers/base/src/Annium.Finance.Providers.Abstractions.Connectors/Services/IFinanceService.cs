@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Abstractions.Connectors.Services;
 
@@ -11,7 +11,7 @@ public interface IFinanceService : IAsyncDisposable
 
     // calculate order result without fee
     decimal GetResult(
-        InstrumentDto instrument,
+        InstrumentModel instrument,
         Orientation orientation,
         byte leverage,
         decimal positionPrice,
@@ -22,20 +22,20 @@ public interface IFinanceService : IAsyncDisposable
 
     // calculate cost of purchasing instrument qty at price
     // note: this won't take fees into account!
-    decimal GetCost(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetCost(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate sum, that will be borrowed from provider, when purchasing instrument qty at price
     // note: this won't take fees into account!
-    decimal GetBorrowedSum(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetBorrowedSum(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate value of instrument qty at price
     // note: this won't take fees into account!
-    decimal GetValue(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetValue(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate order qty by (side, cost, price, leverage) this won't take fees into account!
     // calculate purchasable qty with sum of instrument at price
     // note: this won't take fees into account!
-    decimal GetQty(InstrumentDto instrument, byte leverage, OrderSide side, decimal sum, decimal price);
+    decimal GetQty(InstrumentModel instrument, byte leverage, OrderSide side, decimal sum, decimal price);
 }
 
 /*

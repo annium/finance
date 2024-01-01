@@ -1,13 +1,13 @@
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
+namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record InstrumentDto : IInstrument
+public sealed record InstrumentModel : IInstrument
 {
     public string Symbol { get; init; }
-    public ResourceDto Target { get; init; }
-    public ResourceDto Quote { get; init; }
-    public ResourceDto Currency { get; init; }
+    public ResourceModel Target { get; init; }
+    public ResourceModel Quote { get; init; }
+    public ResourceModel Currency { get; init; }
     public decimal MinQty { get; private set; }
     public decimal MaxQty { get; private set; }
     public decimal LotSize { get; private set; }
@@ -18,11 +18,11 @@ public sealed record InstrumentDto : IInstrument
     public decimal MaxSum { get; private set; }
     public int MaxOrders { get; private set; }
 
-    public InstrumentDto(
+    public InstrumentModel(
         string symbol,
-        ResourceDto target,
-        ResourceDto quote,
-        ResourceDto currency,
+        ResourceModel target,
+        ResourceModel quote,
+        ResourceModel currency,
         decimal minQty,
         decimal maxQty,
         decimal lotSize,

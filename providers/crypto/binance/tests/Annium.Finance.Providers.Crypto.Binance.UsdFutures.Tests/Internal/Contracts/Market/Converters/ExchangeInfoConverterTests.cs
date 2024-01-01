@@ -1,5 +1,5 @@
 using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
@@ -143,11 +143,11 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
         deserialized.Instruments.Has(1);
         var btcusdt = deserialized.Instruments.At(0);
         btcusdt.IsEqual(
-            new InstrumentDto(
+            new InstrumentModel(
                 "BTCUSDT",
-                new ResourceDto("BTC", 8),
-                new ResourceDto("USDT", 8),
-                new ResourceDto("USDT", 8),
+                new ResourceModel("BTC", 8),
+                new ResourceModel("USDT", 8),
+                new ResourceModel("USDT", 8),
                 0.001m,
                 120m,
                 0.001m,

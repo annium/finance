@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Logging;
@@ -44,7 +43,7 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();
         var start = end - Duration.FromDays(2);
-        var candles = new List<CandleDto>();
+        var candles = new List<CandleModel>();
         this.Trace("load candles in for {symbol} ({key}) in {start} - {end}", _symbol, providerKey, start, end);
         await foreach (
             var chunkResult in provider.LoadCandlesAsync(

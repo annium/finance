@@ -4,11 +4,9 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
@@ -55,7 +53,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
             return MarketResult.From(
                 result,
-                new MarketContext(Array.Empty<ResourceDto>(), Array.Empty<InstrumentDto>())
+                new MarketContext(Array.Empty<ResourceModel>(), Array.Empty<InstrumentModel>())
             );
         }
 
@@ -70,7 +68,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         return MarketResult.Ok(new MarketContext(resources, result.Data.Instruments));
     }
 
-    public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleDto>>> LoadCandlesAsync(
+    public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>>> LoadCandlesAsync(
         string instrument,
         ProviderEnvironment env,
         Instant start,
@@ -81,7 +79,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         await foreach (var candles in LoadCandlesBaseAsync(instrument, start, end, 1000, Fetch, ct))
             yield return candles;
 
-        Task<MarketResult<List<CandleDto>?>> Fetch(string symbol, Instant from, int count) =>
+        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count) =>
             _candleRequestFactory
                 .New(Endpoints.GetHttpApi(env))
                 .Get("fapi/v1/klines")
@@ -91,6 +89,6 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
                 .Param("startTime", from.ToUnixTimeMilliseconds())
                 .WithLogFrom(this)
                 .WithRateDelay1M()
-                .AsMarketResultAsync<List<CandleDto>>();
+                .AsMarketResultAsync<List<CandleModel>>();
     }
 }

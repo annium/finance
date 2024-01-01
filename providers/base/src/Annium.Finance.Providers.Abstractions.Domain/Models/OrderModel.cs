@@ -1,9 +1,9 @@
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
+namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record OrderDto : IOrder
+public sealed record OrderModel : IOrder
 {
     public string Id { get; }
     public string ClientOrderId { get; }
@@ -20,7 +20,7 @@ public sealed record OrderDto : IOrder
     public decimal ExecutedPrice { get; private set; }
     public long UpdatedAt { get; private set; }
 
-    public OrderDto(
+    public OrderModel(
         string id,
         string clientOrderId,
         string symbol,

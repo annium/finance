@@ -1,12 +1,12 @@
-﻿using Annium.Finance.Providers.Abstractions.Domain.Dto;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+﻿using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Testing;
 
 namespace Annium.Finance.Providers.Tests.Shared.Extensions;
 
 public static class OrderTestExtensions
 {
-    public static void ShouldMatch(this OrderDto order, IInitOrderRequest request)
+    public static void ShouldMatch(this OrderModel order, IInitOrderRequest request)
     {
         order.ClientOrderId.IsNotDefault();
         order.Id.IsNullOrWhiteSpace().IsFalse();
@@ -18,7 +18,7 @@ public static class OrderTestExtensions
         order.LevelPrice.Is(request.LevelPrice);
     }
 
-    public static void ShouldMatch(this OrderDto order, IModifyOrderRequest request)
+    public static void ShouldMatch(this OrderModel order, IModifyOrderRequest request)
     {
         order.ClientOrderId.IsNotDefault();
         order.Id.IsNullOrWhiteSpace().IsFalse();
@@ -30,7 +30,7 @@ public static class OrderTestExtensions
         order.LevelPrice.Is(request.LevelPrice);
     }
 
-    public static void ShouldMatch(this OrderDto order, OrderDto original)
+    public static void ShouldMatch(this OrderModel order, OrderModel original)
     {
         order.ClientOrderId.Is(original.ClientOrderId);
         order.Id.Is(original.Id);

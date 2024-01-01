@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class GetAccountResponseBalanceConverter : JsonConverter<AssetDto>
+internal class GetAccountResponseBalanceConverter : JsonConverter<AssetModel>
 {
-    public override AssetDto Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override AssetModel Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("deserialization failed");
@@ -23,7 +23,7 @@ internal class GetAccountResponseBalanceConverter : JsonConverter<AssetDto>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                var balance = new AssetDto(asset, free, locked);
+                var balance = new AssetModel(asset, free, locked);
 
                 return balance;
             }
@@ -55,7 +55,7 @@ internal class GetAccountResponseBalanceConverter : JsonConverter<AssetDto>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, AssetDto value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, AssetModel value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

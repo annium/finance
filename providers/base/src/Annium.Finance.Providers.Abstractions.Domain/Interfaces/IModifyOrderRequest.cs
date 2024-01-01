@@ -1,11 +1,11 @@
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 public interface IModifyOrderRequest
 {
-    OrderDto Order { get; }
+    OrderModel Order { get; }
     OrderSide Side { get; }
     OrderType Type { get; }
     decimal Qty { get; }

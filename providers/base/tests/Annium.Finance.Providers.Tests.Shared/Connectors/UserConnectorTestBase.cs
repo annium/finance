@@ -8,7 +8,6 @@ using Annium.Core.Mapper;
 using Annium.Data.Tables;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
@@ -25,19 +24,19 @@ namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
 public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 {
-    protected InstrumentDto Instrument { get; private set; } = default!;
+    protected InstrumentModel Instrument { get; private set; } = default!;
     protected string Symbol { get; }
     protected InstrumentTicker Ticker { get; private set; } = default!;
     private IUserConnector Connector { get; set; } = default!;
     private AsyncDisposableBox Disposable { get; set; }
     private readonly UserSettings _config;
-    private readonly ConcurrentQueue<AssetDto> _assets = new();
-    private readonly ConcurrentQueue<PositionDto> _positions = new();
-    private readonly ConcurrentQueue<OrderDto> _orders = new();
-    private readonly ConcurrentQueue<TradeDto> _trades = new();
+    private readonly ConcurrentQueue<AssetModel> _assets = new();
+    private readonly ConcurrentQueue<PositionModel> _positions = new();
+    private readonly ConcurrentQueue<OrderModel> _orders = new();
+    private readonly ConcurrentQueue<TradeModel> _trades = new();
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
-    private AssetDto _balance = default!;
-    private PositionDto _position = default!;
+    private AssetModel _balance = default!;
+    private PositionModel _position = default!;
 
     protected UserConnectorTestBase(
         Action<ProviderRegistrationContext> registerProvider,
@@ -213,7 +212,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task<OrderDto> InitValidOrder(IInitOrderRequest request, OrderStatus status)
+    protected async Task<OrderModel> InitValidOrder(IInitOrderRequest request, OrderStatus status)
     {
         this.Trace("start");
 
@@ -237,7 +236,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         return order;
     }
 
-    protected async Task CancelInvalidOrder(OrderDto order)
+    protected async Task CancelInvalidOrder(OrderModel order)
     {
         this.Trace("start");
 
@@ -248,7 +247,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task CancelValidOrder(OrderDto order)
+    protected async Task CancelValidOrder(OrderModel order)
     {
         this.Trace("start");
 
@@ -280,7 +279,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task<OrderDto> ModifyValidOrder(IModifyOrderRequest request, OrderStatus status)
+    protected async Task<OrderModel> ModifyValidOrder(IModifyOrderRequest request, OrderStatus status)
     {
         this.Trace("start");
 
@@ -340,7 +339,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 
     protected string GenerateClientOrderId() => Guid.NewGuid().ToString();
 
-    protected AssetDto GetBalance(string resource)
+    protected AssetModel GetBalance(string resource)
     {
         this.Trace<string>("get {resource} last balance", resource);
         var asset = _assets.Last(x => x.Resource == resource);
@@ -349,7 +348,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         return asset;
     }
 
-    private PositionDto GetPosition()
+    private PositionModel GetPosition()
     {
         this.Trace("get {instrument} position", Instrument);
         var position = _positions.Last(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Symbol);
@@ -456,7 +455,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         });
     }
 
-    private Task EnsureOrderReported(OrderDto order, OrderStatus status)
+    private Task EnsureOrderReported(OrderModel order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
         return Expect.To(() =>

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 
@@ -10,7 +9,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
 internal class UserProvider : IUserProvider
 {
-    public Task<UserResult<IReadOnlyCollection<OrderDto>>> LoadOrdersAsync(
+    public Task<UserResult<IReadOnlyCollection<OrderModel>>> LoadOrdersAsync(
         UserSettings config,
         IReadOnlyCollection<string> instruments,
         long? since
@@ -19,7 +18,7 @@ internal class UserProvider : IUserProvider
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<IReadOnlyCollection<TradeDto>>> LoadTradesAsync(
+    public Task<UserResult<IReadOnlyCollection<TradeModel>>> LoadTradesAsync(
         UserSettings config,
         IReadOnlyCollection<string> instruments,
         long? since

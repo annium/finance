@@ -5,7 +5,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
@@ -16,15 +15,15 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public ConnectorStatus Status { get; private set; }
-    public IReadOnlyCollection<ResourceDto> Resources { get; private set; } = Array.Empty<ResourceDto>();
-    public IReadOnlyCollection<InstrumentDto> Instruments { get; private set; } = Array.Empty<InstrumentDto>();
+    public IReadOnlyCollection<ResourceModel> Resources { get; private set; } = Array.Empty<ResourceModel>();
+    public IReadOnlyCollection<InstrumentModel> Instruments { get; private set; } = Array.Empty<InstrumentModel>();
     public IObservable<InstrumentTicker> Tickers { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     public event Func<
         MarketSettings,
-        IReadOnlyCollection<ResourceDto>,
-        IReadOnlyCollection<InstrumentDto>,
+        IReadOnlyCollection<ResourceModel>,
+        IReadOnlyCollection<InstrumentModel>,
         Task
     > OnSync = delegate
     {
@@ -72,8 +71,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     }
 
     protected void ScheduleSync(
-        IReadOnlyCollection<ResourceDto> resources,
-        IReadOnlyCollection<InstrumentDto> instruments
+        IReadOnlyCollection<ResourceModel> resources,
+        IReadOnlyCollection<InstrumentModel> instruments
     )
     {
         this.Trace("start");

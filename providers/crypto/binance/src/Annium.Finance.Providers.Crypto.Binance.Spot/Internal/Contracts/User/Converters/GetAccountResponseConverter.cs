@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
-internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<AssetDto>>
+internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<AssetModel>>
 {
     private static readonly JsonSerializerOptions BalanceOptions = new JsonSerializerOptions()
         .ResetConverters()
         .AddConverter<GetAccountResponseBalanceConverter>();
 
-    public override IReadOnlyCollection<AssetDto>? Read(
+    public override IReadOnlyCollection<AssetModel>? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
@@ -24,7 +24,7 @@ internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<A
 
         var currentDepth = reader.CurrentDepth;
 
-        IReadOnlyCollection<AssetDto>? balances = null;
+        IReadOnlyCollection<AssetModel>? balances = null;
 
         while (reader.Read())
         {
@@ -42,7 +42,7 @@ internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<A
                 switch (propertyName)
                 {
                     case "balances":
-                        balances = JsonSerializer.Deserialize<IReadOnlyCollection<AssetDto>>(
+                        balances = JsonSerializer.Deserialize<IReadOnlyCollection<AssetModel>>(
                             ref reader,
                             BalanceOptions
                         );
@@ -59,7 +59,7 @@ internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<A
 
     public override void Write(
         Utf8JsonWriter writer,
-        IReadOnlyCollection<AssetDto> value,
+        IReadOnlyCollection<AssetModel> value,
         JsonSerializerOptions options
     )
     {

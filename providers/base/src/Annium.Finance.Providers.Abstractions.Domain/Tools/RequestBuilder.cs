@@ -1,7 +1,7 @@
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Internal.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 
@@ -141,7 +141,7 @@ public static class RequestBuilder
     }
 
     public static IModifyOrderRequest ModifyToLimitOrder(
-        OrderDto order,
+        OrderModel order,
         OrderSide side,
         decimal quantity,
         decimal price
@@ -158,7 +158,7 @@ public static class RequestBuilder
         };
     }
 
-    public static IModifyOrderRequest ModifyToMarketOrder(OrderDto order, OrderSide side, decimal quantity)
+    public static IModifyOrderRequest ModifyToMarketOrder(OrderModel order, OrderSide side, decimal quantity)
     {
         return new ModifyOrderRequest
         {
@@ -172,7 +172,7 @@ public static class RequestBuilder
     }
 
     public static IModifyOrderRequest ModifyToStopLossMarketOrder(
-        OrderDto order,
+        OrderModel order,
         OrderSide side,
         decimal quantity,
         decimal levelPrice
@@ -190,7 +190,7 @@ public static class RequestBuilder
     }
 
     public static IModifyOrderRequest ModifyToTakeProfitMarketOrder(
-        OrderDto order,
+        OrderModel order,
         OrderSide side,
         decimal quantity,
         decimal levelPrice
@@ -208,7 +208,7 @@ public static class RequestBuilder
     }
 
     public static IModifyOrderRequest ModifyToStopLossLimitOrder(
-        OrderDto order,
+        OrderModel order,
         OrderSide side,
         decimal quantity,
         decimal price,
@@ -227,7 +227,7 @@ public static class RequestBuilder
     }
 
     public static IModifyOrderRequest ModifyToTakeProfitLimitOrder(
-        OrderDto order,
+        OrderModel order,
         OrderSide side,
         decimal quantity,
         decimal price,

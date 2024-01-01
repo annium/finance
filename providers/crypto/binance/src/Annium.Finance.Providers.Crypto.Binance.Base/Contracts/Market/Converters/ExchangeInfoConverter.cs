@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
@@ -20,7 +20,7 @@ public class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
         var currentDepth = reader.CurrentDepth;
 
         var rateLimits = default(RateLimits?);
-        var instruments = default(IReadOnlyCollection<InstrumentDto>);
+        var instruments = default(IReadOnlyCollection<InstrumentModel>);
 
         while (reader.Read())
         {
@@ -46,11 +46,11 @@ public class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
                         rateLimits = JsonSerializer.Deserialize<RateLimits?>(ref reader, options);
                         break;
                     case "symbols":
-                        var allInstruments = JsonSerializer.Deserialize<IReadOnlyCollection<InstrumentDto?>>(
+                        var allInstruments = JsonSerializer.Deserialize<IReadOnlyCollection<InstrumentModel?>>(
                             ref reader,
                             options
                         );
-                        instruments = allInstruments?.OfType<InstrumentDto>().ToArray();
+                        instruments = allInstruments?.OfType<InstrumentModel>().ToArray();
                         break;
 
                     default:

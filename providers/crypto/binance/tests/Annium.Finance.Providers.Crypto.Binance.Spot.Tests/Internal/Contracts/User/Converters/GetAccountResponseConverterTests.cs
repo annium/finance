@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
@@ -58,11 +58,13 @@ public class GetAccountResponseConverterTests : ConnectorTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.GetAccountKey);
-        var deserialized = serializer.Deserialize<IReadOnlyCollection<AssetDto>>(Encoding.UTF8.GetBytes(raw)).NotNull();
+        var deserialized = serializer
+            .Deserialize<IReadOnlyCollection<AssetModel>>(Encoding.UTF8.GetBytes(raw))
+            .NotNull();
 
         // assert - deserialization
         deserialized.Has(2);
-        deserialized.At(0).IsEqual(new AssetDto("BTC", 1.2m, 2.3m));
-        deserialized.At(1).IsEqual(new AssetDto("LTC", 1.3m, 2.4m));
+        deserialized.At(0).IsEqual(new AssetModel("BTC", 1.2m, 2.3m));
+        deserialized.At(1).IsEqual(new AssetModel("LTC", 1.3m, 2.4m));
     }
 }

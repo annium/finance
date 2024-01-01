@@ -1,14 +1,14 @@
-﻿using Annium.Finance.Providers.Abstractions.Domain.Dto;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
+﻿using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Tests.Shared.Extensions;
 
 public static class InitOrderRequestTestExtensions
 {
-    public static OrderDto ToOrder(this IInitOrderRequest request)
+    public static OrderModel ToOrder(this IInitOrderRequest request)
     {
-        return new OrderDto(
+        return new OrderModel(
             string.Empty,
             request.Id,
             request.Symbol,

@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 
@@ -19,7 +19,7 @@ internal class FinanceService : IFinanceService
     }
 
     public decimal GetResult(
-        InstrumentDto instrument,
+        InstrumentModel instrument,
         Orientation orientation,
         byte leverage,
         decimal positionPrice,
@@ -31,22 +31,22 @@ internal class FinanceService : IFinanceService
         throw new NotImplementedException();
     }
 
-    public decimal GetCost(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetCost(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetBorrowedSum(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetBorrowedSum(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetValue(InstrumentDto instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetValue(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetQty(InstrumentDto instrument, byte leverage, OrderSide side, decimal sum, decimal price)
+    public decimal GetQty(InstrumentModel instrument, byte leverage, OrderSide side, decimal sum, decimal price)
     {
         throw new NotImplementedException();
     }

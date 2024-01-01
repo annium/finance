@@ -1,6 +1,6 @@
-namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
+namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record TradeDto(
+public sealed record TradeModel(
     string Id,
     string OrderId,
     string Symbol,

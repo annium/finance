@@ -1,5 +1,5 @@
 using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
@@ -162,11 +162,11 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
         deserialized.Instruments.Has(1);
         var ethbtc = deserialized.Instruments.At(0);
         ethbtc.IsEqual(
-            new InstrumentDto(
+            new InstrumentModel(
                 "ETHBTC",
-                new ResourceDto("ETH", 8),
-                new ResourceDto("BTC", 8),
-                new ResourceDto("BTC", 8),
+                new ResourceModel("ETH", 8),
+                new ResourceModel("BTC", 8),
+                new ResourceModel("BTC", 8),
                 0.0001m,
                 4623.26313m,
                 0.0001m,

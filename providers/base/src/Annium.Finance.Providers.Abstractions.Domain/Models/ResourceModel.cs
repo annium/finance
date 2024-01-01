@@ -1,11 +1,11 @@
-namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
+namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record ResourceDto
+public sealed record ResourceModel
 {
     public string Code { get; }
     public byte Precision { get; private set; }
 
-    public ResourceDto(string code, byte precision)
+    public ResourceModel(string code, byte precision)
     {
         Code = code;
         Precision = precision;

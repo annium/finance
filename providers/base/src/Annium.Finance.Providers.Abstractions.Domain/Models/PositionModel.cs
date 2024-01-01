@@ -1,9 +1,9 @@
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Dto;
+namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 
-public sealed record PositionDto : IPosition
+public sealed record PositionModel : IPosition
 {
     public string Symbol { get; }
     public OrientationRange OrientationRange { get; }
@@ -11,7 +11,7 @@ public sealed record PositionDto : IPosition
     public decimal Leverage { get; private set; }
     public decimal Amount { get; private set; }
 
-    public PositionDto(
+    public PositionModel(
         string symbol,
         OrientationRange orientationRange,
         MarginType marginType,

@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.Market.Converters;
 
-internal class InstrumentConverter : JsonConverter<InstrumentDto>
+internal class InstrumentConverter : JsonConverter<InstrumentModel>
 {
     private const string RequiredStatus = "TRADING";
 
-    public override InstrumentDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override InstrumentModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
         {
@@ -36,10 +36,10 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
                     return default;
                 }
 
-                var target = new ResourceDto(baseAsset, baseAssetPrecision);
-                var quote = new ResourceDto(quoteAsset, quoteAssetPrecision);
+                var target = new ResourceModel(baseAsset, baseAssetPrecision);
+                var quote = new ResourceModel(quoteAsset, quoteAssetPrecision);
 
-                var instrument = new InstrumentDto(
+                var instrument = new InstrumentModel(
                     symbol,
                     target,
                     quote,
@@ -97,7 +97,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentDto>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, InstrumentDto value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, InstrumentModel value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

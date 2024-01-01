@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
@@ -38,22 +38,22 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public Task<UserResult> SetLeverage(PositionDto position, decimal leverage)
+    public Task<UserResult> SetLeverage(PositionModel position, decimal leverage)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderDto?>> InitOrder(IInitOrderRequest request)
+    public Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderDto?>> ModifyOrder(IModifyOrderRequest request)
+    public Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult> CancelOrder(OrderDto order)
+    public Task<UserResult> CancelOrder(OrderModel order)
     {
         throw new NotImplementedException();
     }

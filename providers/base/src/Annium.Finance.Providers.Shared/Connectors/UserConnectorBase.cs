@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Execution.Background;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Dto;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Logging;
 using Annium.Threading.Channels;
@@ -16,29 +15,29 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
-    public IObservable<ChangeEvent<AssetDto>> Assets { get; }
-    public IObservable<ChangeEvent<PositionDto>> Positions { get; }
-    public IObservable<ChangeEvent<OrderDto>> Orders { get; }
-    public IObservable<TradeDto> Trades { get; }
+    public IObservable<ChangeEvent<AssetModel>> Assets { get; }
+    public IObservable<ChangeEvent<PositionModel>> Positions { get; }
+    public IObservable<ChangeEvent<OrderModel>> Orders { get; }
+    public IObservable<TradeModel> Trades { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
     public event Func<UserSettings, IUserProvider, Task> OnSync = delegate
     {
         return Task.CompletedTask;
     };
-    protected readonly ChannelWriter<ChangeEvent<AssetDto>> AssetWriter;
-    protected readonly ChannelWriter<ChangeEvent<PositionDto>> PositionWriter;
-    protected readonly ChannelWriter<ChangeEvent<OrderDto>> OrderWriter;
-    protected readonly ChannelWriter<TradeDto> TradeWriter;
+    protected readonly ChannelWriter<ChangeEvent<AssetModel>> AssetWriter;
+    protected readonly ChannelWriter<ChangeEvent<PositionModel>> PositionWriter;
+    protected readonly ChannelWriter<ChangeEvent<OrderModel>> OrderWriter;
+    protected readonly ChannelWriter<TradeModel> TradeWriter;
     protected AsyncDisposableBox Disposable;
-    private readonly ChannelReader<ChangeEvent<AssetDto>> _assetSource;
-    private readonly ChannelWriter<ChangeEvent<AssetDto>> _assetTarget;
-    private readonly ChannelReader<ChangeEvent<PositionDto>> _positionSource;
-    private readonly ChannelWriter<ChangeEvent<PositionDto>> _positionTarget;
-    private readonly ChannelReader<ChangeEvent<OrderDto>> _orderSource;
-    private readonly ChannelWriter<ChangeEvent<OrderDto>> _orderTarget;
-    private readonly ChannelReader<TradeDto> _tradeSource;
-    private readonly ChannelWriter<TradeDto> _tradeTarget;
+    private readonly ChannelReader<ChangeEvent<AssetModel>> _assetSource;
+    private readonly ChannelWriter<ChangeEvent<AssetModel>> _assetTarget;
+    private readonly ChannelReader<ChangeEvent<PositionModel>> _positionSource;
+    private readonly ChannelWriter<ChangeEvent<PositionModel>> _positionTarget;
+    private readonly ChannelReader<ChangeEvent<OrderModel>> _orderSource;
+    private readonly ChannelWriter<ChangeEvent<OrderModel>> _orderTarget;
+    private readonly ChannelReader<TradeModel> _tradeSource;
+    private readonly ChannelWriter<TradeModel> _tradeTarget;
     private readonly IExecutor _executor;
     private readonly UserSettings _settings;
     private readonly IUserProvider _userProvider;
@@ -66,38 +65,38 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += () => monitor.OnError -= HandleError;
 
         // assets
-        var assetSourceChannel = Channel.CreateUnbounded<ChangeEvent<AssetDto>>();
+        var assetSourceChannel = Channel.CreateUnbounded<ChangeEvent<AssetModel>>();
         AssetWriter = assetSourceChannel.Writer;
         _assetSource = assetSourceChannel.Reader;
 
-        var assetTargetChannel = Channel.CreateUnbounded<ChangeEvent<AssetDto>>();
+        var assetTargetChannel = Channel.CreateUnbounded<ChangeEvent<AssetModel>>();
         _assetTarget = assetTargetChannel.Writer;
         Assets = assetTargetChannel.Reader.AsObservable().Publish().RefCount();
 
         // positions
-        var positionSourceChannel = Channel.CreateUnbounded<ChangeEvent<PositionDto>>();
+        var positionSourceChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
         PositionWriter = positionSourceChannel.Writer;
         _positionSource = positionSourceChannel.Reader;
 
-        var positionTargetChannel = Channel.CreateUnbounded<ChangeEvent<PositionDto>>();
+        var positionTargetChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
         _positionTarget = positionTargetChannel.Writer;
         Positions = positionTargetChannel.Reader.AsObservable().Publish().RefCount();
 
         // orders
-        var orderSourceChannel = Channel.CreateUnbounded<ChangeEvent<OrderDto>>();
+        var orderSourceChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
         OrderWriter = orderSourceChannel.Writer;
         _orderSource = orderSourceChannel.Reader;
 
-        var orderTargetChannel = Channel.CreateUnbounded<ChangeEvent<OrderDto>>();
+        var orderTargetChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
         _orderTarget = orderTargetChannel.Writer;
         Orders = orderTargetChannel.Reader.AsObservable().Publish().RefCount();
 
         // trades
-        var tradeSourceChannel = Channel.CreateUnbounded<TradeDto>();
+        var tradeSourceChannel = Channel.CreateUnbounded<TradeModel>();
         TradeWriter = tradeSourceChannel.Writer;
         _tradeSource = tradeSourceChannel.Reader;
 
-        var tradeTargetChannel = Channel.CreateUnbounded<TradeDto>();
+        var tradeTargetChannel = Channel.CreateUnbounded<TradeModel>();
         _tradeTarget = tradeTargetChannel.Writer;
         Trades = tradeTargetChannel.Reader.AsObservable().Publish().RefCount();
 
