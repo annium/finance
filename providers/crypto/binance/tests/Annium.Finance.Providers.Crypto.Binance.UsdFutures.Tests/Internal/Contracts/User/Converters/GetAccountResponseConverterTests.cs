@@ -50,8 +50,8 @@ public class GetAccountResponseConverterTests : ConnectorTestBase
                     ""openOrderInitialMargin"": ""0.00000000"",
                     ""crossWalletBalance"": ""23.72469206"",
                     ""crossUnPnl"": ""0.00000000"",
-                    ""availableBalance"": ""1.7"",
-                    ""maxWithdrawAmount"": ""23.72469206"",
+                    ""availableBalance"": ""2.9"",
+                    ""maxWithdrawAmount"": ""1.7"",
                     ""marginAvailable"": true,
                     ""updateTime"": 1625474304765
                 },
@@ -66,8 +66,8 @@ public class GetAccountResponseConverterTests : ConnectorTestBase
                     ""openOrderInitialMargin"": ""0.00000000"",
                     ""crossWalletBalance"": ""103.12345678"",
                     ""crossUnPnl"": ""0.00000000"",
-                    ""availableBalance"": ""3.2"",
-                    ""maxWithdrawAmount"": ""103.12345678"",
+                    ""availableBalance"": ""4.5"",
+                    ""maxWithdrawAmount"": ""3.2"",
                     ""marginAvailable"": true,
                     ""updateTime"": 1625474304766
                 }
