@@ -7,6 +7,8 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public interface IUserProvider
 {
+    Task<UserResult<UserContext>> LoadContextAsync(UserSettings settings);
+
     Task<UserResult<IReadOnlyCollection<OrderModel>>> LoadOrdersAsync(
         UserSettings settings,
         IReadOnlyCollection<string> instruments,
