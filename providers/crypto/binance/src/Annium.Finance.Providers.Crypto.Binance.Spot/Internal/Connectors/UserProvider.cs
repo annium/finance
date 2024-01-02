@@ -9,38 +9,38 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
 internal class UserProvider : IUserProvider
 {
-    public Task<UserResult<UserContext>> LoadContextAsync(UserSettings settings)
+    public Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
     {
         var assets = Array.Empty<AssetModel>();
         var positions = Array.Empty<PositionModel>();
 
-        var result = UserResult.Ok(new UserContext(assets, positions));
+        var result = UserResult.Ok<UserContext?>(new UserContext(assets, positions));
 
         return Task.FromResult(result);
     }
 
-    public Task<UserResult<IReadOnlyCollection<OrderModel>>> LoadOrdersAsync(
+    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> instruments,
+        IReadOnlyCollection<string> symbols,
         long? since
     )
     {
         var orders = Array.Empty<OrderModel>();
 
-        var result = UserResult.Ok<IReadOnlyCollection<OrderModel>>(orders);
+        var result = UserResult.Ok<IReadOnlyCollection<OrderModel>?>(orders);
 
         return Task.FromResult(result);
     }
 
-    public Task<UserResult<IReadOnlyCollection<TradeModel>>> LoadTradesAsync(
+    public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> instruments,
-        long? since
+        IReadOnlyCollection<string> symbols,
+        long since
     )
     {
         var trades = Array.Empty<TradeModel>();
 
-        var result = UserResult.Ok<IReadOnlyCollection<TradeModel>>(trades);
+        var result = UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades);
 
         return Task.FromResult(result);
     }
