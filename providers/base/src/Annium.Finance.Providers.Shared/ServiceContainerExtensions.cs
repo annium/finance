@@ -3,8 +3,9 @@ using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
+using Annium.Finance.Providers.Shared.Internal.Loaders;
 using Annium.Finance.Providers.Shared.Internal.Services;
-using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Shared.Loaders;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;

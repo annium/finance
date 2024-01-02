@@ -1,6 +1,6 @@
 using System;
 
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Loaders;
 
 public interface ICompositeLoader<T> : IDisposable
 {

@@ -1,4 +1,5 @@
 using Annium.Finance.Providers.Crypto.Binance.Base;
+using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Finance.Providers.Shared.Services;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures;

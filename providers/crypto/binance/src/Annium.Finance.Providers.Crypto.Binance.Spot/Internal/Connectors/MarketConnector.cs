@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
-using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Logging;
 using Annium.Threading.Channels;
 

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Logging;
 using Annium.Threading;
 
-namespace Annium.Finance.Providers.Shared.Internal.Services;
+namespace Annium.Finance.Providers.Shared.Internal.Loaders;
 
 internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 {

@@ -2,7 +2,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Logging;
 using Xunit;

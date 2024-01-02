@@ -1,4 +1,4 @@
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Loaders;
 
 public sealed record CompositeLoaderConfig(
     int FastInterval,
