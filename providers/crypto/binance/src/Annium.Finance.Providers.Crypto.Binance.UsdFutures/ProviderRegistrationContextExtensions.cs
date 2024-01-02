@@ -121,7 +121,7 @@ public static class ProviderRegistrationContextExtensions
         };
     }
 
-    private static ServerTimeWatcher ServerTimeWatcherFactory(IServiceProvider sp)
+    private static ServerTimeProvider ServerTimeWatcherFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<MarketConfig>();
         var requestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ServerTimeKey);
@@ -130,7 +130,7 @@ public static class ProviderRegistrationContextExtensions
 
         var providerConfig = sp.Resolve<ProviderConfiguration>();
 
-        return new ServerTimeWatcher(config, requestFactory, providerConfig.ServerTime, statusReporter, logger);
+        return new ServerTimeProvider(config, requestFactory, providerConfig.ServerTime, statusReporter, logger);
     }
 
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
@@ -147,9 +147,9 @@ public static class ProviderRegistrationContextExtensions
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)
     {
         var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-        var serverTimeWatcher = sp.Resolve<ServerTimeWatcher>();
+        var serverTimeProvider = sp.Resolve<ServerTimeProvider>();
 
-        return new SignatureService(userSettings, serverTimeWatcher);
+        return new SignatureService(userSettings, serverTimeProvider);
     }
 
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)

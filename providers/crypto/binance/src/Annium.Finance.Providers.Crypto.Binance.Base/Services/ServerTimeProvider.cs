@@ -10,12 +10,12 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
-public class ServerTimeWatcher : ServerTimeWatcherBase
+public class ServerTimeProvider : ServerTimeProviderBase
 {
     private readonly MarketConfigBase _config;
     private readonly IHttpRequestFactory _requestFactory;
 
-    public ServerTimeWatcher(
+    public ServerTimeProvider(
         MarketConfigBase config,
         IHttpRequestFactory requestFactory,
         ServerTimeWatcherConfig watcherConfig,

@@ -8,16 +8,16 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
 public sealed class SignatureService
 {
-    public long ServerTime => _serverTimeWatcher.ServerTime;
+    public long ServerTime => _serverTimeProvider.ServerTime;
     private readonly SecureString _key;
     private readonly SecureString _secret;
-    private readonly ServerTimeWatcher _serverTimeWatcher;
+    private readonly ServerTimeProvider _serverTimeProvider;
 
-    public SignatureService(UserSettings settings, ServerTimeWatcher serverTimeWatcher)
+    public SignatureService(UserSettings settings, ServerTimeProvider serverTimeProvider)
     {
         _key = settings.Key.AsSecureString();
         _secret = settings.Secret.AsSecureString();
-        _serverTimeWatcher = serverTimeWatcher;
+        _serverTimeProvider = serverTimeProvider;
     }
 
     public string GetKey()

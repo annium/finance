@@ -10,9 +10,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Services;
 
-public class ServerTimeWatcherTests : ConnectorTestBase
+public class ServerTimeProviderTests : ConnectorTestBase
 {
-    public ServerTimeWatcherTests(ITestOutputHelper outputHelper)
+    public ServerTimeProviderTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper)
     {
         this.Inject(Markets.Test);
@@ -23,7 +23,7 @@ public class ServerTimeWatcherTests : ConnectorTestBase
     public async Task Works()
     {
         // arrange
-        var watcher = Get<ServerTimeWatcher>();
+        var watcher = Get<ServerTimeProvider>();
         var monitor = Get<IStatusMonitor>();
         var status = ConnectorStatus.Disconnected;
         monitor.OnStatusChanged += s => status = s;

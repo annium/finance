@@ -10,7 +10,7 @@ using NodaTime;
 
 namespace Annium.Finance.Providers.Shared.Services;
 
-public abstract class ServerTimeWatcherBase : IDisposable, ILogSubject
+public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public long ServerTime => _serverTime + _watch.ElapsedMilliseconds;
@@ -22,7 +22,7 @@ public abstract class ServerTimeWatcherBase : IDisposable, ILogSubject
     private long _serverTime = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private Mode _mode = Mode.Load;
 
-    protected ServerTimeWatcherBase(ServerTimeWatcherConfig config, IStatusReporter statusReporter, ILogger logger)
+    protected ServerTimeProviderBase(ServerTimeWatcherConfig config, IStatusReporter statusReporter, ILogger logger)
     {
         Logger = logger;
         _config = config;
