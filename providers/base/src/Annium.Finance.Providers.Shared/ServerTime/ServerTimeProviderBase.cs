@@ -8,13 +8,13 @@ using Annium.Logging;
 using Annium.Threading;
 using NodaTime;
 
-namespace Annium.Finance.Providers.Shared.Services;
+namespace Annium.Finance.Providers.Shared.ServerTime;
 
 public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public long ServerTime => _serverTime + _watch.ElapsedMilliseconds;
-    private readonly ServerTimeWatcherConfig _config;
+    private readonly ServerTimeProviderConfig _config;
     private readonly IStatusReporter _statusReporter;
     private readonly Stopwatch _watch = new();
     private readonly IAsyncTimer _timer;
@@ -22,7 +22,7 @@ public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
     private long _serverTime = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private Mode _mode = Mode.Load;
 
-    protected ServerTimeProviderBase(ServerTimeWatcherConfig config, IStatusReporter statusReporter, ILogger logger)
+    protected ServerTimeProviderBase(ServerTimeProviderConfig config, IStatusReporter statusReporter, ILogger logger)
     {
         Logger = logger;
         _config = config;

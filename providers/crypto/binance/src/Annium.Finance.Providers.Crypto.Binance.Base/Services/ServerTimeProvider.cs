@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
@@ -18,11 +19,11 @@ public class ServerTimeProvider : ServerTimeProviderBase
     public ServerTimeProvider(
         MarketConfigBase config,
         IHttpRequestFactory requestFactory,
-        ServerTimeWatcherConfig watcherConfig,
+        ServerTimeProviderConfig providerConfig,
         IStatusReporter statusReporter,
         ILogger logger
     )
-        : base(watcherConfig, statusReporter, logger)
+        : base(providerConfig, statusReporter, logger)
     {
         _config = config;
         _requestFactory = requestFactory;
