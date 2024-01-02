@@ -14,7 +14,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public ConnectorStatus Status { get; private set; } = ConnectorStatus.Disconnected;
+    public ConnectorStatus Status { get; private set; }
     public IObservable<ChangeEvent<AssetModel>> Assets { get; }
     public IObservable<ChangeEvent<PositionModel>> Positions { get; }
     public IObservable<ChangeEvent<OrderModel>> Orders { get; }

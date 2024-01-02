@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
@@ -10,6 +12,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Logging;
 using Annium.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,14 +27,14 @@ internal class UserProvider : UserProviderBase, IUserProvider
     private static long OrderQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
     private static long TradeQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
 
-    private readonly SignatureService _signatureService;
+    private readonly IServiceProvider _sp;
     private readonly IHttpRequestFactory _getAccountRequestFactory;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
 
     public UserProvider(
+        IServiceProvider sp,
         ITimeProvider timeProvider,
-        SignatureService signatureService,
         [FromKeyedServices(GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
         [FromKeyedServices(GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
         [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
@@ -39,7 +42,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     )
         : base(timeProvider, logger)
     {
-        _signatureService = signatureService;
+        _sp = sp;
         _getAccountRequestFactory = getAccountRequestFactory;
         _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
@@ -49,11 +52,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         this.Trace("start");
 
+        var signatureService = GetSignatureService(settings);
+
         var result = await _getAccountRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
             .Get("/fapi/v2/account")
             .ReceiveWindow()
-            .Sign(_signatureService)
+            .Sign(signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<AccountResponse>();
@@ -86,12 +91,14 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         this.Trace("start");
 
+        var signatureService = GetSignatureService(settings);
+
         // load current open orders
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
             .Get("/fapi/v1/openOrders")
             .ReceiveWindow()
-            .Sign(_signatureService)
+            .Sign(signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
@@ -132,7 +139,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                     .Param("startTime", start)
                     .Param("endTime", until)
                     .ReceiveWindow()
-                    .Sign(_signatureService)
+                    .Sign(signatureService)
                     .WithRateDelay1M()
                     .WithLogFrom(this, LogData.Headers | LogData.Response)
                     .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
@@ -158,6 +165,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         this.Trace("start");
 
+        var signatureService = GetSignatureService(settings);
+
         var resolvedTrades = new Dictionary<string, TradeModel>();
 
         var (startTime, endTime) = ResolveHistoryBounds(since);
@@ -179,7 +188,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                     .Param("startTime", start)
                     .Param("endTime", until)
                     .ReceiveWindow()
-                    .Sign(_signatureService)
+                    .Sign(signatureService)
                     .WithRateDelay1M()
                     .WithLogFrom(this, LogData.Headers | LogData.Response)
                     .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
@@ -195,5 +204,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
         ResolveTrades(resolvedTrades, historyTrades);
 
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(resolvedTrades.Values);
+    }
+
+    private SignatureService GetSignatureService(UserSettings settings)
+    {
+        return new SignatureService(settings, _sp.ResolveKeyed<IServerTimeProvider>(settings.GetProviderKey()));
     }
 }

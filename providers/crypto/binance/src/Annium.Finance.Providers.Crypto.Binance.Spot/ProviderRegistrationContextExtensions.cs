@@ -11,6 +11,7 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
@@ -34,6 +35,7 @@ public static class ProviderRegistrationContextExtensions
     {
         // provider
         ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, QueryProcessor, UserConnector, FinanceService>(
+            ServerTimeProviderFactory,
             Provider,
             ProviderEnvironment.Real | ProviderEnvironment.Test
         );
@@ -67,13 +69,24 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
-        ctx.Container.Add(ServerTimeWatcherFactory).AsSelf().Scoped();
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
         ctx.Container.Add(UserStreamFactory).AsSelf().Scoped();
 
         return ctx;
+    }
+
+    private static IServerTimeProvider ServerTimeProviderFactory(IServiceProvider sp, object key)
+    {
+        var providerKey = key.CastTo<ProviderKey>();
+
+        var requestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ServerTimeKey);
+        var httpApi = Endpoints.GetHttpApi(providerKey.Environment);
+        var providerConfig = sp.Resolve<ProviderConfiguration>();
+        var logger = sp.Resolve<ILogger>();
+
+        return new ServerTimeProvider(requestFactory, httpApi, "/api/v1/time", providerConfig.ServerTime, logger);
     }
 
     private static MarketConfig MarketConfigFactory(IServiceProvider sp)
@@ -89,7 +102,6 @@ public static class ProviderRegistrationContextExtensions
             Environment = marketSettings.Environment,
             HttpApi = httpApi,
             WsApi = wsApi,
-            ServerTimeEndpoint = "/api/v1/time",
             WsMarketEndpoint = "/stream",
         };
     }
@@ -119,18 +131,6 @@ public static class ProviderRegistrationContextExtensions
         };
     }
 
-    private static ServerTimeProvider ServerTimeWatcherFactory(IServiceProvider sp)
-    {
-        var config = sp.Resolve<MarketConfig>();
-        var requestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ServerTimeKey);
-        var statusReporter = sp.Resolve<IStatusReporter>();
-        var logger = sp.Resolve<ILogger>();
-
-        var providerConfig = sp.Resolve<ProviderConfiguration>();
-
-        return new ServerTimeProvider(config, requestFactory, providerConfig.ServerTime, statusReporter, logger);
-    }
-
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<MarketConfig>();
@@ -145,9 +145,9 @@ public static class ProviderRegistrationContextExtensions
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)
     {
         var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-        var serverTimeProvider = sp.Resolve<ServerTimeProvider>();
+        var serverTimeTracker = sp.Resolve<IServerTimeTracker>();
 
-        return new SignatureService(userSettings, serverTimeProvider);
+        return new SignatureService(userSettings, serverTimeTracker);
     }
 
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)

@@ -3,34 +3,29 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Threading;
 using NodaTime;
 
 namespace Annium.Finance.Providers.Shared.ServerTime;
 
-public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
+public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public long ServerTime => _serverTime + _watch.ElapsedMilliseconds;
+    public event Action<bool> OnStateChanged = delegate { };
     private readonly ServerTimeProviderConfig _config;
-    private readonly IStatusReporter _statusReporter;
     private readonly Stopwatch _watch = new();
     private readonly IAsyncTimer _timer;
     private readonly CancellationTokenSource _cts = new();
     private long _serverTime = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private Mode _mode = Mode.Load;
 
-    protected ServerTimeProviderBase(ServerTimeProviderConfig config, IStatusReporter statusReporter, ILogger logger)
+    protected ServerTimeProviderBase(ServerTimeProviderConfig config, ILogger logger)
     {
         Logger = logger;
         _config = config;
-        _statusReporter = statusReporter;
         _watch.Start();
-
-        _statusReporter.Bind(this);
-        _statusReporter.Connecting();
 
         _timer = Timers.Async(RefreshAsync, 0, _config.LoadInterval);
     }
@@ -43,8 +38,6 @@ public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
         _timer.Dispose();
         _cts.Cancel();
         _cts.Dispose();
-
-        _statusReporter.Disconnected();
 
         this.Trace("start");
     }
@@ -62,7 +55,7 @@ public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
         {
             this.Trace("server time load failed ({result})", result);
 
-            _statusReporter.Connecting();
+            OnStateChanged(false);
 
             if (_mode is Mode.Confirm)
             {
@@ -80,7 +73,7 @@ public abstract class ServerTimeProviderBase : IDisposable, ILogSubject
         _serverTime = result.Data;
         _watch.Restart();
 
-        _statusReporter.Connected();
+        OnStateChanged(true);
 
         if (_mode is Mode.Load)
         {

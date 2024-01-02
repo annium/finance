@@ -9,6 +9,5 @@ public abstract record MarketConfigBase
     public required ProviderEnvironment Environment { get; init; }
     public required Uri HttpApi { get; init; }
     public required Uri WsApi { get; init; }
-    public required string ServerTimeEndpoint { get; init; }
     public required string WsMarketEndpoint { get; init; }
 }

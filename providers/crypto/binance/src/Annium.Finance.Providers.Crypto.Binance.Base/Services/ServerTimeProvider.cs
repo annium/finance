@@ -1,11 +1,10 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
-using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 
@@ -13,28 +12,30 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
 public class ServerTimeProvider : ServerTimeProviderBase
 {
-    private readonly MarketConfigBase _config;
     private readonly IHttpRequestFactory _requestFactory;
+    private readonly Uri _httpApi;
+    private readonly string _endpoint;
 
     public ServerTimeProvider(
-        MarketConfigBase config,
         IHttpRequestFactory requestFactory,
+        Uri httpApi,
+        string endpoint,
         ServerTimeProviderConfig providerConfig,
-        IStatusReporter statusReporter,
         ILogger logger
     )
-        : base(providerConfig, statusReporter, logger)
+        : base(providerConfig, logger)
     {
-        _config = config;
         _requestFactory = requestFactory;
+        _httpApi = httpApi;
+        _endpoint = endpoint;
     }
 
     protected override async Task<MarketResult<long>> LoadAsync(CancellationToken ct)
     {
         // load exchange info
         var result = await _requestFactory
-            .New(_config.HttpApi)
-            .Get(_config.ServerTimeEndpoint)
+            .New(_httpApi)
+            .Get(_endpoint)
             .WithLogFrom(this, LogData.Headers | LogData.Response)
             .AsMarketResultAsync<ServerTime>();
 

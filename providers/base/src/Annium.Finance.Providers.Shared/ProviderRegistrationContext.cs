@@ -4,7 +4,12 @@ using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Internal.ServerTime;
+using Annium.Finance.Providers.Shared.ServerTime;
+using Annium.Logging;
 
 namespace Annium.Finance.Providers.Shared;
 
@@ -24,7 +29,11 @@ public readonly struct ProviderRegistrationContext
         TQueryProcessor,
         TUserConnector,
         TFinanceService
-    >(string provider, ProviderEnvironment environment)
+    >(
+        Func<IServiceProvider, object, IServerTimeProvider> serverTimeProviderFactory,
+        string provider,
+        ProviderEnvironment environment
+    )
         where TMarketProvider : IMarketProvider
         where TMarketConnector : IMarketConnector
         where TUserProvider : IUserProvider
@@ -52,8 +61,22 @@ public readonly struct ProviderRegistrationContext
                 .AsKeyed<Func<IServiceProvider, IUserConnector>>(providerKey)
                 .Singleton();
             Container.Add<TFinanceService>().AsKeyed<IFinanceService>(providerKey).Singleton();
+            Container.Add(serverTimeProviderFactory).AsKeyed<IServerTimeProvider>(providerKey).Singleton();
+            Container.Add(ServerTimeTrackerFactory).As<IServerTimeTracker>().Scoped();
         }
 
         return this;
+    }
+
+    private static IServerTimeTracker ServerTimeTrackerFactory(IServiceProvider sp)
+    {
+        var settings = sp.Resolve<Injected<MarketSettings>>().Value;
+        var key = settings.GetProviderKey();
+
+        var provider = sp.ResolveKeyed<IServerTimeProvider>(key);
+        var reporter = sp.Resolve<IStatusReporter>();
+        var logger = sp.Resolve<ILogger>();
+
+        return new ServerTimeTracker(provider, reporter, logger);
     }
 }

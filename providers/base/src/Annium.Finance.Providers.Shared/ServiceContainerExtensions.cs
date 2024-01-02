@@ -2,6 +2,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
+using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Loaders;
 using Annium.Finance.Providers.Shared.Internal.Services;
@@ -25,12 +26,14 @@ public static class ServiceContainerExtensions
         container.Add<Injected<UserSettings>>().AsSelf().Scoped();
 
         // status
-        container.Add<StatusMonitor>().AsSelf().AsInterfaces().Scoped();
-        container.Add<StatusReporter>().AsSelf().AsInterfaces().Transient();
+        container.Add<StatusMonitor>().AsSelf().As<IStatusMonitor>().Scoped();
+        container.Add<IStatusReporter, StatusReporter>().Transient();
+
+        // loaders
+        container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(ServiceLifetime.Singleton);
-        container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // common
         container.AddScheduler();

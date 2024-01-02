@@ -2,22 +2,23 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Security;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
 
 public sealed class SignatureService
 {
-    public long ServerTime => _serverTimeProvider.ServerTime;
+    public long ServerTime => _serverTimeSource.ServerTime;
     private readonly SecureString _key;
     private readonly SecureString _secret;
-    private readonly ServerTimeProvider _serverTimeProvider;
+    private readonly IServerTimeSource _serverTimeSource;
 
-    public SignatureService(UserSettings settings, ServerTimeProvider serverTimeProvider)
+    public SignatureService(UserSettings settings, IServerTimeSource serverTimeSource)
     {
         _key = settings.Key.AsSecureString();
         _secret = settings.Secret.AsSecureString();
-        _serverTimeProvider = serverTimeProvider;
+        _serverTimeSource = serverTimeSource;
     }
 
     public string GetKey()
