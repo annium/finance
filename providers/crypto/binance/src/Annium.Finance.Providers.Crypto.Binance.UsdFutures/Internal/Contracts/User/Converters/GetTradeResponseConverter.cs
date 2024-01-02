@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
+internal class GetTradeResponseConverter : JsonConverter<TradeModel?>
 {
-    public override TradeResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override TradeModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("deserialization failed");
@@ -21,7 +21,7 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
         var qty = 0m;
         var price = 0m;
         var commissionAsset = string.Empty;
-        var commission = 0m;
+        var commissionAmount = 0m;
         var isMaker = false;
         var moment = 0L;
 
@@ -38,14 +38,14 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
                     return default;
                 }
 
-                var trade = new TradeResponse(
+                var trade = new TradeModel(
                     id,
                     orderId,
                     symbol,
                     price,
                     qty,
                     commissionAsset,
-                    commission,
+                    commissionAmount,
                     isMaker,
                     moment
                 );
@@ -77,7 +77,7 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
                         price = reader.GetDecimalFromString();
                         break;
                     case "commission":
-                        commission = reader.GetDecimalFromString();
+                        commissionAmount = reader.GetDecimalFromString();
                         break;
                     case "commissionAsset":
                         commissionAsset = reader.GetString();
@@ -98,7 +98,7 @@ internal class GetTradeResponseConverter : JsonConverter<TradeResponse?>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, TradeResponse? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, TradeModel? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
@@ -37,7 +37,7 @@ public class GetTradeResponseConverterTests : ConnectorTestBase
 
         // act
         var serializer = this.GetJsonSerializer(Constants.GetTradeKey);
-        var deserialized = serializer.Deserialize<TradeResponse>(Encoding.UTF8.GetBytes(raw)).NotNull();
+        var deserialized = serializer.Deserialize<TradeModel>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert
         deserialized.Id.Is("698759");
@@ -45,8 +45,8 @@ public class GetTradeResponseConverterTests : ConnectorTestBase
         deserialized.Symbol.Is("BTCUSDT");
         deserialized.Price.Is(7819.01m);
         deserialized.Qty.Is(0.002m);
-        deserialized.Commission.Is(-0.07819010m);
         deserialized.CommissionAsset.Is("USDT");
+        deserialized.CommissionAmount.Is(-0.07819010m);
         deserialized.Maker.IsTrue();
         deserialized.Moment.Is(1569514978020);
     }

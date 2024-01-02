@@ -47,7 +47,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _getAccountRequestFactory;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
-    private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>> _tradesLoader;
+    private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
@@ -110,7 +110,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         Disposable += () => _ordersLoader.OnData -= HandleOrders;
 
         // deals
-        Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeResponse>>(
+        Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
             _config.ReloadTrades,
             SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds(),
             LoadTrades,
@@ -373,7 +373,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("done");
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<TradeResponse>?>> LoadTrades(
+    private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTrades(
         string symbol,
         long since,
         CancellationToken ct
@@ -390,13 +390,13 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Sign(_signatureService)
             .WithRateDelay1M()
             .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync<IReadOnlyCollection<TradeResponse>>();
+            .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
         this.Trace("done");
 
         return result;
     }
 
-    private long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeResponse> trades)
+    private long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeModel> trades)
     {
         this.Trace("start");
         var result = trades.Select(x => x.Moment).MaxBy(x => x);
@@ -405,25 +405,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeResponse> items)
+    private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeModel> items)
     {
         this.Trace("start");
 
         foreach (var item in items)
-        {
-            var trade = new TradeModel(
-                item.Id,
-                item.OrderId,
-                item.Symbol,
-                item.Price,
-                item.Qty,
-                item.CommissionAsset,
-                item.Commission,
-                item.Maker,
-                item.Moment
-            );
-            TradeWriter.Write(trade);
-        }
+            TradeWriter.Write(item);
 
         this.Trace("done");
     }
