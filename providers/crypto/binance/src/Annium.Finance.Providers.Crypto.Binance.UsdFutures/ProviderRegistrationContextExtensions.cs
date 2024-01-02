@@ -146,10 +146,10 @@ public static class ProviderRegistrationContextExtensions
 
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)
     {
-        var config = sp.Resolve<UserConfig>();
+        var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
         var serverTimeWatcher = sp.Resolve<ServerTimeWatcher>();
 
-        return new SignatureService(config, serverTimeWatcher);
+        return new SignatureService(userSettings, serverTimeWatcher);
     }
 
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)

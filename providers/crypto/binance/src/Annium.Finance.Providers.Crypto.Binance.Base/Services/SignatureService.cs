@@ -1,6 +1,7 @@
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Security;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;
@@ -12,10 +13,10 @@ public sealed class SignatureService
     private readonly SecureString _secret;
     private readonly ServerTimeWatcher _serverTimeWatcher;
 
-    public SignatureService(UserConfigBase config, ServerTimeWatcher serverTimeWatcher)
+    public SignatureService(UserSettings settings, ServerTimeWatcher serverTimeWatcher)
     {
-        _key = config.Key.AsSecureString();
-        _secret = config.Secret.AsSecureString();
+        _key = settings.Key.AsSecureString();
+        _secret = settings.Secret.AsSecureString();
         _serverTimeWatcher = serverTimeWatcher;
     }
 
