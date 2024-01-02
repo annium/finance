@@ -25,6 +25,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     {
         return Task.CompletedTask;
     };
+    protected readonly UserSettings Settings;
+    protected readonly IUserProvider UserProvider;
     protected readonly ChannelWriter<ChangeEvent<AssetModel>> AssetWriter;
     protected readonly ChannelWriter<ChangeEvent<PositionModel>> PositionWriter;
     protected readonly ChannelWriter<ChangeEvent<OrderModel>> OrderWriter;
@@ -39,8 +41,6 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelReader<TradeModel> _tradeSource;
     private readonly ChannelWriter<TradeModel> _tradeTarget;
     private readonly IExecutor _executor;
-    private readonly UserSettings _settings;
-    private readonly IUserProvider _userProvider;
     private DisposableBox _sourceSubscriptions;
 
     protected UserConnectorBase(
@@ -51,8 +51,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        _settings = settings;
-        _userProvider = userProvider;
+        Settings = settings;
+        UserProvider = userProvider;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
@@ -127,7 +127,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             UnsubscribeReaders();
 
             this.Trace("sync start");
-            await OnSync(_settings, _userProvider);
+            await OnSync(Settings, UserProvider);
             this.Trace("sync done");
 
             this.Trace("subscribe readers");

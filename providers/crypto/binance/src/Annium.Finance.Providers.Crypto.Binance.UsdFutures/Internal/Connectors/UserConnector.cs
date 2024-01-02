@@ -43,8 +43,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _cancelOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
     private readonly UserStream _userStream;
-    private readonly ICompositeLoader<AccountResponse> _accountLoader;
-    private readonly IHttpRequestFactory _getAccountRequestFactory;
+    private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
@@ -62,7 +61,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
         [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
-        [FromKeyedServices(GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
         [FromKeyedServices(GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
         [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
@@ -79,7 +77,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _initOrderRequestFactory = initOrderRequestFactory;
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
-        _getAccountRequestFactory = getAccountRequestFactory;
         _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
@@ -100,9 +97,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         );
 
         // accounts
-        Disposable += _accountLoader = loaderFactory.CreateCompositeLoader(_config.ReloadAccount, LoadAccount);
-        _accountLoader.OnData += HandleAccount;
-        Disposable += () => _accountLoader.OnData -= HandleAccount;
+        Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContext);
+        _contextLoader.OnData += HandleContext;
+        Disposable += () => _contextLoader.OnData -= HandleContext;
 
         // orders
         Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(_config.ReloadOrders, LoadOrders);
@@ -306,7 +303,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private void HandleTradeResult(bool isSuccess)
     {
         this.Trace("request account load");
-        _accountLoader.Request();
+        _contextLoader.Request();
 
         if (!isSuccess)
         {
@@ -315,35 +312,19 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
     }
 
-    private async Task<IBaseResult<AccountResponse?>> LoadAccount(CancellationToken ct)
+    private async Task<IBaseResult<UserContext?>> LoadContext(CancellationToken ct)
     {
-        this.Trace("start");
-        var result = await _getAccountRequestFactory
-            .New(_config.HttpApi)
-            .Get("/fapi/v2/account")
-            .ReceiveWindow()
-            .Sign(_signatureService)
-            .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync<AccountResponse>();
-        this.Trace("done");
+        var result = await UserProvider.LoadContextAsync(Settings);
 
         return result;
     }
 
-    private void HandleAccount(AccountResponse response)
+    private void HandleContext(UserContext context)
     {
         this.Trace("start");
 
-        var assets = response.Balances
-            .Select(x => new AssetModel(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin))
-            .ToArray();
-        AssetWriter.Write(ChangeEvent.Init(assets));
-
-        var positions = response.Positions
-            .Select(x => new PositionModel(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount))
-            .ToArray();
-        PositionWriter.Write(ChangeEvent.Init(positions));
+        AssetWriter.Write(ChangeEvent.Init(context.Assets));
+        PositionWriter.Write(ChangeEvent.Init(context.Positions));
 
         this.Trace("done");
     }
@@ -419,7 +400,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
-        _accountLoader.Start();
+        _contextLoader.Start();
         _ordersLoader.Start();
 
         this.Trace("done");
@@ -429,7 +410,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
-        _accountLoader.Stop();
+        _contextLoader.Stop();
         _ordersLoader.Stop();
 
         this.Trace("done");
@@ -440,7 +421,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         this.Trace("start");
 
         // account info in event is almost useless (and position info lacks leverage value), so request account reload
-        _accountLoader.Request();
+        _contextLoader.Request();
 
         // handle order update
         var orderUpdate = _orderUpdateEventSerializer.Deserialize<OrderUpdateEvent?>(data);

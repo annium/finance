@@ -127,7 +127,7 @@ public static class ProviderRegistrationContextExtensions
             WsApi = wsApi,
             ListenKeyBase = "/ws/",
             ListenKey = providerConfig.ListenKey,
-            ReloadAccount = providerConfig.ReloadAccount,
+            ReloadContext = providerConfig.ReloadContext,
             ReloadOrders = providerConfig.ReloadOrders,
             ReloadTrades = providerConfig.ReloadTrades,
         };

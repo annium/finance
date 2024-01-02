@@ -33,7 +33,7 @@ public class UserConnectorTests : UserConnectorTestBase
                 ctx.WithBinanceUsdFutures(
                     new ProviderConfiguration
                     {
-                        ReloadAccount = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                        ReloadContext = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                         ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                         ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                     }
