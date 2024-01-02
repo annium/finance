@@ -72,9 +72,13 @@ public abstract class MarketProviderBase
         // provider-specific fetch
         var result = await fetch(instrument, start, count);
 
-        // fast return if failed or empty
-        if (result.IsFailure || result.Data.Count == 0)
-            return MarketResult.New(result.Status, default(IReadOnlyCollection<CandleModel>), result.Message);
+        // fast return if failed
+        if (result.IsFailure)
+            return MarketResult.From(result, default(IReadOnlyCollection<CandleModel>));
+
+        // fast return if empty
+        if (result.Data.Count == 0)
+            return MarketResult.Ok<IReadOnlyCollection<CandleModel>?>(Array.Empty<CandleModel>());
 
         var candles = result.Data;
 
