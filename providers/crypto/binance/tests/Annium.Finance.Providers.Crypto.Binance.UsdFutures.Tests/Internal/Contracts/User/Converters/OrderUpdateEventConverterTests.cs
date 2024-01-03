@@ -34,7 +34,7 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
                 ""ap"": ""12305.6"",
                 ""sp"": ""7103.04"",
                 ""x"": ""NEW"",
-                ""X"": ""NEW"",
+                ""X"": ""PARTIALLY_FILLED"",
                 ""i"": 8886774,
                 ""l"": ""2.4"",
                 ""z"": ""10.5"",
@@ -75,7 +75,7 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
         deserialized.Price.Is(10264.410m);
         deserialized.LevelPrice.Is(7103.04m);
         deserialized.ReduceOnly.IsTrue();
-        deserialized.Status.Is(OrderStatus.New);
+        deserialized.Status.Is(OrderStatus.PartiallyFilled);
         deserialized.ExecutedQty.Is(10.5m);
         deserialized.ExecutedPrice.Is(12305.6m);
         deserialized.LastExecutedQty.Is(2.4m);
@@ -83,8 +83,8 @@ public class OrderUpdateEventConverterTests : ConnectorTestBase
         deserialized.CommissionAsset.Is("USDT");
         deserialized.CommissionAmount.Is(3.6m);
         deserialized.IsMaker.IsTrue();
-        deserialized.CreatedAt.Is(1499405658657);
-        deserialized.UpdatedAt.Is(1499405658677);
+        deserialized.CreatedAt.Is(0);
+        deserialized.UpdatedAt.Is(1499405658657);
     }
 
     [Fact]

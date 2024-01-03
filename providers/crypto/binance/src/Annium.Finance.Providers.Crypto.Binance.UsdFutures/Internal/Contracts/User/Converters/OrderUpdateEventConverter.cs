@@ -38,8 +38,7 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
         var commissionAmount = 0m;
         var commissionAsset = string.Empty;
         var isMaker = false;
-        var createdAt = 0L;
-        var updatedAt = 0L;
+        var transactionTime = 0L;
 
         while (reader.Read())
         {
@@ -69,8 +68,8 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                     commissionAmount,
                     commissionAsset ?? string.Empty,
                     isMaker,
-                    createdAt,
-                    updatedAt
+                    status is OrderStatus.New ? transactionTime : 0L,
+                    transactionTime
                 );
 
                 return result;
@@ -97,9 +96,6 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                             canConvert = false;
                         }
 
-                        break;
-                    case "T":
-                        updatedAt = reader.GetInt64();
                         break;
                     case "o":
                         break;
@@ -173,7 +169,7 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                         isMaker = reader.GetBoolean();
                         break;
                     case "T":
-                        createdAt = reader.GetInt64();
+                        transactionTime = reader.GetInt64();
                         break;
 
                     default:

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -420,6 +421,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
+        this.Trace<string>("handle {msg}", Encoding.UTF8.GetString(data.Span));
         // account info in event is almost useless (and position info lacks leverage value), so request account reload
         _contextLoader.Request();
 
@@ -427,6 +429,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var orderUpdate = _orderUpdateEventSerializer.Deserialize<OrderUpdateEvent?>(data);
         if (orderUpdate is not null)
             HandleOrderUpdate(orderUpdate);
+
+        this.Trace("done");
     }
 
     private void HandleOrderUpdate(OrderUpdateEvent e)
