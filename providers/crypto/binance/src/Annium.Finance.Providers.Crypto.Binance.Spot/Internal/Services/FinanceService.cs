@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
 
@@ -13,13 +13,8 @@ internal class FinanceService : IFinanceService
         throw new NotImplementedException();
     }
 
-    public ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
-    }
-
     public decimal GetResult(
-        InstrumentModel instrument,
+        IInstrument instrument,
         Orientation orientation,
         byte leverage,
         decimal positionPrice,
@@ -31,22 +26,22 @@ internal class FinanceService : IFinanceService
         throw new NotImplementedException();
     }
 
-    public decimal GetCost(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetCost(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetBorrowedSum(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetBorrowedSum(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetValue(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetValue(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetQty(InstrumentModel instrument, byte leverage, OrderSide side, decimal sum, decimal price)
+    public decimal GetQty(IInstrument instrument, byte leverage, OrderSide side, decimal sum, decimal price)
     {
         throw new NotImplementedException();
     }

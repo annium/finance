@@ -1,8 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Services;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 
@@ -10,16 +9,11 @@ internal class FinanceService : IFinanceService
 {
     public ValueTask InitAsync(ProviderEnvironment env)
     {
-        throw new NotImplementedException();
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
+        return ValueTask.CompletedTask;
     }
 
     public decimal GetResult(
-        InstrumentModel instrument,
+        IInstrument instrument,
         Orientation orientation,
         byte leverage,
         decimal positionPrice,
@@ -28,26 +22,43 @@ internal class FinanceService : IFinanceService
         decimal price
     )
     {
-        throw new NotImplementedException();
+        var leveragedPart = 1m / leverage;
+
+        // for open order result is leveraged expense sum
+        if (side == orientation.OpenSide)
+        {
+            var expense = qty * price * leveragedPart;
+            return -expense;
+        }
+
+        var openedValue = qty * positionPrice * leveragedPart;
+        var priceDiff = orientation == Orientation.Long ? price - positionPrice : positionPrice - price;
+        var pnl = qty * priceDiff;
+        var income = openedValue + pnl;
+
+        return income;
     }
 
-    public decimal GetCost(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetCost(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new NotImplementedException();
+        return qty * price / leverage;
     }
 
-    public decimal GetBorrowedSum(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetBorrowedSum(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new NotImplementedException();
+        if (leverage == 0)
+            return 0;
+
+        return qty * price * (leverage - 1) / leverage;
     }
 
-    public decimal GetValue(InstrumentModel instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetValue(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
     {
-        throw new NotImplementedException();
+        return qty * price / leverage;
     }
 
-    public decimal GetQty(InstrumentModel instrument, byte leverage, OrderSide side, decimal sum, decimal price)
+    public decimal GetQty(IInstrument instrument, byte leverage, OrderSide side, decimal sum, decimal price)
     {
-        throw new NotImplementedException();
+        return sum * leverage / price;
     }
 }
