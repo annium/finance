@@ -158,7 +158,7 @@ public sealed record Position(
         return this;
     }
 
-    public Position Update(MarginType marginType, byte leverage)
+    public Position Update(MarginType marginType, decimal leverage)
     {
         MarginType = marginType;
         Leverage = leverage;

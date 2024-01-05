@@ -16,7 +16,7 @@ internal class FinanceService : IFinanceService
     public decimal GetResult(
         IInstrument instrument,
         Orientation orientation,
-        byte leverage,
+        decimal leverage,
         decimal positionPrice,
         OrderSide side,
         decimal qty,
@@ -26,22 +26,22 @@ internal class FinanceService : IFinanceService
         throw new NotImplementedException();
     }
 
-    public decimal GetCost(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetCost(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetBorrowedSum(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetBorrowedSum(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetValue(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetValue(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         throw new NotImplementedException();
     }
 
-    public decimal GetQty(IInstrument instrument, byte leverage, OrderSide side, decimal sum, decimal price)
+    public decimal GetQty(IInstrument instrument, decimal leverage, OrderSide side, decimal sum, decimal price)
     {
         throw new NotImplementedException();
     }

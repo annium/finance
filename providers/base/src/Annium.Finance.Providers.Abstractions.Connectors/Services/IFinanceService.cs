@@ -12,7 +12,7 @@ public interface IFinanceService
     decimal GetResult(
         IInstrument instrument,
         Orientation orientation,
-        byte leverage,
+        decimal leverage,
         decimal positionPrice,
         OrderSide side,
         decimal qty,
@@ -21,20 +21,20 @@ public interface IFinanceService
 
     // calculate cost of purchasing instrument qty at price
     // note: this won't take fees into account!
-    decimal GetCost(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetCost(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate sum, that will be borrowed from provider, when purchasing instrument qty at price
     // note: this won't take fees into account!
-    decimal GetBorrowedSum(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetBorrowedSum(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate value of instrument qty at price
     // note: this won't take fees into account!
-    decimal GetValue(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price);
+    decimal GetValue(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
     // calculate order qty by (side, cost, price, leverage) this won't take fees into account!
     // calculate purchasable qty with sum of instrument at price
     // note: this won't take fees into account!
-    decimal GetQty(IInstrument instrument, byte leverage, OrderSide side, decimal sum, decimal price);
+    decimal GetQty(IInstrument instrument, decimal leverage, OrderSide side, decimal sum, decimal price);
 }
 
 /*

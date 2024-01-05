@@ -15,7 +15,7 @@ internal class FinanceService : IFinanceService
     public decimal GetResult(
         IInstrument instrument,
         Orientation orientation,
-        byte leverage,
+        decimal leverage,
         decimal positionPrice,
         OrderSide side,
         decimal qty,
@@ -39,12 +39,12 @@ internal class FinanceService : IFinanceService
         return income;
     }
 
-    public decimal GetCost(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetCost(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         return qty * price / leverage;
     }
 
-    public decimal GetBorrowedSum(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetBorrowedSum(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         if (leverage == 0)
             return 0;
@@ -52,12 +52,12 @@ internal class FinanceService : IFinanceService
         return qty * price * (leverage - 1) / leverage;
     }
 
-    public decimal GetValue(IInstrument instrument, byte leverage, OrderSide side, decimal qty, decimal price)
+    public decimal GetValue(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price)
     {
         return qty * price / leverage;
     }
 
-    public decimal GetQty(IInstrument instrument, byte leverage, OrderSide side, decimal sum, decimal price)
+    public decimal GetQty(IInstrument instrument, decimal leverage, OrderSide side, decimal sum, decimal price)
     {
         return sum * leverage / price;
     }

@@ -8,9 +8,9 @@ public static class Helper
 {
     public static readonly Instrument DefaultInstrument = CreateInstrument("XBT", "USD", 0.1m, 0.01m);
 
-    public static Position CreatePosition(byte leverage) => CreatePosition(DefaultInstrument, leverage);
+    public static Position CreatePosition(decimal leverage) => CreatePosition(DefaultInstrument, leverage);
 
-    public static Position CreatePosition(Instrument instrument, byte leverage) =>
+    public static Position CreatePosition(Instrument instrument, decimal leverage) =>
         new(
             Guid.NewGuid(),
             instrument,
