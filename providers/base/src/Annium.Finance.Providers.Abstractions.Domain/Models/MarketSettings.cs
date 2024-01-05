@@ -7,4 +7,6 @@ public sealed record MarketSettings : IConnectorSettings
 {
     public string Provider { get; init; } = string.Empty;
     public ProviderEnvironment Environment { get; init; }
+
+    public override string ToString() => $"{Provider}[{Environment}]";
 }
