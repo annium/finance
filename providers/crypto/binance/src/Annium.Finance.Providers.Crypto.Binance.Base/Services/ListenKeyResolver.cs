@@ -45,7 +45,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         _statusReporter.Connecting();
 
         _disposable = Disposable.AsyncBox(logger);
-        _disposable += _timer = Timers.Async(GetListenKeyAsync, 0, _config.ListenKey.FetchInterval);
+        _disposable += _timer = Timers.Async(GetListenKeyAsync, 0, _config.ListenKey.FetchInterval, logger);
     }
 
     public async ValueTask DisposeAsync()

@@ -27,7 +27,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         _config = config;
         _watch.Start();
 
-        _timer = Timers.Async(RefreshAsync, 0, _config.LoadInterval);
+        _timer = Timers.Async(RefreshAsync, 0, _config.LoadInterval, logger);
     }
 
     public void Dispose()

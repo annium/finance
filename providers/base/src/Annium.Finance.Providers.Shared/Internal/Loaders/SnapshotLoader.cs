@@ -34,7 +34,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         _load = load;
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
-        _timer = Timers.Async(FetchSnapshotAsync, Timeout.Infinite, Timeout.Infinite);
+        _timer = Timers.Async(FetchSnapshotAsync, Timeout.Infinite, Timeout.Infinite, logger);
     }
 
     public void Dispose()

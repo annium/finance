@@ -31,7 +31,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         if (intervalPeriod != Timeout.Infinite)
         {
             this.Trace("create interval timer with period {0}", intervalPeriod);
-            _intervalTimer = Timers.Async(InitIntervalLoad, Timeout.Infinite, Timeout.Infinite);
+            _intervalTimer = Timers.Async(InitIntervalLoad, Timeout.Infinite, Timeout.Infinite, logger);
         }
         else
         {
@@ -41,7 +41,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         if (debouncePeriod != Timeout.Infinite)
         {
             this.Trace("create debounce timer with period {0}", debouncePeriod);
-            _debounceTimer = Timers.Debounce(InitDebounceLoad, Timeout.Infinite);
+            _debounceTimer = Timers.Debounce(InitDebounceLoad, Timeout.Infinite, logger);
         }
         else
         {
