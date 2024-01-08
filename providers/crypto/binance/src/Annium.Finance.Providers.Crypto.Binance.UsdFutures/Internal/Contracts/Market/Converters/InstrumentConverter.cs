@@ -8,6 +8,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.
 
 internal class InstrumentConverter : JsonConverter<InstrumentModel>
 {
+    private const string RequiredContractType = "PERPETUAL";
     private const string RequiredStatus = "TRADING";
 
     public override InstrumentModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -20,6 +21,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
         var currentDepth = reader.CurrentDepth;
 
         var symbol = string.Empty;
+        var contractType = string.Empty;
         var status = string.Empty;
         var baseAsset = string.Empty;
         byte baseAssetPrecision = 0;
@@ -31,7 +33,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                if (status != RequiredStatus || filters is null)
+                if (contractType != RequiredContractType || status != RequiredStatus || filters is null)
                 {
                     return default;
                 }
@@ -68,6 +70,9 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
                 {
                     case "symbol":
                         symbol = reader.GetString().NotNull();
+                        break;
+                    case "contractType":
+                        contractType = reader.GetString().NotNull();
                         break;
                     case "status":
                         status = reader.GetString().NotNull();
