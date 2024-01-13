@@ -35,10 +35,6 @@ public static class ServiceContainerExtensions
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(ServiceLifetime.Singleton);
 
-        // common
-        container.AddScheduler();
-        container.AddTables();
-
         var ctx = new ProviderRegistrationContext(container);
 
         return ctx;

@@ -14,8 +14,9 @@
         <ProjectReference Include="../Annium.Finance.Providers.Abstractions.Connectors/Annium.Finance.Providers.Abstractions.Connectors.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Annium.Extensions.Jobs" Version="0.1.0" />
+        <PackageReference Include="Annium.Execution.Background" Version="0.1.0" />
         <PackageReference Include="Annium.Extensions.Pooling" Version="0.1.0" />
+        <PackageReference Include="Annium.NodaTime.Extensions" Version="0.1.0" />
         <PackageReference Include="Annium.Net.Http" Version="0.1.0" />
         <PackageReference Include="Annium.Net.WebSockets" Version="0.1.0" />
         <PackageReference Include="Annium.Serialization.Json" Version="0.1.0" />
