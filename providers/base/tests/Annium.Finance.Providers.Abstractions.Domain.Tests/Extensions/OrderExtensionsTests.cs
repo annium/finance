@@ -82,6 +82,19 @@ public class OrderExtensionsTests
     }
 
     [Fact]
+    public void OpeningQty()
+    {
+        // arrange
+        var position = Helper.CreatePosition(1);
+
+        // assert
+        position.AddLimitBuyOrder(2, 1).OpeningQty().Is(2);
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).OpeningQty().Is(1);
+        position.AddLimitBuyOrder(2, 1).Fill().OpeningQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().OpeningQty().Is(0);
+    }
+
+    [Fact]
     public void PotentialQty()
     {
         // arrange

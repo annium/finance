@@ -45,6 +45,10 @@ public static class OrderExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static decimal OpeningQty<TOrder>(this TOrder order)
+        where TOrder : IOrder => order.Status is OrderStatus.Canceled ? 0 : order.TotalQty - order.ExecutedQty;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static decimal PotentialQty<TOrder>(this TOrder order)
         where TOrder : IOrder => order.Status is OrderStatus.Canceled ? order.ExecutedQty : order.TotalQty;
 
