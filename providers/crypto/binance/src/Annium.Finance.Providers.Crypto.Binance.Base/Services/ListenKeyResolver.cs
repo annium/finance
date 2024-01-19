@@ -21,7 +21,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
     private readonly IHttpRequestFactory _httpRequestFactory;
     private readonly SignatureService _signatureService;
     private readonly IStatusReporter _statusReporter;
-    private readonly IAsyncTimer _timer;
+    private readonly ISequentialTimer _timer;
     private readonly AsyncDisposableBox _disposable;
     private string _listenKey = string.Empty;
 

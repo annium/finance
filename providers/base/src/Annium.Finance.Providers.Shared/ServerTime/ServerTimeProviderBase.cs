@@ -16,7 +16,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
     public event Action<bool> OnStateChanged = delegate { };
     private readonly ServerTimeProviderConfig _config;
     private readonly Stopwatch _watch = new();
-    private readonly IAsyncTimer _timer;
+    private readonly ISequentialTimer _timer;
     private readonly CancellationTokenSource _cts = new();
     private long _serverTime = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private Mode _mode = Mode.Load;

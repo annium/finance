@@ -12,7 +12,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
     public ILogger Logger { get; }
     public event Action<T> OnData = delegate { };
     private readonly ISnapshotLoader<T> _loader;
-    private readonly IAsyncTimer? _intervalTimer;
+    private readonly ISequentialTimer? _intervalTimer;
     private readonly int _intervalPeriod;
     private readonly IDebounceTimer? _debounceTimer;
     private readonly int _debouncePeriod;
@@ -31,7 +31,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         if (intervalPeriod != Timeout.Infinite)
         {
             this.Trace("create interval timer with period {0}", intervalPeriod);
-            _intervalTimer = Timers.Async(InitIntervalLoad, Timeout.Infinite, Timeout.Infinite, logger);
+            _intervalTimer = Timers.Sync(InitIntervalLoad, Timeout.Infinite, Timeout.Infinite, logger);
         }
         else
         {
@@ -174,7 +174,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         this.Trace("done");
     }
 
-    private ValueTask InitIntervalLoad()
+    private void InitIntervalLoad()
     {
         this.Trace("start");
 
@@ -183,7 +183,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             if (_state is not State.Active)
             {
                 this.Trace("can't request from {state} state", _state);
-                return ValueTask.CompletedTask;
+                return;
             }
 
             this.Trace("start loader");
@@ -191,8 +191,6 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         }
 
         this.Trace("done");
-
-        return ValueTask.CompletedTask;
     }
 
     private ValueTask InitDebounceLoad()

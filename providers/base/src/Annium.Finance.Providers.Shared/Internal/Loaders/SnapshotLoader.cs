@@ -16,7 +16,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     private readonly SnapshotLoaderConfig _cfg;
     private readonly Func<CancellationToken, Task<IBaseResult<T?>>> _load;
     private readonly IStatusReporter _statusReporter;
-    private readonly IAsyncTimer _timer;
+    private readonly ISequentialTimer _timer;
     private readonly object _locker = new();
     private State _state;
     private CancellationTokenSource _cts = new();
