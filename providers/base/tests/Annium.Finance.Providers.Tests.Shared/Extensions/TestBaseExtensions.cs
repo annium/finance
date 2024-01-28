@@ -1,6 +1,5 @@
 using System;
 using System.Net.Mime;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 
