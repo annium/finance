@@ -15,15 +15,15 @@ public static class ServiceContainerExtensions
 {
     public static ProviderRegistrationContext AddProviders(this IServiceContainer container)
     {
+        container.AddInjectables();
+
         // market
         container.AddObjectCache<MarketSettings, IMarketConnector, MarketConnectorCacheProvider>(
             ServiceLifetime.Singleton
         );
-        container.Add<Injected<MarketSettings>>().AsSelf().Scoped();
 
         // user
         container.AddObjectCache<UserSettings, IUserConnector, UserConnectorCacheProvider>(ServiceLifetime.Singleton);
-        container.Add<Injected<UserSettings>>().AsSelf().Scoped();
 
         // status
         container.Add<StatusMonitor>().AsSelf().As<IStatusMonitor>().Scoped();
