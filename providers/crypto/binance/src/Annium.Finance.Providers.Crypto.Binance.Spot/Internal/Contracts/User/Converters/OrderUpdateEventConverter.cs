@@ -54,6 +54,7 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                     tradeId,
                     orderId.ToString(),
                     clientOrderId ?? string.Empty,
+                    OrientationRange.Both,
                     type,
                     side,
                     totalQty,

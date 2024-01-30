@@ -7,6 +7,7 @@ public sealed record OrderModel(
     string Id,
     string ClientOrderId,
     string Symbol,
+    OrientationRange Range,
     OrderSide Side,
     OrderType Type,
     decimal TotalQty,

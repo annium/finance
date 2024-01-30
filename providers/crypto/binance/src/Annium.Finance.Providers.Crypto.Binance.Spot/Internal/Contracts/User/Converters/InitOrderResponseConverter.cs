@@ -46,6 +46,7 @@ internal class InitOrderResponseConverter : JsonConverter<OrderModel?>
                     id,
                     clientOrderId,
                     symbol,
+                    OrientationRange.Both,
                     side,
                     type,
                     totalQty,

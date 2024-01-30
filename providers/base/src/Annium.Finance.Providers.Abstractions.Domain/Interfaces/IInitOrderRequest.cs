@@ -6,6 +6,7 @@ public interface IInitOrderRequest
 {
     string Id { get; }
     string Symbol { get; }
+    OrientationRange Range { get; }
     OrderSide Side { get; }
     OrderType Type { get; }
     decimal Qty { get; }
