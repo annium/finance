@@ -3,7 +3,6 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
-using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,8 +14,8 @@ public class ServerTimeProviderTests : ConnectorTestBase
     public ServerTimeProviderTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper)
     {
-        this.Inject(Markets.Test);
-        this.Inject(Users.Test);
+        Inject(Markets.Test);
+        Inject(Users.Test);
     }
 
     [Fact]

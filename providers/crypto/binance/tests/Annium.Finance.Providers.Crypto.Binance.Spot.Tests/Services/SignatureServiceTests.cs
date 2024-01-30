@@ -1,6 +1,5 @@
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
-using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,8 +11,8 @@ public class SignatureServiceTests : ConnectorTestBase
     public SignatureServiceTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper)
     {
-        this.Inject(Markets.Test);
-        this.Inject(Users.Test);
+        Inject(Markets.Test);
+        Inject(Users.Test);
     }
 
     [Fact]

@@ -14,10 +14,4 @@ public static class TestBaseExtensions
 
         return serializer;
     }
-
-    public static void Inject<T>(this TestBase testBase, T value)
-        where T : class
-    {
-        testBase.Get<Injected<T>>().Init(value);
-    }
 }
