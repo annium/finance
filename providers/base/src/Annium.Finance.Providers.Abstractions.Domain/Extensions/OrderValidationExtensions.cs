@@ -58,6 +58,26 @@ public static class OrderValidationExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TOrder ValidateIsActive<TOrder>(this TOrder order)
+        where TOrder : IOrder
+    {
+        if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
+            throw new InvalidOperationException($"Order {order} is not Active");
+
+        return order;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TOrder ValidateIsInactive<TOrder>(this TOrder order)
+        where TOrder : IOrder
+    {
+        if (order.Status is OrderStatus.New or OrderStatus.PartiallyFilled)
+            throw new InvalidOperationException($"Order {order} is not Inactive");
+
+        return order;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOrder ValidateStatus<TOrder>(this TOrder order, OrderStatus status)
         where TOrder : IOrder
     {

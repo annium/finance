@@ -24,6 +24,30 @@ public class OrderValidationExtensionsTests
     }
 
     [Fact]
+    public void ValidateIsActive()
+    {
+        // arrange
+        var activeOrder = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
+        var inactiveOrder = _position.AddLimitBuyOrder(2, 1).Cancel();
+
+        // assert
+        activeOrder.ValidateIsActive();
+        Wrap.It(() => inactiveOrder.ValidateIsActive()).Throws<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void ValidateIsInactive()
+    {
+        // arrange
+        var activeOrder = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
+        var inactiveOrder = _position.AddLimitBuyOrder(2, 1).Cancel();
+
+        // assert
+        inactiveOrder.ValidateIsInactive();
+        Wrap.It(() => activeOrder.ValidateIsInactive()).Throws<InvalidOperationException>();
+    }
+
+    [Fact]
     public void ValidateStatus()
     {
         // arrange
