@@ -108,9 +108,15 @@ internal class QueryProcessor : IQueryProcessor
     {
         var result = new Dictionary<string, string>();
 
-        result["orderId"] = request.Id;
-        result["origClientOrderId"] = request.ClientOrderId;
-        result["newClientOrderId"] = request.ClientOrderId;
+        if (!string.IsNullOrWhiteSpace(request.Id))
+            result["orderId"] = request.Id;
+
+        if (!string.IsNullOrWhiteSpace(request.Id))
+        {
+            result["origClientOrderId"] = request.ClientOrderId;
+            result["newClientOrderId"] = request.ClientOrderId;
+        }
+
         result["symbol"] = request.Symbol;
 
         return UserResult.Ok(result);
