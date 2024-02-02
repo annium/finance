@@ -17,6 +17,6 @@ public interface IUserConnector : IConnectorBase
     Task<UserResult> SetLeverage(PositionModel position, decimal leverage);
     Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request);
     Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request);
-    Task<UserResult> CancelOrder(OrderModel order);
+    Task<UserResult> CancelOrder(ICancelOrderRequest request);
     Task<UserResult> CancelAllOrders(string symbol);
 }

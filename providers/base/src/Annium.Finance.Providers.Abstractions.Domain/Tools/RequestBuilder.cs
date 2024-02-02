@@ -244,4 +244,14 @@ public static class RequestBuilder
             LevelPrice = levelPrice,
         };
     }
+
+    public static ICancelOrderRequest CancelOrder(string id, string clientOrderId, string symbol)
+    {
+        return new CancelOrderRequest
+        {
+            Id = id,
+            ClientOrderId = clientOrderId,
+            Symbol = symbol,
+        };
+    }
 }

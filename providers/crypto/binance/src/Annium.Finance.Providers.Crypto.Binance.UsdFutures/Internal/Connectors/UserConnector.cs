@@ -12,6 +12,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Tools;
 using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
@@ -195,11 +196,13 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         if (request.Order.Type is not OrderType.Limit)
         {
             // try cancel order
-            this.Trace("try cancel order {order}", request.Order);
-            var cancelResult = await CancelOrder(request.Order);
+            var order = request.Order;
+            this.Trace("try cancel order {order}", order);
+            var cancelRequest = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
+            var cancelResult = await CancelOrder(cancelRequest);
             if (cancelResult.IsFailure)
             {
-                this.Trace("cancel of order {order} failed: {result}", request.Order, cancelResult);
+                this.Trace("cancel of order {order} failed: {result}", order, cancelResult);
                 return UserResult.From(cancelResult, default(OrderModel));
             }
 
@@ -235,15 +238,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public async Task<UserResult> CancelOrder(OrderModel order)
+    public async Task<UserResult> CancelOrder(ICancelOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {order} - not connected", order);
+            this.Trace("skip for {order} - not connected", request);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
-        var queryResult = _queryProcessor.BuildCancelOrderQuery(order);
+        var queryResult = _queryProcessor.BuildCancelOrderQuery(request);
         if (queryResult.IsFailure)
         {
             this.Trace("query processing failed: {result}", queryResult);

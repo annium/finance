@@ -2,7 +2,6 @@
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 
@@ -105,13 +104,14 @@ internal class QueryProcessor : IQueryProcessor
         return UserResult.Ok(result);
     }
 
-    public UserResult<Dictionary<string, string>> BuildCancelOrderQuery(OrderModel order)
+    public UserResult<Dictionary<string, string>> BuildCancelOrderQuery(ICancelOrderRequest request)
     {
         var result = new Dictionary<string, string>();
 
-        result["origClientOrderId"] = order.ClientOrderId;
-        result["newClientOrderId"] = order.ClientOrderId;
-        result["symbol"] = order.Symbol;
+        result["orderId"] = request.Id;
+        result["origClientOrderId"] = request.ClientOrderId;
+        result["newClientOrderId"] = request.ClientOrderId;
+        result["symbol"] = request.Symbol;
 
         return UserResult.Ok(result);
     }

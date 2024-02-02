@@ -53,7 +53,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         throw new NotImplementedException();
     }
 
-    public Task<UserResult> CancelOrder(OrderModel order)
+    public Task<UserResult> CancelOrder(ICancelOrderRequest order)
     {
         throw new NotImplementedException();
     }

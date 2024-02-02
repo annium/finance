@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Tools;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
@@ -290,15 +291,17 @@ public class QueryProcessorTests : ConnectorTestBase
         // arrange
         var processor = Get<QueryProcessor>();
         var order = InitTakeProfitLimitOrder(ClientOrderId, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
+        var request = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
 
         // act
-        var data = processor.BuildCancelOrderQuery(order).Unwrap().As<IReadOnlyDictionary<string, string>>();
+        var data = processor.BuildCancelOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(3);
-        data.At("symbol").Is(order.Symbol);
-        data.At("origClientOrderId").Is(order.ClientOrderId);
-        data.At("newClientOrderId").Is(order.ClientOrderId);
+        data.Has(4);
+        data.At("orderId").Is(request.Id);
+        data.At("origClientOrderId").Is(request.ClientOrderId);
+        data.At("newClientOrderId").Is(request.ClientOrderId);
+        data.At("symbol").Is(request.Symbol);
     }
 
     [Fact]
