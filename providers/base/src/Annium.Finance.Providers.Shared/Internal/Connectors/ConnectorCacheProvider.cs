@@ -31,36 +31,36 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
     }
 
     public override async Task<OneOf<TConnector, IDisposableReference<TConnector>>> CreateAsync(
-        TSettings key,
+        TSettings settings,
         CancellationToken ct
     )
     {
-        var providerKey = key.GetProviderKey();
+        var providerKey = settings.GetProviderKey();
 
-        this.Trace("{key} - resolve entry for {settings}", providerKey, key);
-        var entry = _scopes.GetOrAdd(key, CreateEntry);
+        this.Trace("{key} - resolve entry for {settings}", providerKey, settings);
+        var entry = _scopes.GetOrAdd(settings, CreateEntry);
 
-        this.Trace("{key} - init {key} connector for {settings}", providerKey, key);
+        this.Trace("{key} - init connector for {settings}", providerKey, settings);
         await entry.Connector.InitAsync(); // this must not be called twice by design
 
         return entry.Connector;
     }
 
-    public override async Task DisposeAsync(TSettings key, TConnector value)
+    public override async Task DisposeAsync(TSettings settings, TConnector value)
     {
-        var providerKey = key.GetProviderKey();
+        var providerKey = settings.GetProviderKey();
 
-        this.Trace("resolve {key} entry for {settings}", providerKey, key);
-        if (!_scopes.TryGetValue(key, out var entry))
+        this.Trace("resolve {key} entry for {settings}", providerKey, settings);
+        if (!_scopes.TryGetValue(settings, out var entry))
         {
-            this.Warn("resolved no {key} entry for {settings}", providerKey, key);
+            this.Warn("resolved no {key} entry for {settings}", providerKey, settings);
             return;
         }
 
-        this.Warn("dispose {key} entry for {settings}", providerKey, key);
+        this.Warn("dispose {key} entry for {settings}", providerKey, settings);
         await entry.DisposeAsync();
 
-        this.Warn("resolved {key} entry for {settings}", providerKey, key);
+        this.Warn("resolved {key} entry for {settings}", providerKey, settings);
     }
 
     protected abstract void Inject(IServiceProvider scopeProvider, TSettings settings);
