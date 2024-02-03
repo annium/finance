@@ -16,10 +16,12 @@ namespace Annium.Finance.Providers.Shared;
 public readonly struct ProviderRegistrationContext
 {
     public readonly IServiceContainer Container;
+    public readonly ServiceLifetime Lifetime;
 
-    public ProviderRegistrationContext(IServiceContainer container)
+    public ProviderRegistrationContext(IServiceContainer container, ServiceLifetime lifetime)
     {
         Container = container;
+        Lifetime = lifetime;
     }
 
     public ProviderRegistrationContext AddProvider<

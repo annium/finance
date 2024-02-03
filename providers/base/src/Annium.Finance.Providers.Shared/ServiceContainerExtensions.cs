@@ -13,17 +13,18 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static ProviderRegistrationContext AddProviders(this IServiceContainer container)
+    public static ProviderRegistrationContext AddProviders(
+        this IServiceContainer container,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton
+    )
     {
         container.AddInjectables();
 
         // market
-        container.AddObjectCache<MarketSettings, IMarketConnector, MarketConnectorCacheProvider>(
-            ServiceLifetime.Singleton
-        );
+        container.AddObjectCache<MarketSettings, IMarketConnector, MarketConnectorCacheProvider>(lifetime);
 
         // user
-        container.AddObjectCache<UserSettings, IUserConnector, UserConnectorCacheProvider>(ServiceLifetime.Singleton);
+        container.AddObjectCache<UserSettings, IUserConnector, UserConnectorCacheProvider>(lifetime);
 
         // status
         container.Add<StatusMonitor>().AsSelf().As<IStatusMonitor>().Scoped();
@@ -33,9 +34,9 @@ public static class ServiceContainerExtensions
         container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // services
-        container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(ServiceLifetime.Singleton);
+        container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
 
-        var ctx = new ProviderRegistrationContext(container);
+        var ctx = new ProviderRegistrationContext(container, lifetime);
 
         return ctx;
     }
