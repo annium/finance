@@ -98,7 +98,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             SerializerKey.Create(OrderUpdateKey, Application.Json)
         );
 
-        // accounts
+        // context
         Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContext);
         _contextLoader.OnData += HandleContext;
         Disposable += () => _contextLoader.OnData -= HandleContext;
