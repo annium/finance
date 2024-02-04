@@ -57,10 +57,10 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
             return;
         }
 
-        this.Warn("dispose {key} entry for {settings}", providerKey, settings);
+        this.Trace("dispose {key} entry for {settings}", providerKey, settings);
         await entry.DisposeAsync();
 
-        this.Warn("resolved {key} entry for {settings}", providerKey, settings);
+        this.Trace("resolved {key} entry for {settings}", providerKey, settings);
     }
 
     protected abstract void Inject(IServiceProvider scopeProvider, TSettings settings);
