@@ -342,7 +342,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            // .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFrom(this, LogData.Headers)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
         this.Trace("done");
 

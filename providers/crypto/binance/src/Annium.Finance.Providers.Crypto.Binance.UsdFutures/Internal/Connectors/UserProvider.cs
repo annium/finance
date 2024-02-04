@@ -60,7 +60,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .ReceiveWindow()
             .Sign(signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            // .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFrom(this, LogData.Headers)
             .AsUserResultAsync<AccountResponse>();
 
         if (result.IsFailure)
