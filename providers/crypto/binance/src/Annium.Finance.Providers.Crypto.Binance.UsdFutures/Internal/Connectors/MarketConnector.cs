@@ -69,11 +69,6 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
 
     private void HandleTicker(InstrumentTicker ticker)
     {
-        this.Trace("start");
-
-        this.Trace("write {ticker}", ticker);
         TickerWriter.Write(ticker);
-
-        this.Trace("done");
     }
 }
