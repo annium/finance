@@ -111,11 +111,18 @@ internal class QueryProcessor : IQueryProcessor
         if (!string.IsNullOrWhiteSpace(request.Id))
             result["orderId"] = request.Id;
 
-        if (!string.IsNullOrWhiteSpace(request.Id))
+        if (!string.IsNullOrWhiteSpace(request.ClientOrderId))
         {
             result["origClientOrderId"] = request.ClientOrderId;
             result["newClientOrderId"] = request.ClientOrderId;
         }
+
+        if (result.Count == 0)
+            return UserResult.New(
+                UserOperationStatus.BadRequest,
+                result,
+                "Either order id or client order id must be specified"
+            );
 
         result["symbol"] = request.Symbol;
 

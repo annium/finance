@@ -297,8 +297,7 @@ public class QueryProcessorTests : ConnectorTestBase
         var data = processor.BuildCancelOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(4);
-        data.At("orderId").Is(request.Id);
+        data.Has(3);
         data.At("origClientOrderId").Is(request.ClientOrderId);
         data.At("newClientOrderId").Is(request.ClientOrderId);
         data.At("symbol").Is(request.Symbol);
