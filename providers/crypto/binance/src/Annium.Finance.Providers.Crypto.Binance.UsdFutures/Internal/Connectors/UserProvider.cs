@@ -60,8 +60,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .ReceiveWindow()
             .Sign(signatureService)
             .WithRateDelay1M()
-            // .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .WithLogFrom(this, LogData.Headers)
+            // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<AccountResponse>();
 
         if (result.IsFailure)
@@ -101,7 +101,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .ReceiveWindow()
             .Sign(signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
         if (result.IsFailure)
@@ -142,7 +142,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                     .ReceiveWindow()
                     .Sign(signatureService)
                     .WithRateDelay1M()
-                    .WithLogFrom(this, LogData.Headers | LogData.Response)
+                    .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                     .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
                 if (chunkResult.IsFailure)
@@ -191,7 +191,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                     .ReceiveWindow()
                     .Sign(signatureService)
                     .WithRateDelay1M()
-                    .WithLogFrom(this, LogData.Headers | LogData.Response)
+                    .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                     .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
                 if (chunkResult.IsFailure)

@@ -36,7 +36,7 @@ public class ServerTimeProvider : ServerTimeProviderBase
         var result = await _requestFactory
             .New(_httpApi)
             .Get(_endpoint)
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsMarketResultAsync<ServerTime>();
 
         return MarketResult.From(result, result.IsSuccess ? result.Data.Value : 0L);

@@ -141,7 +141,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<LeverageResponse>();
 
         HandleTradeResult(result.IsSuccess);
@@ -174,7 +174,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OrderModel>();
 
         HandleTradeResult(result.IsSuccess);
@@ -228,7 +228,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OrderModel>();
 
         HandleTradeResult(result.IsSuccess);
@@ -261,7 +261,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<CancelOrderResponse>();
 
         HandleTradeResult(result.IsSuccess);
@@ -294,7 +294,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OperationResult>();
 
         HandleTradeResult(result.IsSuccess);
@@ -342,8 +342,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            // .WithLogFrom(this, LogData.Headers | LogData.Response)
-            .WithLogFrom(this, LogData.Headers)
+            // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
         this.Trace("done");
 
@@ -375,7 +375,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .ReceiveWindow()
             .Sign(_signatureService)
             .WithRateDelay1M()
-            .WithLogFrom(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
         this.Trace("done");
 

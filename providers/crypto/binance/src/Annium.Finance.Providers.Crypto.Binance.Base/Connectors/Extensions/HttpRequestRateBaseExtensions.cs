@@ -8,6 +8,14 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestRateBaseExtensions
 {
+    private static readonly string[] HeaderMasks = new[] { "x-mbx-used-weight", "x-mbx-order" };
+
+    public static IHttpRequest WithLogFromWithHeaders<T>(this IHttpRequest request, T subject, LogData log = default)
+        where T : ILogSubject
+    {
+        return request.WithLogFrom(subject, log, HeaderMasks);
+    }
+
     public static IHttpRequest WithRateDelayBase(this IHttpRequest request, string interval, int watermark) =>
         request.Intercept(async next =>
         {

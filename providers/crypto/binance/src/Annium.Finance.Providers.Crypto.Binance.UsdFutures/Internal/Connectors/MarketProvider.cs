@@ -42,7 +42,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         var result = await _exchangeInfoRequestFactory
             .New(Endpoints.GetHttpApi(env))
             .Get("fapi/v1/exchangeInfo")
-            .WithLogFrom(this)
+            .WithLogFromWithHeaders(this)
             .WithRateDelay1M()
             .AsMarketResultAsync<ExchangeInfo>();
 
@@ -83,7 +83,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
                 .Param("interval", "1m")
                 .Param("limit", count)
                 .Param("startTime", from.ToUnixTimeMilliseconds())
-                .WithLogFrom(this)
+                .WithLogFromWithHeaders(this)
                 .WithRateDelay1M()
                 .AsMarketResultAsync<List<CandleModel>>();
     }
