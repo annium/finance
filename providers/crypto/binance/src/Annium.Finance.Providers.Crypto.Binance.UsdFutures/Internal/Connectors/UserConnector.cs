@@ -325,12 +325,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private void HandleContext(UserContext context)
     {
-        this.Trace("start");
-
         AssetWriter.Write(ChangeEvent.Init(context.Assets));
         PositionWriter.Write(ChangeEvent.Init(context.Positions));
-
-        this.Trace("done");
     }
 
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrders(CancellationToken ct)
