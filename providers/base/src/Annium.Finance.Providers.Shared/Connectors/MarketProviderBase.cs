@@ -14,7 +14,7 @@ public abstract class MarketProviderBase
 {
     private static readonly long Minute = Duration.FromMinutes(1).TotalMilliseconds.FloorInt64();
 
-    protected IReadOnlyCollection<ResourceModel> ResolveResources(IReadOnlyCollection<InstrumentModel> instruments)
+    protected Dictionary<string, ResourceModel> ResolveResources(IReadOnlyCollection<InstrumentModel> instruments)
     {
         var result = new Dictionary<string, ResourceModel>();
 
@@ -22,7 +22,7 @@ public abstract class MarketProviderBase
             if (!result.TryGetValue(item.Code, out var current) || current.Precision < item.Precision)
                 result[item.Code] = item;
 
-        return result.Values;
+        return result;
     }
 
     protected async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesBaseAsync(

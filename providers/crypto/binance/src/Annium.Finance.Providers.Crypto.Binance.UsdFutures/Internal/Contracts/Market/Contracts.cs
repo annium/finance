@@ -14,6 +14,7 @@ internal class Contracts
             .ResetConverters()
             .AddConverter<ExchangeInfoConverter>()
             .AddConverter<RateLimitsConverter>()
+            .AddConverter<AssetConverter>()
             .AddConverter<InstrumentConverter>()
             .AddConverter<InstrumentFiltersConverter>();
 

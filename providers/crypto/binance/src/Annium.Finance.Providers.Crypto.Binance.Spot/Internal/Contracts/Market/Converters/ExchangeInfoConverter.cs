@@ -5,10 +5,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Domain;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Converters;
 
-public class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
+internal class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
 {
     public override ExchangeInfo? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

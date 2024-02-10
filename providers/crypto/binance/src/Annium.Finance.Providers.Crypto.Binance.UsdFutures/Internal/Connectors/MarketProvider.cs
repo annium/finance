@@ -7,8 +7,8 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.Market.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;
@@ -55,13 +55,16 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         this.Trace("resolve resources");
         var resources = ResolveResources(result.Data.Instruments);
+        foreach (var asset in result.Data.Assets)
+            if (!resources.ContainsKey(asset.Code))
+                resources[asset.Code] = new ResourceModel(asset.Code, (byte)(asset.Code.Contains("USD") ? 2 : 8));
 
         this.Trace("update watermark (can change over time)");
         HttpRequestRateExtensions.UpdateRequestWeightLimit(result.Data.RateLimits.RequestWeightLimit);
 
         this.Trace("done");
 
-        return MarketResult.Ok<MarketContext?>(new MarketContext(resources, result.Data.Instruments));
+        return MarketResult.Ok<MarketContext?>(new MarketContext(resources.Values, result.Data.Instruments));
     }
 
     public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(

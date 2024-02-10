@@ -1,6 +1,7 @@
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
+using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.Market.Domain;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
@@ -49,6 +50,11 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
                     ""asset"": ""USDT"",
                     ""marginAvailable"": true,
                     ""autoAssetExchange"": ""-10000""
+                },
+                {
+                  ""asset"": ""ETH"",
+                  ""marginAvailable"": true,
+                  ""autoAssetExchange"": ""-5""
                 }
             ],
             ""symbols"": [
@@ -140,6 +146,9 @@ public class ExchangeInfoConverterTests : ConnectorTestBase
 
         // assert - deserialization
         deserialized.RateLimits.IsEqual(new RateLimits(2400));
+        deserialized.Assets.Has(2);
+        deserialized.Assets.At(0).Code.Is("USDT");
+        deserialized.Assets.At(1).Code.Is("ETH");
         deserialized.Instruments.Has(1);
         var btcusdt = deserialized.Instruments.At(0);
         btcusdt.IsEqual(

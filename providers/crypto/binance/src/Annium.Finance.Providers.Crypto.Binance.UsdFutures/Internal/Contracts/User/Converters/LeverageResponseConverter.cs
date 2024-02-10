@@ -6,7 +6,7 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 
-public class LeverageResponseConverter : JsonConverter<LeverageResponse>
+internal class LeverageResponseConverter : JsonConverter<LeverageResponse>
 {
     public override LeverageResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

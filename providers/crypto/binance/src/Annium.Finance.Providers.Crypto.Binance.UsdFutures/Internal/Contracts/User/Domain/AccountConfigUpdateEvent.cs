@@ -8,7 +8,7 @@ internal sealed record AccountConfigUpdateEvent(
     int Leverage
 );
 
-public enum AccountConfigUpdateEventType
+internal enum AccountConfigUpdateEventType
 {
     MultiAssetsModeChange,
     LeverageChange

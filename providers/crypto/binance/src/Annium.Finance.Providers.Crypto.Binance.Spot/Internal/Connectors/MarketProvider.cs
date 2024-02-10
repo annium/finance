@@ -7,8 +7,8 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;
@@ -61,7 +61,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         this.Trace("done");
 
-        return MarketResult.Ok<MarketContext?>(new MarketContext(resources, result.Data.Instruments));
+        return MarketResult.Ok<MarketContext?>(new MarketContext(resources.Values, result.Data.Instruments));
     }
 
     public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
