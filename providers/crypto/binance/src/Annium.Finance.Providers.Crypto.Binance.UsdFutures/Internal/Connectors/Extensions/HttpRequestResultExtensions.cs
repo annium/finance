@@ -22,7 +22,13 @@ public static class HttpRequestResultExtensions
         return request.AsUserResultAsync<T, OperationResult>(DefaultError, GetErrorStatus, GetError);
     }
 
-    private static UserOperationStatus? GetErrorStatus(OperationResult result) => null;
+    private static UserOperationStatus? GetErrorStatus(OperationResult result) =>
+        result.Code switch
+        {
+            -2018 => UserOperationStatus.InsufficientBalance, // BALANCE_NOT_SUFFICIENT
+            -2019 => UserOperationStatus.InsufficientBalance, // MARGIN_NOT_SUFFICIENT
+            _ => null
+        };
 
     private static string GetError(OperationResult result) => result.Message;
 }

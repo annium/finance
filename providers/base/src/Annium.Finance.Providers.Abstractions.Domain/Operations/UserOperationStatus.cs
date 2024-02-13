@@ -13,4 +13,7 @@ public enum UserOperationStatus
     NotFound,
     ParseError,
     UnknownError,
+
+    // custom statuses
+    InsufficientBalance
 }
