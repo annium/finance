@@ -11,6 +11,7 @@ public static class HttpRequestUserResultExtensions
     public static async Task<UserResult<TData?>> AsUserResultAsync<TData, TError>(
         this IHttpRequest request,
         TError defaultError,
+        Func<TError, UserOperationStatus?> getErrorStatus,
         Func<TError, string> getError
     )
         where TData : class
@@ -21,7 +22,7 @@ public static class HttpRequestUserResultExtensions
             UserResult.Ok!,
             error =>
             {
-                var operationStatus = MapHttpStatusCodeToOperationStatus(response.StatusCode);
+                var operationStatus = getErrorStatus(error) ?? MapHttpStatusCodeToOperationStatus(response.StatusCode);
                 var errorMessage = getError(error);
 
                 return UserResult.New<TData?>(operationStatus, null, errorMessage);

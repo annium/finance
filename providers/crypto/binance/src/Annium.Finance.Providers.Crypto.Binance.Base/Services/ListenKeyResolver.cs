@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;

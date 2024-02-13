@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Logging;
 using Annium.Net.Http;
