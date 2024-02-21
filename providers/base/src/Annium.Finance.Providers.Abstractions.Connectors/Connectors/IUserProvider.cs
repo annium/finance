@@ -20,6 +20,6 @@ public interface IUserProvider
     Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         UserSettings settings,
         string symbol,
-        long since
+        long? since
     );
 }

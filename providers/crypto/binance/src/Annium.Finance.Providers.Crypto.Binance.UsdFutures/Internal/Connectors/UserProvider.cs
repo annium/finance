@@ -66,7 +66,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Trace("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(UserContext));
         }
@@ -102,7 +102,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Trace("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
         }
@@ -118,14 +118,38 @@ internal class UserProvider : UserProviderBase, IUserProvider
         long? since
     )
     {
+        if (since is null)
+            return await LoadLatestOrdersAsync(settings, symbol);
+
+        return await LoadOrderHistoryAsync(settings, symbol, since.Value);
+    }
+
+    public async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
+        UserSettings settings,
+        string symbol,
+        long? since
+    )
+    {
+        if (since is null)
+            return await LoadLatestTradesAsync(settings, symbol);
+
+        return await LoadTradeHistoryAsync(settings, symbol, since.Value);
+    }
+
+    private async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadLatestOrdersAsync(
+        UserSettings settings,
+        string symbol
+    )
+    {
         this.Trace("start");
 
         var signatureService = GetSignatureService(settings);
 
-        // load current open orders
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
-            .Get("/fapi/v1/openOrders")
+            .Get("/fapi/v1/allOrders")
+            .Param("symbol", symbol)
+            .Param("limit", OrderQueryLimit)
             .ReceiveWindow()
             .Sign(signatureService)
             .WithRateDelay1M()
@@ -134,30 +158,34 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Trace("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
         }
 
-        var resolvedOrders = ResolveOrders(result.Data);
+        this.Trace("done, {count} orders loaded", result.Data.Count);
 
-        // if no historical orders to resolve status of - just return opened ones
-        if (since is null)
-        {
-            this.Trace("load since null - only open orders");
+        return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(result.Data);
+    }
 
-            return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(resolvedOrders.Values);
-        }
+    private async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrderHistoryAsync(
+        UserSettings settings,
+        string symbol,
+        long since
+    )
+    {
+        this.Trace("start");
 
-        var (startTime, endTime) = ResolveHistoryBounds(since.Value);
-        var historyOrders = new List<OrderModel>();
-
+        var signatureService = GetSignatureService(settings);
+        var orders = new Dictionary<string, OrderModel>();
+        var (startTime, endTime) = ResolveHistoryBounds(since);
         var start = startTime.ToUnixTimeMilliseconds();
         var end = endTime.ToUnixTimeMilliseconds();
 
         while (start < end)
         {
             var until = Math.Min(start + OrderQueryWindow, end);
+
             var chunkResult = await _getOrderRequestFactory
                 .New(Endpoints.GetHttpApi(settings.Environment))
                 .Get("/fapi/v1/allOrders")
@@ -172,18 +200,55 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
             if (chunkResult.IsFailure)
-                return chunkResult;
+            {
+                this.Error("failure: {result}", chunkResult);
 
-            historyOrders.AddRange(chunkResult.Data);
+                return chunkResult;
+            }
+
+            this.Trace("chunk done, {count} orders loaded, merge", chunkResult.Data.Count);
+            MergeOrders(orders, chunkResult.Data);
             start += OrderQueryWindow;
         }
 
-        ResolveOrders(resolvedOrders, historyOrders);
+        this.Trace("done, {count} orders loaded", orders.Count);
 
-        return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(resolvedOrders.Values);
+        return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(orders.Values);
     }
 
-    public async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
+    private async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadLatestTradesAsync(
+        UserSettings settings,
+        string symbol
+    )
+    {
+        this.Trace("start");
+
+        var signatureService = GetSignatureService(settings);
+
+        var result = await _getTradeRequestFactory
+            .New(Endpoints.GetHttpApi(settings.Environment))
+            .Get("/fapi/v1/userTrades")
+            .Param("symbol", symbol)
+            .Param("limit", TradeQueryLimit)
+            .ReceiveWindow()
+            .Sign(signatureService)
+            .WithRateDelay1M()
+            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+            .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
+
+        if (result.IsFailure)
+        {
+            this.Error("failure: {result}", result);
+
+            return UserResult.From(result, default(IReadOnlyCollection<TradeModel>));
+        }
+
+        this.Trace("done, {count} orders loaded", result.Data.Count);
+
+        return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(result.Data);
+    }
+
+    private async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradeHistoryAsync(
         UserSettings settings,
         string symbol,
         long since
@@ -192,12 +257,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
         this.Trace("start");
 
         var signatureService = GetSignatureService(settings);
-
-        var resolvedTrades = new Dictionary<string, TradeModel>();
-
+        var trades = new Dictionary<string, TradeModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
-        var historyTrades = new List<TradeModel>();
-
         var start = startTime.ToUnixTimeMilliseconds();
         var end = endTime.ToUnixTimeMilliseconds();
 
@@ -218,15 +279,20 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
             if (chunkResult.IsFailure)
-                return chunkResult;
+            {
+                this.Error("failure: {result}", chunkResult);
 
-            historyTrades.AddRange(chunkResult.Data);
+                return chunkResult;
+            }
+
+            this.Trace("chunk done, {count} trades loaded, merge", chunkResult.Data.Count);
+            MergeTrades(trades, chunkResult.Data);
             start += TradeQueryWindow;
         }
 
-        ResolveTrades(resolvedTrades, historyTrades);
+        this.Trace("done, {count} trades loaded", trades.Count);
 
-        return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(resolvedTrades.Values);
+        return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);
     }
 
     private SignatureService GetSignatureService(UserSettings settings)

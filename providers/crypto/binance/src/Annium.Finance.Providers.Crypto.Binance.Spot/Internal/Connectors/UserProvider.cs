@@ -44,7 +44,7 @@ internal class UserProvider : IUserProvider
     public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         UserSettings settings,
         string symbol,
-        long since
+        long? since
     )
     {
         var trades = Array.Empty<TradeModel>();

@@ -27,33 +27,15 @@ public abstract class UserProviderBase : ILogSubject
         return (min, max);
     }
 
-    protected void ResolveOrders(Dictionary<string, OrderModel> orders, IReadOnlyCollection<OrderModel> models)
+    protected void MergeOrders(Dictionary<string, OrderModel> orders, IReadOnlyCollection<OrderModel> models)
     {
         foreach (var model in models)
             orders.TryAdd(model.Id, model);
     }
 
-    protected Dictionary<string, OrderModel> ResolveOrders(IReadOnlyCollection<OrderModel> models)
-    {
-        var orders = new Dictionary<string, OrderModel>();
-
-        ResolveOrders(orders, models);
-
-        return orders;
-    }
-
-    protected void ResolveTrades(Dictionary<string, TradeModel> trades, IReadOnlyCollection<TradeModel> models)
+    protected void MergeTrades(Dictionary<string, TradeModel> trades, IReadOnlyCollection<TradeModel> models)
     {
         foreach (var model in models)
             trades.TryAdd(model.Id, model);
-    }
-
-    protected Dictionary<string, TradeModel> ResolveTrades(IReadOnlyCollection<TradeModel> models)
-    {
-        var trades = new Dictionary<string, TradeModel>();
-
-        ResolveTrades(trades, models);
-
-        return trades;
     }
 }
