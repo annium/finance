@@ -9,6 +9,8 @@ public interface IUserProvider
 {
     Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings);
 
+    Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings);
+
     Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
         IReadOnlyCollection<string> symbols,

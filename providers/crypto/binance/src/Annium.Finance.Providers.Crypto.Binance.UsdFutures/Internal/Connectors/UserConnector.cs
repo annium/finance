@@ -47,7 +47,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly UserStream _userStream;
     private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
-    private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
@@ -63,7 +62,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
         [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
-        [FromKeyedServices(GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
         [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
@@ -79,7 +77,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _initOrderRequestFactory = initOrderRequestFactory;
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
-        _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
 
@@ -332,15 +329,9 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrders(CancellationToken ct)
     {
         this.Trace("start");
-        var result = await _getOrderRequestFactory
-            .New(_config.HttpApi)
-            .Get("/fapi/v1/openOrders")
-            .ReceiveWindow()
-            .Sign(_signatureService)
-            .WithRateDelay1M()
-            // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
-            .WithLogFromWithHeaders(this, LogData.Headers)
-            .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
+
+        var result = await UserProvider.LoadOpenOrdersAsync(Settings);
+
         this.Trace("done");
 
         return result;

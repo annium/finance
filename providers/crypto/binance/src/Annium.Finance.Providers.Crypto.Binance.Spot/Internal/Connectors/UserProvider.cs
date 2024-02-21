@@ -19,6 +19,15 @@ internal class UserProvider : IUserProvider
         return Task.FromResult(result);
     }
 
+    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings)
+    {
+        var orders = Array.Empty<OrderModel>();
+
+        var result = UserResult.Ok<IReadOnlyCollection<OrderModel>?>(orders);
+
+        return Task.FromResult(result);
+    }
+
     public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
         IReadOnlyCollection<string> symbols,

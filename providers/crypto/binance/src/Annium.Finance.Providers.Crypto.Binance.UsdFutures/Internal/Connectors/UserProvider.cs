@@ -84,6 +84,34 @@ internal class UserProvider : UserProviderBase, IUserProvider
         return UserResult.Ok<UserContext?>(new UserContext(assets, positions));
     }
 
+    public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings)
+    {
+        this.Trace("start");
+
+        var signatureService = GetSignatureService(settings);
+
+        var result = await _getOrderRequestFactory
+            .New(Endpoints.GetHttpApi(settings.Environment))
+            .Get("/fapi/v1/openOrders")
+            .ReceiveWindow()
+            .Sign(signatureService)
+            .WithRateDelay1M()
+            // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+            .WithLogFromWithHeaders(this, LogData.Headers)
+            .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
+
+        if (result.IsFailure)
+        {
+            this.Trace("failure: {result}", result);
+
+            return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
+        }
+
+        this.Trace("done");
+
+        return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(result.Data);
+    }
+
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
         IReadOnlyCollection<string> symbols,
