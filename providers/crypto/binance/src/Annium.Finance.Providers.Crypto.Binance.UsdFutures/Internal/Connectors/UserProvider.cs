@@ -114,7 +114,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> symbols,
+        string symbol,
         long? since
     )
     {
@@ -152,33 +152,30 @@ internal class UserProvider : UserProviderBase, IUserProvider
         var (startTime, endTime) = ResolveHistoryBounds(since.Value);
         var historyOrders = new List<OrderModel>();
 
-        foreach (var symbol in symbols)
+        var start = startTime.ToUnixTimeMilliseconds();
+        var end = endTime.ToUnixTimeMilliseconds();
+
+        while (start < end)
         {
-            var start = startTime.ToUnixTimeMilliseconds();
-            var end = endTime.ToUnixTimeMilliseconds();
+            var until = Math.Min(start + OrderQueryWindow, end);
+            var chunkResult = await _getOrderRequestFactory
+                .New(Endpoints.GetHttpApi(settings.Environment))
+                .Get("/fapi/v1/allOrders")
+                .Param("symbol", symbol)
+                .Param("limit", OrderQueryLimit)
+                .Param("startTime", start)
+                .Param("endTime", until)
+                .ReceiveWindow()
+                .Sign(signatureService)
+                .WithRateDelay1M()
+                .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+                .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
-            while (start < end)
-            {
-                var until = Math.Min(start + OrderQueryWindow, end);
-                var chunkResult = await _getOrderRequestFactory
-                    .New(Endpoints.GetHttpApi(settings.Environment))
-                    .Get("/fapi/v1/allOrders")
-                    .Param("symbol", symbol)
-                    .Param("limit", OrderQueryLimit)
-                    .Param("startTime", start)
-                    .Param("endTime", until)
-                    .ReceiveWindow()
-                    .Sign(signatureService)
-                    .WithRateDelay1M()
-                    .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
-                    .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
+            if (chunkResult.IsFailure)
+                return chunkResult;
 
-                if (chunkResult.IsFailure)
-                    return chunkResult;
-
-                historyOrders.AddRange(chunkResult.Data);
-                start += OrderQueryWindow;
-            }
+            historyOrders.AddRange(chunkResult.Data);
+            start += OrderQueryWindow;
         }
 
         ResolveOrders(resolvedOrders, historyOrders);
@@ -188,7 +185,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
     public async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> symbols,
+        string symbol,
         long since
     )
     {
@@ -201,33 +198,30 @@ internal class UserProvider : UserProviderBase, IUserProvider
         var (startTime, endTime) = ResolveHistoryBounds(since);
         var historyTrades = new List<TradeModel>();
 
-        foreach (var symbol in symbols)
+        var start = startTime.ToUnixTimeMilliseconds();
+        var end = endTime.ToUnixTimeMilliseconds();
+
+        while (start < end)
         {
-            var start = startTime.ToUnixTimeMilliseconds();
-            var end = endTime.ToUnixTimeMilliseconds();
+            var until = Math.Min(start + TradeQueryWindow, end);
+            var chunkResult = await _getTradeRequestFactory
+                .New(Endpoints.GetHttpApi(settings.Environment))
+                .Get("/fapi/v1/userTrades")
+                .Param("symbol", symbol)
+                .Param("limit", TradeQueryLimit)
+                .Param("startTime", start)
+                .Param("endTime", until)
+                .ReceiveWindow()
+                .Sign(signatureService)
+                .WithRateDelay1M()
+                .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+                .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
-            while (start < end)
-            {
-                var until = Math.Min(start + TradeQueryWindow, end);
-                var chunkResult = await _getTradeRequestFactory
-                    .New(Endpoints.GetHttpApi(settings.Environment))
-                    .Get("/fapi/v1/userTrades")
-                    .Param("symbol", symbol)
-                    .Param("limit", TradeQueryLimit)
-                    .Param("startTime", start)
-                    .Param("endTime", until)
-                    .ReceiveWindow()
-                    .Sign(signatureService)
-                    .WithRateDelay1M()
-                    .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
-                    .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
+            if (chunkResult.IsFailure)
+                return chunkResult;
 
-                if (chunkResult.IsFailure)
-                    return chunkResult;
-
-                historyTrades.AddRange(chunkResult.Data);
-                start += TradeQueryWindow;
-            }
+            historyTrades.AddRange(chunkResult.Data);
+            start += TradeQueryWindow;
         }
 
         ResolveTrades(resolvedTrades, historyTrades);

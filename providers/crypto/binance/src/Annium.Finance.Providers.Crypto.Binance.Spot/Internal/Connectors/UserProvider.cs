@@ -30,7 +30,7 @@ internal class UserProvider : IUserProvider
 
     public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> symbols,
+        string symbol,
         long? since
     )
     {
@@ -43,7 +43,7 @@ internal class UserProvider : IUserProvider
 
     public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         UserSettings settings,
-        IReadOnlyCollection<string> symbols,
+        string symbol,
         long since
     )
     {

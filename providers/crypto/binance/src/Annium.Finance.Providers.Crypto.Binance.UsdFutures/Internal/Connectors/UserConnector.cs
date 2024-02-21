@@ -48,7 +48,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
-    private readonly IHttpRequestFactory _getTradeRequestFactory;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
     public UserConnector(
@@ -62,7 +61,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
         [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
-        [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
         IStatusMonitor monitor,
@@ -77,7 +75,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _initOrderRequestFactory = initOrderRequestFactory;
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
-        _getTradeRequestFactory = getTradeRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
 
         // user stream
@@ -329,9 +326,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrders(CancellationToken ct)
     {
         this.Trace("start");
-
         var result = await UserProvider.LoadOpenOrdersAsync(Settings);
-
         this.Trace("done");
 
         return result;
@@ -353,17 +348,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     )
     {
         this.Trace("start");
-        var result = await _getTradeRequestFactory
-            .New(_config.HttpApi)
-            .Get("/fapi/v1/userTrades")
-            .Param("symbol", symbol)
-            .Param("startTime", since)
-            .Param("limit", 1000)
-            .ReceiveWindow()
-            .Sign(_signatureService)
-            .WithRateDelay1M()
-            .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
-            .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
+        var result = await UserProvider.LoadTradesAsync(Settings, symbol, since);
         this.Trace("done");
 
         return result;
