@@ -18,7 +18,7 @@ public static class OrderExtensions
     public static bool IsInactive<TOrder>(this TOrder order)
         where TOrder : IOrder
     {
-        return order.Status is Filled or Canceled;
+        return order.Status is Filled or Canceled or Rejected or Expired;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
