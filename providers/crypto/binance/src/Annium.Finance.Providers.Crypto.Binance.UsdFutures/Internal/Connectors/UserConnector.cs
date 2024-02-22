@@ -377,8 +377,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         this.Trace("start");
 
-        _contextLoader.Start();
-        _ordersLoader.Start();
+        _contextLoader.Start(true);
+        _ordersLoader.Start(true);
 
         this.Trace("done");
     }

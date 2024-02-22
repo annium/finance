@@ -56,7 +56,7 @@ public class CompositeLoaderTests : TestBase
         using var loader = Get<ILoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load());
         loader.OnData += log.Add;
 
-        loader.Start();
+        loader.Start(true);
         for (var i = 0; i < 10; i++)
             loader.Request();
 

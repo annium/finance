@@ -79,7 +79,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         foreach (var entry in _entries)
         {
             this.Trace("start {key} entry", entry.Key);
-            entry.Value.Loader.Start();
+            entry.Value.Loader.Start(false);
         }
 
         this.Trace("done");
@@ -132,7 +132,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         };
 
         this.Trace("start {key} loader", key);
-        loader.Start();
+        loader.Start(false);
 
         this.Trace("done {key} entry", key);
 

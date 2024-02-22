@@ -84,7 +84,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         this.Trace("done");
     }
 
-    public void Start()
+    public void Start(bool reportStatus)
     {
         this.Trace("start");
 
@@ -99,7 +99,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             _state = State.Active;
 
             this.Trace("start loader");
-            _loader.Start(reportStatus: true);
+            _loader.Start(reportStatus);
 
             if (_intervalTimer is not null)
             {

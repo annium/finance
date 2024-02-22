@@ -31,7 +31,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
         Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
-        exchangeInfoLoader.Start();
+        exchangeInfoLoader.Start(true);
 
         _bookTickerService = bookTickerService;
         _bookTickerService.OnData += HandleTicker;
