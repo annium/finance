@@ -17,6 +17,9 @@ public static class ConnectorExtensions
             tcs.SetResult();
         }
 
+        if (connector.Status is ConnectorStatus.Connected)
+            return Task.CompletedTask;
+
         connector.OnStatusChanged += HandleStatusChanged;
 
         return tcs.Task;
