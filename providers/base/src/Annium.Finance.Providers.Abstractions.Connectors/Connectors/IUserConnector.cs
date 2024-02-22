@@ -14,6 +14,7 @@ public interface IUserConnector : IConnectorBase
     IObservable<ChangeEvent<OrderModel>> Orders { get; }
     IObservable<TradeModel> Trades { get; }
     event Func<UserSettings, IUserProvider, Task> OnSync;
+    void Sync();
     Task<UserResult> SetLeverage(PositionModel position, decimal leverage);
     Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request);
     Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request);

@@ -110,16 +110,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         return Disposable.DisposeAsync();
     }
 
-    private void HandleStatusChanged(ConnectorStatus status)
+    public void Sync()
     {
-        if (status is not ConnectorStatus.Connected)
-        {
-            this.Trace("notify {status} status", status);
-            Status = status;
-            OnStatusChanged(status);
-            return;
-        }
-
         this.Trace("schedule sync");
         var scheduled = _executor.TrySchedule(async () =>
         {
@@ -133,14 +125,27 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             this.Trace("subscribe readers");
             SubscribeReaders();
 
-            this.Trace("notify {status} status", status);
-            Status = status;
-            OnStatusChanged(status);
+            this.Trace("notify {status} status", ConnectorStatus.Connected);
+            Status = ConnectorStatus.Connected;
+            OnStatusChanged(ConnectorStatus.Connected);
 
             this.Trace("done sync");
         });
 
         this.Trace("done, result: {result}", scheduled);
+    }
+
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        if (status is not ConnectorStatus.Connected)
+        {
+            this.Trace("notify {status} status", status);
+            Status = status;
+            OnStatusChanged(status);
+            return;
+        }
+
+        Sync();
     }
 
     private void HandleError(ConnectorError error)
