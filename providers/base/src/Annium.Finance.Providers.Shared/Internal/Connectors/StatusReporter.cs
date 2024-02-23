@@ -26,7 +26,7 @@ internal class StatusReporter : IStatusReporter, ILogSubject
         if (current != string.Empty)
             throw new InvalidOperationException($"{this.GetFullId()} is already bound to {current}");
 
-        this.Trace<string>("register {target}", target);
+        this.Trace("register {target} in {status} status", target, status);
         _monitor.Register(target, status);
     }
 

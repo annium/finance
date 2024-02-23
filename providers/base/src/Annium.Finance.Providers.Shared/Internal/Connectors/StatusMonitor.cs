@@ -33,7 +33,7 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         lock (_locker)
         {
             this.Trace<string>("add {target}", target);
-            _targets.Add(target, ConnectorStatus.Disconnected);
+            _targets.Add(target, status);
 
             UpdateStatus();
         }
