@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
@@ -26,6 +27,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         SnapshotLoaderConfig cfg,
         Func<CancellationToken, Task<IBaseResult<T?>>> load,
         IStatusReporter statusReporter,
+        ConnectorStatus initialStatus,
         ILogger logger
     )
     {
@@ -33,7 +35,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         _cfg = cfg;
         _load = load;
         _statusReporter = statusReporter;
-        _statusReporter.Bind(this);
+        _statusReporter.Bind(this, initialStatus);
         _timer = Timers.Async(FetchSnapshotAsync, Timeout.Infinite, Timeout.Infinite, logger);
     }
 

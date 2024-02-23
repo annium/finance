@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
@@ -25,9 +26,9 @@ internal class LoaderFactory : ILoaderFactory
         Func<CancellationToken, Task<IBaseResult<T?>>> load
     )
     {
-        var reporter = _sp.Resolve<IStatusReporter>();
+        var statusReporter = _sp.Resolve<IStatusReporter>();
 
-        return new SnapshotLoader<T>(cfg, load, reporter, _logger);
+        return new SnapshotLoader<T>(cfg, load, statusReporter, ConnectorStatus.Disconnected, _logger);
     }
 
     public ICompositeLoader<T> CreateCompositeLoader<T>(

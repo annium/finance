@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
@@ -28,7 +29,13 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
         Key = key;
         Context = context;
         _getLoad = getLoad;
-        var snapshotLoader = new SnapshotLoader<TData>(config, GetLoad, statusReporter, logger);
+        var snapshotLoader = new SnapshotLoader<TData>(
+            config,
+            GetLoad,
+            statusReporter,
+            ConnectorStatus.Connected,
+            logger
+        );
         Loader = new CompositeLoader<TData>(snapshotLoader, config.Interval, config.Debounce, logger);
     }
 
