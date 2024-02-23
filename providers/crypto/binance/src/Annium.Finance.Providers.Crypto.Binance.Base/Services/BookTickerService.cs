@@ -45,7 +45,7 @@ public sealed class BookTickerService : WebSocketService
             return;
         }
 
-        this.Trace("send: {data}", data.Data);
+        // this.Trace("send: {data}", data.Data);
         OnData(data.Data);
     }
 
