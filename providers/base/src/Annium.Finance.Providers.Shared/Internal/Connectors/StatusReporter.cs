@@ -19,7 +19,7 @@ internal class StatusReporter : IStatusReporter, ILogSubject
         this.Trace<string>("reports to {monitor}", monitor.GetFullId());
     }
 
-    public void Bind(object component)
+    public void Bind(object component, ConnectorStatus status = ConnectorStatus.Disconnected)
     {
         var target = component.GetFullId();
         var current = Interlocked.CompareExchange(ref _target, target, string.Empty);
@@ -27,7 +27,7 @@ internal class StatusReporter : IStatusReporter, ILogSubject
             throw new InvalidOperationException($"{this.GetFullId()} is already bound to {current}");
 
         this.Trace<string>("register {target}", target);
-        _monitor.Register(target);
+        _monitor.Register(target, status);
     }
 
     public void Unbind()

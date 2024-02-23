@@ -4,7 +4,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public interface IStatusReporter
 {
-    void Bind(object component);
+    void Bind(object component, ConnectorStatus status = ConnectorStatus.Disconnected);
     void Unbind();
     void Connecting();
     void Connected();

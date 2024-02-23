@@ -28,7 +28,7 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         this.Trace("start");
     }
 
-    public void Register(string target)
+    public void Register(string target, ConnectorStatus status)
     {
         lock (_locker)
         {
