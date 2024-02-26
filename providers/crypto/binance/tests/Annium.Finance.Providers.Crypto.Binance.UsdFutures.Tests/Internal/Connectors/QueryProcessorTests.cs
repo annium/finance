@@ -76,8 +76,6 @@ public class QueryProcessorTests : ConnectorTestBase
     }
 
     [Theory]
-    [InlineData(8, 0, false)]
-    [InlineData(8, 0, true)]
     [InlineData(8, 10.5, false)]
     [InlineData(9, 10.5, true)]
     public void InitOrder_StopLossMarket(int count, decimal quantity, bool reduceOnly)
@@ -99,21 +97,12 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("stopPrice").Is("9.4");
 
-        if (quantity == 0)
-        {
-            data.At("closePosition").Is("true");
-        }
-        else
-        {
-            data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
-            if (reduceOnly)
-                data.At("reduceOnly").Is("true");
-        }
+        data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
+        if (reduceOnly)
+            data.At("reduceOnly").Is("true");
     }
 
     [Theory]
-    [InlineData(8, 0, false)]
-    [InlineData(8, 0, true)]
     [InlineData(8, 10.5, false)]
     [InlineData(9, 10.5, true)]
     public void InitOrder_TakeProfitMarket(int count, decimal quantity, bool reduceOnly)
@@ -135,16 +124,9 @@ public class QueryProcessorTests : ConnectorTestBase
         data.At("newOrderRespType").Is("RESULT");
         data.At("stopPrice").Is("9.4");
 
-        if (quantity == 0)
-        {
-            data.At("closePosition").Is("true");
-        }
-        else
-        {
-            data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
-            if (reduceOnly)
-                data.At("reduceOnly").Is("true");
-        }
+        data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
+        if (reduceOnly)
+            data.At("reduceOnly").Is("true");
     }
 
     [Theory]

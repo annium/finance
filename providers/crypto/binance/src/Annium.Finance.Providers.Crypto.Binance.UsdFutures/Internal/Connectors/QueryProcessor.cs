@@ -38,11 +38,13 @@ internal class QueryProcessor : IQueryProcessor
                 TrySetReduceOnly(request, result);
                 break;
             case OrderType.StopLossMarket:
-                SetQtyOrClosePosition(request, result);
+                result["quantity"] = request.Qty.ToGeneralInvariantString();
+                TrySetReduceOnly(request, result);
                 result["stopPrice"] = request.LevelPrice.ToGeneralInvariantString();
                 break;
             case OrderType.TakeProfitMarket:
-                SetQtyOrClosePosition(request, result);
+                result["quantity"] = request.Qty.ToGeneralInvariantString();
+                TrySetReduceOnly(request, result);
                 result["stopPrice"] = request.LevelPrice.ToGeneralInvariantString();
                 break;
             case OrderType.StopLossLimit:
@@ -62,19 +64,6 @@ internal class QueryProcessor : IQueryProcessor
         }
 
         return UserResult.Ok(result);
-
-        static void SetQtyOrClosePosition(IInitOrderRequest request, IDictionary<string, string> result)
-        {
-            if (request.Qty == 0)
-            {
-                result["closePosition"] = "true";
-            }
-            else
-            {
-                result["quantity"] = request.Qty.ToGeneralInvariantString();
-                TrySetReduceOnly(request, result);
-            }
-        }
 
         static void TrySetReduceOnly(IInitOrderRequest request, IDictionary<string, string> result)
         {
