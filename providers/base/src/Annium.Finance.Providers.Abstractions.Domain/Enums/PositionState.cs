@@ -12,5 +12,6 @@ public enum PositionState
     Opened = 1 << 2,
     Closing = 1 << 3,
     Closed = 1 << 4,
-    Canceled = 1 << 5,
+    Filled = 1 << 5,
+    Canceled = 1 << 6,
 }

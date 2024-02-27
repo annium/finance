@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 
@@ -33,25 +34,28 @@ public static class PositionHelper
 
         // total and others are 0
         if (totalQty == 0m)
-            return PositionState.Blank;
+            return Blank;
 
         // total > 0
 
         var state = default(PositionState);
 
         if (openingQty > 0)
-            state |= PositionState.Opening;
+            state |= Opening;
 
         if (openedQty > 0)
-            state |= PositionState.Opened;
+            state |= Opened;
 
         if (closingQty > 0)
-            state |= PositionState.Closing;
+            state |= Closing;
 
         if (closedQty > 0)
-            state |= PositionState.Closed;
+            state |= Closed;
 
-        return state == default ? PositionState.Canceled : state;
+        if (state == default)
+            return Canceled;
+
+        return state == (Opened | Closed) && openedQty == closedQty ? Filled : state;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

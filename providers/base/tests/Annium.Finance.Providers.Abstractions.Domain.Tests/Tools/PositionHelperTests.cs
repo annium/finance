@@ -26,10 +26,17 @@ public class PositionHelperTests
     }
 
     [Fact]
-    public void ResolveState_Opening_Closing()
+    public void ResolveState_Active()
     {
         // assert
         ResolveState(2, 1, 1, 1, 1).Is(Opening | Opened | Closing | Closed);
+    }
+
+    [Fact]
+    public void ResolveState_Filled()
+    {
+        // assert
+        ResolveState(2, 0, 1, 0, 1).Is(Filled);
     }
 
     [Fact]
