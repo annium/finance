@@ -18,7 +18,6 @@ public static class Helper
             OrientationRange.Both,
             MarginType.Cross,
             leverage,
-            PositionState.Blank,
             0,
             decimal.Zero,
             decimal.Zero,

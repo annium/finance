@@ -14,7 +14,6 @@ public sealed record Position(
     OrientationRange OrientationRange,
     MarginType MarginType,
     decimal Leverage,
-    PositionState State,
     long UpdatedAt,
     decimal TotalQty,
     decimal Price,
@@ -36,7 +35,6 @@ public sealed record Position(
     public Orientation Orientation =>
         OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");
     public OrientationType? OrientationType { get; private set; }
-    public PositionState State { get; private set; } = State;
     public long UpdatedAt { get; private set; } = UpdatedAt;
     public decimal TotalQty { get; private set; } = TotalQty;
     public decimal Price { get; private set; } = Price;
@@ -167,7 +165,7 @@ public sealed record Position(
     }
 
     public override string ToString() =>
-        $"{State} ({OrientationType?.ToString() ?? "inactive"}) {Instrument} with {_orders.Count} order(s) [id:{Id}]";
+        $"({OrientationType?.ToString() ?? "inactive"}) {Instrument} with {_orders.Count} order(s) [id:{Id}]";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SyncState(long updatedAt)
@@ -175,7 +173,6 @@ public sealed record Position(
         BorrowedQty = (OpenedQty - ClosedQty) * _borrowedPart;
         BorrowedSum = BorrowedQty * Price;
 
-        State = PositionHelper.ResolveState(TotalQty, OpeningQty, OpenedQty, ClosingQty, ClosedQty);
         UpdatedAt = Math.Max(UpdatedAt, updatedAt);
     }
 
