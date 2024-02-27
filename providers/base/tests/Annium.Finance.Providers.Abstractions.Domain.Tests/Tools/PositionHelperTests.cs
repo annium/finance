@@ -1,7 +1,7 @@
 using System;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Testing;
 using Xunit;
+using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
 using static Annium.Finance.Providers.Abstractions.Domain.Tools.PositionHelper;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Tools;
@@ -13,62 +13,30 @@ public class PositionHelperTests
     {
         // assert
         // opening + opened is greater than total
-        Wrap.It(() => ResolveState(1, 0.6m, 0.5m, 0, 0)).Throws<InvalidOperationException>();
+        Wrap.It(() => ResolveState(10, 6, 5, 0, 0)).Throws<InvalidOperationException>();
         // closing + closed is greater than opening + opened
-        Wrap.It(() => ResolveState(1, 0, 1, 0.6m, 0.5m)).Throws<InvalidOperationException>();
-        // closing is greater than opened
-        Wrap.It(() => ResolveState(1, 0, 1, 0.6m, 0.5m)).Throws<InvalidOperationException>();
+        Wrap.It(() => ResolveState(10, 0, 10, 6, 5)).Throws<InvalidOperationException>();
     }
 
     [Fact]
     public void ResolveState_Blank()
     {
         // assert
-        ResolveState(0, 0, 0, 0, 0).Is(PositionState.Blank);
+        ResolveState(0, 0, 0, 0, 0).Is(Blank);
     }
 
     [Fact]
     public void ResolveState_Opening_Closing()
     {
         // assert
-        ResolveState(2, 1, 1, 1, 1).Is(PositionState.Opening | PositionState.Closing);
-    }
-
-    [Fact]
-    public void ResolveState_Opening()
-    {
-        // assert
-        ResolveState(2, 1, 1, 0, 0).Is(PositionState.Opening);
-    }
-
-    [Fact]
-    public void ResolveState_Closing()
-    {
-        // assert
-        ResolveState(2, 0, 2, 1, 1).Is(PositionState.Closing);
-    }
-
-    [Fact]
-    public void ResolveState_Opened()
-    {
-        // assert
-        ResolveState(2, 0, 1, 0, 0).Is(PositionState.Opened);
-        ResolveState(2, 0, 2, 0, 1).Is(PositionState.Opened);
-    }
-
-    [Fact]
-    public void ResolveState_Closed()
-    {
-        // assert
-        ResolveState(2, 0, 1, 0, 1).Is(PositionState.Closed);
-        ResolveState(2, 0, 2, 0, 2).Is(PositionState.Closed);
+        ResolveState(2, 1, 1, 1, 1).Is(Opening | Opened | Closing | Closed);
     }
 
     [Fact]
     public void ResolveState_Canceled()
     {
         // assert
-        ResolveState(2, 0, 0, 0, 0).Is(PositionState.Canceled);
+        ResolveState(2, 0, 0, 0, 0).Is(Canceled);
     }
 
     [Fact]

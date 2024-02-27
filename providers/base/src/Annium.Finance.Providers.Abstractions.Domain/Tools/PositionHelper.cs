@@ -37,20 +37,21 @@ public static class PositionHelper
 
         // total > 0
 
+        var state = default(PositionState);
+
         if (openingQty > 0)
-            return closingQty > 0 ? PositionState.Opening | PositionState.Closing : PositionState.Opening;
+            state |= PositionState.Opening;
+
+        if (openedQty > 0)
+            state |= PositionState.Opened;
 
         if (closingQty > 0)
-            return PositionState.Closing;
+            state |= PositionState.Closing;
 
-        // opening == 0, closing == 0
+        if (closedQty > 0)
+            state |= PositionState.Closed;
 
-        // opened == 0, closed == 0
-        if (openedQty == 0)
-            return PositionState.Canceled;
-
-        // opened >= 0, closed >= opened
-        return openedQty > closedQty ? PositionState.Opened : PositionState.Closed;
+        return state == default ? PositionState.Canceled : state;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
