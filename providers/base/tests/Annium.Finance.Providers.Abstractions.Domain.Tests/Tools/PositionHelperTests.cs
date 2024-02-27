@@ -1,4 +1,3 @@
-using System;
 using Annium.Testing;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
@@ -13,9 +12,9 @@ public class PositionHelperTests
     {
         // assert
         // opening + opened is greater than total
-        Wrap.It(() => ResolveState(10, 6, 5, 0, 0)).Throws<InvalidOperationException>();
+        ResolveState(10, 6, 5, 0, 0).AsT1.Message.Contains("Too much opens").IsTrue();
         // closing + closed is greater than opening + opened
-        Wrap.It(() => ResolveState(10, 0, 10, 6, 5)).Throws<InvalidOperationException>();
+        ResolveState(10, 0, 10, 6, 5).AsT1.Message.Contains("Too much closes").IsTrue();
     }
 
     [Fact]

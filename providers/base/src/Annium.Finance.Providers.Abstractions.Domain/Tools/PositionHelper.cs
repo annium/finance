@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using OneOf;
 using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
@@ -8,7 +9,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 public static class PositionHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PositionState ResolveState(
+    public static OneOf<PositionState, Exception> ResolveState(
         decimal totalQty,
         decimal openingQty,
         decimal openedQty,
@@ -23,12 +24,12 @@ public static class PositionHelper
         EnsureNonNegative(closedQty);
 
         if (openingQty + openedQty > totalQty)
-            throw new InvalidOperationException(
+            return new InvalidOperationException(
                 $"Too much opens: openingQty {openingQty} + openedQty {openedQty} > TotalQty {totalQty}."
             );
 
         if (closingQty + closedQty > openingQty + openedQty)
-            throw new InvalidOperationException(
+            return new InvalidOperationException(
                 $"Too much closes: closingQty {closingQty} + closedQty {closedQty} > openingQty {openingQty} + openedQty {openedQty}."
             );
 
