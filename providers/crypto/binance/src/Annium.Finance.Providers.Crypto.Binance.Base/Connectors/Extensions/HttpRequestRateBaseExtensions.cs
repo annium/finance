@@ -27,7 +27,7 @@ public static class HttpRequestRateBaseExtensions
                 ?? Array.Empty<string>();
             if (usedHeader.Length == 0)
             {
-                request.Error($"{headerName} header not present");
+                request.Warn($"{headerName} header not present");
                 await Task.Delay(TimeSpan.FromSeconds(2));
                 return response;
             }
