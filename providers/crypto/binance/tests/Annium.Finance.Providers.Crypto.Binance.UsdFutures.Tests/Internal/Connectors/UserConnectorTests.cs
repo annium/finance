@@ -48,7 +48,14 @@ public class UserConnectorTests : UserConnectorTestBase
     {
         this.Trace("start");
 
-        var request = InitLimitOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, ExtremeHighQty, LowPrice);
+        var request = InitLimitOrder(
+            ClientOrderId(),
+            OrientationRange.Both,
+            Symbol,
+            OrderSide.Buy,
+            ExtremeHighQty,
+            LowPrice
+        );
         await InitInvalidOrder(request);
 
         this.Trace("done");
@@ -60,7 +67,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("start");
 
         // arrange
-        var request = InitLimitOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var request = InitLimitOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, MinQty, LowPrice);
 
         // act
         this.Trace("init order");
@@ -84,7 +91,7 @@ public class UserConnectorTests : UserConnectorTestBase
     {
         this.Trace("start");
 
-        var request = InitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, ExtremeHighQty);
+        var request = InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, ExtremeHighQty);
         await InitInvalidOrder(request);
 
         this.Trace("done");
@@ -96,7 +103,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("start");
 
         // arrange
-        var request = InitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, MinQty);
+        var request = InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, MinQty);
 
         // open position
         var order = await InitValidOrder(request, OrderStatus.Filled);
@@ -108,24 +115,26 @@ public class UserConnectorTests : UserConnectorTestBase
 
         // TP & SL invalid orders
         await TestOrder(
-            InitStopLossMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, ExtremeHighQty, LowPrice),
-            InitStopLossMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, GetPositionAmount(), LowPrice)
+            InitStopLossMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, ExtremeHighQty, LowPrice),
+            InitStopLossMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, GetPositionAmount(), LowPrice)
         );
 
         await TestOrder(
             InitTakeProfitMarketOrder(
-                GenerateClientOrderId(),
+                ClientOrderId(),
+                Range(),
                 Symbol,
                 OrderSide.Sell,
                 GetPositionAmount(),
                 ExtremeHighPrice
             ),
-            InitTakeProfitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, GetPositionAmount(), HighPrice)
+            InitTakeProfitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, GetPositionAmount(), HighPrice)
         );
 
         await TestOrder(
             InitStopLossLimitOrder(
-                GenerateClientOrderId(),
+                ClientOrderId(),
+                Range(),
                 Symbol,
                 OrderSide.Sell,
                 ExtremeHighQty,
@@ -133,7 +142,8 @@ public class UserConnectorTests : UserConnectorTestBase
                 LowPrice
             ),
             InitStopLossLimitOrder(
-                GenerateClientOrderId(),
+                ClientOrderId(),
+                Range(),
                 Symbol,
                 OrderSide.Sell,
                 GetPositionAmount(),
@@ -144,7 +154,8 @@ public class UserConnectorTests : UserConnectorTestBase
 
         await TestOrder(
             InitTakeProfitLimitOrder(
-                GenerateClientOrderId(),
+                ClientOrderId(),
+                Range(),
                 Symbol,
                 OrderSide.Sell,
                 GetPositionAmount(),
@@ -152,7 +163,8 @@ public class UserConnectorTests : UserConnectorTestBase
                 ExtremeHighPrice
             ),
             InitTakeProfitLimitOrder(
-                GenerateClientOrderId(),
+                ClientOrderId(),
+                Range(),
                 Symbol,
                 OrderSide.Sell,
                 GetPositionAmount(),
@@ -162,7 +174,7 @@ public class UserConnectorTests : UserConnectorTestBase
         );
 
         // cleanup
-        request = InitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, GetPositionAmount());
+        request = InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, GetPositionAmount());
         await InitValidOrder(request, OrderStatus.Filled);
         await EnsureBalanceIsIncreased();
         await EnsurePositionIsDecreased();
@@ -191,7 +203,7 @@ public class UserConnectorTests : UserConnectorTestBase
 
         // arrange
         this.Trace("init order");
-        var initRequest = InitLimitOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var initRequest = InitLimitOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, MinQty, LowPrice);
         var initOrder = await InitValidOrder(initRequest, OrderStatus.New);
         var modifyRequest = ModifyToLimitOrder(initOrder, initOrder.Side, ExtremeHighQty, initOrder.Price);
 
@@ -209,7 +221,7 @@ public class UserConnectorTests : UserConnectorTestBase
 
         // arrange
         this.Trace("init order");
-        var initRequest = InitLimitOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var initRequest = InitLimitOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, MinQty, LowPrice);
         var initialOrder = await InitValidOrder(initRequest, OrderStatus.New);
         var modifyRequest = ModifyToLimitOrder(
             initialOrder,
@@ -241,7 +253,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("start");
 
         // arrange
-        var request = InitLimitOrder(GenerateClientOrderId(), Symbol, OrderSide.Buy, MinQty, LowPrice);
+        var request = InitLimitOrder(ClientOrderId(), Range(), Symbol, OrderSide.Buy, MinQty, LowPrice);
 
         // act
         this.Trace("init order");

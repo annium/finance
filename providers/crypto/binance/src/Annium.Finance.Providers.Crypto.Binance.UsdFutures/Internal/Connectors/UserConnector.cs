@@ -422,6 +422,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var order = new OrderModel(
             e.OrderId,
             e.ClientOrderId,
+            e.Range,
             e.Symbol,
             e.Side,
             e.Type,

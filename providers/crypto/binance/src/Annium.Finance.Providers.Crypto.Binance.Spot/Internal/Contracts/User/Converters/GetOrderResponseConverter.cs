@@ -45,6 +45,7 @@ internal class GetOrderResponseConverter : JsonConverter<OrderModel?>
                 var order = new OrderModel(
                     id,
                     clientOrderId,
+                    OrientationRange.Both,
                     symbol,
                     side,
                     type,

@@ -20,10 +20,11 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
         var currentDepth = reader.CurrentDepth;
 
         var canConvert = true;
-        var symbol = string.Empty;
         var tradeId = string.Empty;
         var orderId = 0L;
         var clientOrderId = string.Empty;
+        var range = OrientationRange.Both;
+        var symbol = string.Empty;
         var type = default(OrderType);
         var side = default(OrderSide);
         var totalQty = 0m;
@@ -50,10 +51,11 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
                 }
 
                 var result = new OrderUpdateEvent(
-                    symbol ?? string.Empty,
                     tradeId,
                     orderId.ToString(),
                     clientOrderId,
+                    range,
+                    symbol ?? string.Empty,
                     type,
                     side,
                     totalQty,

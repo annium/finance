@@ -134,7 +134,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         {
             this.Trace("close position amount: {amount}", amount);
             await InitValidOrder(
-                InitMarketOrder(GenerateClientOrderId(), Symbol, OrderSide.Sell, amount),
+                InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, amount),
                 OrderStatus.Filled
             );
             await EnsureBalanceIsIncreased();
@@ -187,7 +187,8 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             await Connector
                 .InitOrder(
                     InitMarketOrder(
-                        GenerateClientOrderId(),
+                        ClientOrderId(),
+                        Range(),
                         Symbol,
                         position.Amount < 0 ? OrderSide.Buy : OrderSide.Sell,
                         Math.Abs(position.Amount)
@@ -339,7 +340,9 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         return Instrument.ToLotSize(amount);
     }
 
-    protected string GenerateClientOrderId() => Guid.NewGuid().ToString();
+    protected string ClientOrderId() => Guid.NewGuid().ToString();
+
+    protected OrientationRange Range() => OrientationRange.Both;
 
     protected AssetModel GetBalance(string resource)
     {

@@ -11,6 +11,7 @@ public static class InitOrderRequestTestExtensions
         return new OrderModel(
             string.Empty,
             request.Id,
+            OrientationRange.Both,
             request.Symbol,
             request.Side,
             request.Type,

@@ -6,6 +6,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Models;
 public sealed record OrderModel(
     string Id,
     string ClientOrderId,
+    OrientationRange Range,
     string Symbol,
     OrderSide Side,
     OrderType Type,

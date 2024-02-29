@@ -20,6 +20,7 @@ internal class GetOrderResponseConverter : JsonConverter<OrderModel?>
 
         var id = string.Empty;
         var clientOrderId = string.Empty;
+        var range = OrientationRange.Both;
         var symbol = string.Empty;
         var type = default(OrderType);
         var side = default(OrderSide);
@@ -45,6 +46,7 @@ internal class GetOrderResponseConverter : JsonConverter<OrderModel?>
                 var order = new OrderModel(
                     id,
                     clientOrderId,
+                    range,
                     symbol,
                     side,
                     type,
@@ -75,6 +77,9 @@ internal class GetOrderResponseConverter : JsonConverter<OrderModel?>
                         break;
                     case "clientOrderId":
                         clientOrderId = reader.GetString();
+                        break;
+                    case "positionSide":
+                        range = OrientationRanges.StringToValue.MapValue(reader.GetString());
                         break;
                     case "symbol":
                         symbol = reader.GetString();

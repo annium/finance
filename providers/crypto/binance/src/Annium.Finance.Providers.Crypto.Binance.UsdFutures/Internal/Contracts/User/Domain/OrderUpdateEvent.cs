@@ -3,10 +3,11 @@
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 
 internal sealed record OrderUpdateEvent(
-    string Symbol,
     string TradeId,
     string OrderId,
     string ClientOrderId,
+    OrientationRange Range,
+    string Symbol,
     OrderType Type,
     OrderSide Side,
     decimal TotalQty,

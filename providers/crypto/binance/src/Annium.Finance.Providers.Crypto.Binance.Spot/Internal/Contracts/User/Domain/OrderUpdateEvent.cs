@@ -7,6 +7,7 @@ internal sealed record OrderUpdateEvent(
     string TradeId,
     string OrderId,
     string ClientOrderId,
+    OrientationRange Range,
     OrderType Type,
     OrderSide Side,
     decimal TotalQty,

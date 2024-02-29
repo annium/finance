@@ -21,7 +21,7 @@ internal class QueryProcessor : IQueryProcessor
         result["newClientOrderId"] = request.Id;
         result["symbol"] = request.Symbol;
         result["side"] = OrderSides.ValueToString[request.Side];
-        result["positionSide"] = "BOTH";
+        result["positionSide"] = OrientationRanges.ValueToString[request.Range];
         result["type"] = OrderTypes.ValueToString[request.Type];
         result["newOrderRespType"] = "RESULT";
 

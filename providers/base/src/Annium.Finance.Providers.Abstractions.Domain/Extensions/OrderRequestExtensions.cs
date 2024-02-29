@@ -10,6 +10,7 @@ public static class OrderRequestExtensions
         return new InitOrderRequest
         {
             Id = request.Order.ClientOrderId,
+            Range = request.Order.Range,
             Symbol = request.Order.Symbol,
             Side = request.Side,
             Type = request.Type,

@@ -9,6 +9,7 @@ public static class RequestBuilder
 {
     public static IInitOrderRequest InitLimitOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -19,6 +20,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.Limit,
@@ -31,6 +33,7 @@ public static class RequestBuilder
 
     public static IInitOrderRequest InitMarketOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -40,6 +43,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.Market,
@@ -52,6 +56,7 @@ public static class RequestBuilder
 
     public static IInitOrderRequest InitStopLossMarketOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -62,6 +67,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.StopLossMarket,
@@ -74,6 +80,7 @@ public static class RequestBuilder
 
     public static IInitOrderRequest InitTakeProfitMarketOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -84,6 +91,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.TakeProfitMarket,
@@ -96,6 +104,7 @@ public static class RequestBuilder
 
     public static IInitOrderRequest InitStopLossLimitOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -107,6 +116,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.StopLossLimit,
@@ -119,6 +129,7 @@ public static class RequestBuilder
 
     public static IInitOrderRequest InitTakeProfitLimitOrder(
         string id,
+        OrientationRange range,
         string symbol,
         OrderSide side,
         decimal quantity,
@@ -130,6 +141,7 @@ public static class RequestBuilder
         return new InitOrderRequest
         {
             Id = id,
+            Range = range,
             Symbol = symbol,
             Side = side,
             Type = OrderType.TakeProfitLimit,
