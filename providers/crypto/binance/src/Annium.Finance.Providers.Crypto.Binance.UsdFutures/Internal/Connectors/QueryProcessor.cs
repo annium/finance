@@ -67,7 +67,7 @@ internal class QueryProcessor : IQueryProcessor
 
         static void TrySetReduceOnly(IInitOrderRequest request, IDictionary<string, string> result)
         {
-            if (request.ReduceOnly)
+            if (request.ReduceOnly && request.Range is OrientationRange.Both)
                 result["reduceOnly"] = "true";
         }
     }
