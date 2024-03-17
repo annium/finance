@@ -3,6 +3,7 @@
         <PackageId>Annium.Finance.Providers.Crypto.Binance.Spot</PackageId>
         <PackageVersion>0.1.0</PackageVersion>
         <Description>Annium.Finance.Providers.Crypto.Binance.Spot</Description>
+        <Solutions>Annium.Finance</Solutions>
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <DebugType>portable</DebugType>
