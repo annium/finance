@@ -81,13 +81,13 @@ public class BalanceAndPositionUpdateEventConverterTests : ConnectorTestBase
         // assert - deserialization
         deserialized.Date.Is(1564745798938);
         deserialized.Balances.Has(2);
-        deserialized.Balances
-            .At(0)
+        deserialized
+            .Balances.At(0)
             .IsEqual(new BalanceAndPositionUpdateEventBalance("USDT", 122624.123m, 100.123m, 50.123m));
         deserialized.Balances.At(1).IsEqual(new BalanceAndPositionUpdateEventBalance("BUSD", 1, 0, -49.123m));
         deserialized.Positions.Has(3);
-        deserialized.Positions
-            .At(0)
+        deserialized
+            .Positions.At(0)
             .IsEqual(
                 new BalanceAndPositionUpdateEventPosition(
                     "BTCUSDT",
@@ -99,8 +99,8 @@ public class BalanceAndPositionUpdateEventConverterTests : ConnectorTestBase
                     0
                 )
             );
-        deserialized.Positions
-            .At(1)
+        deserialized
+            .Positions.At(1)
             .IsEqual(
                 new BalanceAndPositionUpdateEventPosition(
                     "ETHUSDT",
@@ -112,8 +112,8 @@ public class BalanceAndPositionUpdateEventConverterTests : ConnectorTestBase
                     2850.212m
                 )
             );
-        deserialized.Positions
-            .At(2)
+        deserialized
+            .Positions.At(2)
             .IsEqual(
                 new BalanceAndPositionUpdateEventPosition(
                     "LTCUSDT",

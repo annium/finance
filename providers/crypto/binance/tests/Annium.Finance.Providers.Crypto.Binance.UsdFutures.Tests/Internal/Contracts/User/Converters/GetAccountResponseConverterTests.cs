@@ -99,15 +99,15 @@ public class GetAccountResponseConverterTests : ConnectorTestBase
 
         // assert - deserialization
         deserialized.Balances.Has(2);
-        deserialized.Balances
-            .ElementAt(0)
+        deserialized
+            .Balances.ElementAt(0)
             .IsEqual(new AccountResponseBalance("USDT", 10.7m, 1.7m, 4.4m, 2.3m, 1625474304765));
-        deserialized.Balances
-            .ElementAt(1)
+        deserialized
+            .Balances.ElementAt(1)
             .IsEqual(new AccountResponseBalance("BUSD", 30.2m, 3.2m, 1.5m, 7.2m, 1625474304766));
         deserialized.Positions.Has(1);
-        deserialized.Positions
-            .ElementAt(0)
+        deserialized
+            .Positions.ElementAt(0)
             .IsEqual(
                 new AccountResponsePosition(
                     "BTCUSDT",

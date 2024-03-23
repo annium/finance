@@ -29,8 +29,8 @@ using Annium.Serialization.Abstractions;
 using Annium.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
-using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 using static System.Net.Mime.MediaTypeNames;
+using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
 

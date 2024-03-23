@@ -71,12 +71,12 @@ internal class UserProvider : UserProviderBase, IUserProvider
             return UserResult.From(result, default(UserContext));
         }
 
-        var assets = result.Data.Balances
-            .Select(x => new AssetModel(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin))
+        var assets = result
+            .Data.Balances.Select(x => new AssetModel(x.Asset, x.Free, x.InitialMargin + x.MaintenanceMargin))
             .ToArray();
 
-        var positions = result.Data.Positions
-            .Select(x => new PositionModel(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount))
+        var positions = result
+            .Data.Positions.Select(x => new PositionModel(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount))
             .ToArray();
 
         this.Trace("done");

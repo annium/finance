@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using static Annium.Finance.Providers.Abstractions.Domain.Enums.OrderType;
 using static Annium.Finance.Providers.Abstractions.Domain.Enums.OrderStatus;
+using static Annium.Finance.Providers.Abstractions.Domain.Enums.OrderType;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Extensions;
 

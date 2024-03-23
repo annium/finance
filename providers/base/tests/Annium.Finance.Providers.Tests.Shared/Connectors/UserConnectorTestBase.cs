@@ -80,12 +80,12 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         Connector = userConnectorRef.Value;
 
         this.Trace("subscribe to connector data");
-        Disposable += Connector.Assets
-            .Where(x => x.Type is ChangeEventType.Init)
+        Disposable += Connector
+            .Assets.Where(x => x.Type is ChangeEventType.Init)
             .SelectMany(x => x.Items)
             .Subscribe(_assets.Enqueue);
-        Disposable += Connector.Positions
-            .Where(x => x.Type is ChangeEventType.Init)
+        Disposable += Connector
+            .Positions.Where(x => x.Type is ChangeEventType.Init)
             .SelectMany(x => x.Items)
             .Subscribe(_positions.Enqueue);
         Disposable += Connector.Orders.Subscribe(x =>
