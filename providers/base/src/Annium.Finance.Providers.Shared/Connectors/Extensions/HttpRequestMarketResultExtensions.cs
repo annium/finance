@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Net.Http;
@@ -10,12 +11,12 @@ public static class HttpRequestResultExtensions
 {
     public static async Task<MarketResult<TData?>> AsMarketResultAsync<TData, TError>(
         this IHttpRequest request,
-        TError defaultError,
+        Func<HttpFailureReason, HttpContent, Exception?, Task<TError>> getFailure,
         Func<TError, string> getError
     )
         where TData : class
     {
-        var response = await request.AsResponseAsync<TData, TError>(defaultError);
+        var response = await request.AsResponseAsync<TData, TError>(getFailure);
 
         return response.Data.Match<MarketResult<TData?>>(
             MarketResult.Ok!,
