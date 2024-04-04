@@ -181,6 +181,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
         var (startTime, endTime) = ResolveHistoryBounds(since);
         var start = startTime.ToUnixTimeMilliseconds();
         var end = endTime.ToUnixTimeMilliseconds();
+        string? fromOrder = null;
 
         while (start < end)
         {
@@ -208,7 +209,50 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             this.Trace("chunk done, {count} orders loaded, merge", chunkResult.Data.Count);
             MergeOrders(orders, chunkResult.Data);
+
+            if (chunkResult.Data.Count == OrderQueryLimit)
+            {
+                this.Trace("chunk limit reached, switch to cursor based load");
+                // this assumes, that orders are sorted!
+                fromOrder = chunkResult.Data.Last().Id;
+                break;
+            }
+
+            // update to load next interval
             start += OrderQueryWindow;
+        }
+
+        while (fromOrder is not null)
+        {
+            var chunkResult = await _getOrderRequestFactory
+                .New(Endpoints.GetHttpApi(settings.Environment))
+                .Get("/fapi/v1/allOrders")
+                .Param("symbol", symbol)
+                .Param("limit", OrderQueryLimit)
+                .Param("orderId", fromOrder)
+                .ReceiveWindow()
+                .Sign(signatureService)
+                .WithRateDelay1M()
+                .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+                .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
+
+            if (chunkResult.IsFailure)
+            {
+                this.Error("failure: {result}", chunkResult);
+
+                return chunkResult;
+            }
+
+            var chunkData = chunkResult.Data.Where(x => x.CreatedAt <= end).ToArray();
+            this.Trace("chunk done, {count} orders loaded, merge", chunkData.Length);
+            MergeOrders(orders, chunkData);
+
+            if (chunkData.Length == OrderQueryLimit)
+                // update to load next chunk if limit is reached by related orders
+                fromOrder = chunkData.LastOrDefault()?.Id;
+            else
+                // break - all related orders loaded
+                break;
         }
 
         this.Trace("done, {count} orders loaded", orders.Count);
@@ -243,7 +287,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             return UserResult.From(result, default(IReadOnlyCollection<TradeModel>));
         }
 
-        this.Trace("done, {count} orders loaded", result.Data.Count);
+        this.Trace("done, {count} trades loaded", result.Data.Count);
 
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(result.Data);
     }
@@ -261,6 +305,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
         var (startTime, endTime) = ResolveHistoryBounds(since);
         var start = startTime.ToUnixTimeMilliseconds();
         var end = endTime.ToUnixTimeMilliseconds();
+        string? fromTrade = null;
 
         while (start < end)
         {
@@ -287,9 +332,51 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             this.Trace("chunk done, {count} trades loaded, merge", chunkResult.Data.Count);
             MergeTrades(trades, chunkResult.Data);
+
+            if (chunkResult.Data.Count == TradeQueryLimit)
+            {
+                this.Trace("chunk limit reached, switch to cursor based load");
+                // this assumes, that trades are sorted!
+                fromTrade = chunkResult.Data.Last().Id;
+                break;
+            }
+
+            // update to load next interval
             start += TradeQueryWindow;
         }
 
+        while (fromTrade is not null)
+        {
+            var chunkResult = await _getTradeRequestFactory
+                .New(Endpoints.GetHttpApi(settings.Environment))
+                .Get("/fapi/v1/userTrades")
+                .Param("symbol", symbol)
+                .Param("limit", TradeQueryLimit)
+                .Param("fromId", fromTrade)
+                .ReceiveWindow()
+                .Sign(signatureService)
+                .WithRateDelay1M()
+                .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
+                .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
+
+            if (chunkResult.IsFailure)
+            {
+                this.Error("failure: {result}", chunkResult);
+
+                return chunkResult;
+            }
+
+            var chunkData = chunkResult.Data.Where(x => x.Moment <= end).ToArray();
+            this.Trace("chunk done, {count} trades loaded, merge", chunkData.Length);
+            MergeTrades(trades, chunkData);
+
+            if (chunkData.Length == TradeQueryLimit)
+                // update to load next chunk if limit is reached by related trades
+                fromTrade = chunkData.LastOrDefault()?.Id;
+            else
+                // break - all related orders loaded
+                break;
+        }
         this.Trace("done, {count} trades loaded", trades.Count);
 
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);
