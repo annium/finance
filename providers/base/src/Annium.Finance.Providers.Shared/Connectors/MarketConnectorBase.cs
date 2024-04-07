@@ -63,11 +63,11 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 
     public async ValueTask DisposeAsync()
     {
-        this.Trace("start");
+        this.Trace("{settings} start", _settings);
 
         await Disposable.DisposeAsync();
 
-        this.Trace("done");
+        this.Trace("{settings} done", _settings);
     }
 
     protected void ScheduleSync(
@@ -75,18 +75,18 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         IReadOnlyCollection<InstrumentModel> instruments
     )
     {
-        this.Trace("start");
+        this.Trace("{settings} start", _settings);
 
         var scheduled = _executor.TrySchedule(async () =>
         {
-            this.Trace("start sync");
+            this.Trace("{settings} start sync", _settings);
             Resources = resources;
             Instruments = instruments;
             await OnSync(_settings, resources, instruments);
-            this.Trace("done sync");
+            this.Trace("{settings} done sync", _settings);
         });
 
-        this.Trace("done, result: {result}", scheduled);
+        this.Trace("{settings} done, result: {result}", _settings, scheduled);
     }
 
     private void HandleStatusChanged(ConnectorStatus status)

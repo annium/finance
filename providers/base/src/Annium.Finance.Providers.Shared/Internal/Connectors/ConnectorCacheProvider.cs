@@ -43,6 +43,8 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
         this.Trace("{key} - init connector for {settings}", providerKey, settings);
         await entry.Connector.InitAsync(); // this must not be called twice by design
 
+        this.Trace("{key} - created for {settings}", providerKey, settings);
+
         return entry.Connector;
     }
 
@@ -50,17 +52,17 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
     {
         var providerKey = settings.GetProviderKey();
 
-        this.Trace("resolve {key} entry for {settings}", providerKey, settings);
+        this.Trace("{key} - resolve entry for {settings}", providerKey, settings);
         if (!_scopes.TryGetValue(settings, out var entry))
         {
-            this.Warn("resolved no {key} entry for {settings}", providerKey, settings);
+            this.Warn("{key} - resolved no entry for {settings}", providerKey, settings);
             return;
         }
 
-        this.Trace("dispose {key} entry for {settings}", providerKey, settings);
+        this.Trace("{key} - dispose entry for {settings}", providerKey, settings);
         await entry.DisposeAsync();
 
-        this.Trace("resolved {key} entry for {settings}", providerKey, settings);
+        this.Trace("{key} - disposed entry for {settings}", providerKey, settings);
     }
 
     protected abstract void Inject(IServiceProvider scopeProvider, TSettings settings);
@@ -69,13 +71,13 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
     {
         var providerKey = ProviderKey.Create(settings.Provider, settings.Environment);
 
-        this.Trace("create new {key} scope for {settings}", providerKey, settings);
+        this.Trace("{key} - create new scope for {settings}", providerKey, settings);
         var scope = _sp.CreateAsyncScope();
 
         this.Trace("{key} - provide {settings} into scope", providerKey, settings);
         Inject(scope.ServiceProvider, settings);
 
-        this.Trace("create new {key} connector for {settings}", providerKey, settings);
+        this.Trace("{key} - create new connector for {settings}", providerKey, settings);
         var factory = _sp.ResolveKeyed<Func<IServiceProvider, TConnector>>(providerKey);
         var connector = factory(scope.ServiceProvider);
 

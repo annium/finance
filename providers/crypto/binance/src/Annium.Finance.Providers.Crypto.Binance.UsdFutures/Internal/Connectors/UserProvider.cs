@@ -50,8 +50,6 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
     public async Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
 
         var result = await _getAccountRequestFactory
@@ -79,15 +77,11 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .Data.Positions.Select(x => new PositionModel(x.Symbol, x.Orientation, x.MarginType, x.Leverage, x.Amount))
             .ToArray();
 
-        this.Trace("done");
-
         return UserResult.Ok<UserContext?>(new UserContext(assets, positions));
     }
 
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings)
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
 
         var result = await _getOrderRequestFactory
@@ -107,7 +101,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
         }
 
-        this.Trace("done");
+        this.Trace("done, {count} orders loaded", result.Data.Count);
 
         return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(result.Data);
     }
@@ -141,8 +135,6 @@ internal class UserProvider : UserProviderBase, IUserProvider
         string symbol
     )
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
 
         var result = await _getOrderRequestFactory
@@ -174,8 +166,6 @@ internal class UserProvider : UserProviderBase, IUserProvider
         long since
     )
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
         var orders = new Dictionary<string, OrderModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
@@ -212,9 +202,9 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.Data.Count == OrderQueryLimit)
             {
-                this.Trace("chunk limit reached, switch to cursor based load");
                 // this assumes, that orders are sorted!
                 fromOrder = chunkResult.Data.Last().Id;
+                this.Trace<string?>("chunk limit reached, switch to cursor based load from {orderId}", fromOrder);
                 break;
             }
 
@@ -265,8 +255,6 @@ internal class UserProvider : UserProviderBase, IUserProvider
         string symbol
     )
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
 
         var result = await _getTradeRequestFactory
@@ -298,8 +286,6 @@ internal class UserProvider : UserProviderBase, IUserProvider
         long since
     )
     {
-        this.Trace("start");
-
         var signatureService = GetSignatureService(settings);
         var trades = new Dictionary<string, TradeModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
@@ -335,9 +321,9 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.Data.Count == TradeQueryLimit)
             {
-                this.Trace("chunk limit reached, switch to cursor based load");
                 // this assumes, that trades are sorted!
                 fromTrade = chunkResult.Data.Last().Id;
+                this.Trace<string?>("chunk limit reached, switch to cursor based load from trade {tradeId}", fromTrade);
                 break;
             }
 
@@ -377,6 +363,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 // break - all related orders loaded
                 break;
         }
+
         this.Trace("done, {count} trades loaded", trades.Count);
 
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);

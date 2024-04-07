@@ -122,11 +122,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {position} -> {leverage} - not connected", position, leverage);
+            this.Warn("{id} skip for {position} -> {leverage} - not connected", Id, position, leverage);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
-        this.Trace("send request");
         var result = await _setLeverageRequestFactory
             .New(_config.HttpApi)
             .Post("/fapi/v1/leverage")
@@ -140,8 +139,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         HandleTradeResult(result.IsSuccess);
 
-        this.Trace("done");
-
         return UserResult.Ok();
     }
 
@@ -149,18 +146,17 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {request} - not connected", request);
+            this.Warn("{id} skip for {request} - not connected", Id, request);
             return UserResult.New(UserOperationStatus.NotConnected, default(OrderModel));
         }
 
         var queryResult = _queryProcessor.BuildInitOrderQuery(request);
         if (queryResult.IsFailure)
         {
-            this.Trace("query processing failed: {result}", queryResult);
+            this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
         }
 
-        this.Trace("send request");
         var result = await _initOrderRequestFactory
             .New(_config.HttpApi)
             .Post("/fapi/v1/order")
@@ -173,8 +169,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         HandleTradeResult(result.IsSuccess);
 
-        this.Trace("done");
-
         return result;
     }
 
@@ -182,7 +176,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {request} - not connected", request);
+            this.Warn("{id} skip for {request} - not connected", Id, request);
             return UserResult.New(UserOperationStatus.NotConnected, default(OrderModel));
         }
 
@@ -191,17 +185,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         {
             // try cancel order
             var order = request.Order;
-            this.Trace("try cancel order {order}", order);
             var cancelRequest = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
             var cancelResult = await CancelOrder(cancelRequest);
             if (cancelResult.IsFailure)
             {
-                this.Trace("cancel of order {order} failed: {result}", order, cancelResult);
+                this.Warn("{id} cancel of order {order} failed: {result}", Id, order, cancelResult);
                 return UserResult.From(cancelResult, default(OrderModel));
             }
 
             var initRequest = request.ToInitOrderRequest();
-            this.Trace("init new order {request}", initRequest);
             var initResult = await InitOrder(initRequest);
 
             return initResult;
@@ -210,11 +202,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var queryResult = _queryProcessor.BuildModifyOrderQuery(request);
         if (queryResult.IsFailure)
         {
-            this.Trace("query processing failed: {result}", queryResult);
+            this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
         }
 
-        this.Trace("send request");
         var result = await _modifyOrderRequestFactory
             .New(_config.HttpApi)
             .Put("/fapi/v1/order")
@@ -227,8 +218,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         HandleTradeResult(result.IsSuccess);
 
-        this.Trace("done");
-
         return result;
     }
 
@@ -236,18 +225,17 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace("skip for {order} - not connected", request);
+            this.Warn("{id} skip for {order} - not connected", Id, request);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
         var queryResult = _queryProcessor.BuildCancelOrderQuery(request);
         if (queryResult.IsFailure)
         {
-            this.Trace("query processing failed: {result}", queryResult);
+            this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);
         }
 
-        this.Trace("send request");
         var result = await _cancelOrderRequestFactory
             .New(_config.HttpApi)
             .Delete("/fapi/v1/order")
@@ -260,8 +248,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         HandleTradeResult(result.IsSuccess);
 
-        this.Trace("done");
-
         return UserResult.From(result);
     }
 
@@ -269,18 +255,17 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Trace<string>("skip for {symbol} - not connected", symbol);
+            this.Warn<string>("{id} skip for {symbol} - not connected", Id, symbol);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
         var queryResult = _queryProcessor.BuildCancelAllOrdersQuery(symbol);
         if (queryResult.IsFailure)
         {
-            this.Trace("query processing failed: {result}", queryResult);
+            this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);
         }
 
-        this.Trace("send request");
         var result = await _cancelAllOrdersRequestFactory
             .New(_config.HttpApi)
             .Delete("/fapi/v1/allOpenOrders")
@@ -293,19 +278,16 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         HandleTradeResult(result.IsSuccess);
 
-        this.Trace("done");
-
         return UserResult.From(result);
     }
 
     private void HandleTradeResult(bool isSuccess)
     {
-        this.Trace("request account load");
         _contextLoader.Request();
 
         if (!isSuccess)
         {
-            this.Trace("request orders load");
+            this.Trace<string>("{id} trade failed, request orders load", Id);
             _ordersLoader.Request();
         }
     }
@@ -325,20 +307,14 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrders(CancellationToken ct)
     {
-        this.Trace("start");
         var result = await UserProvider.LoadOpenOrdersAsync(Settings);
-        this.Trace("done");
 
         return result;
     }
 
     private void HandleOrders(IReadOnlyCollection<OrderModel> orders)
     {
-        this.Trace("start");
-
         OrderWriter.Write(ChangeEvent.Init(orders));
-
-        this.Trace("done");
     }
 
     private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTrades(
@@ -347,57 +323,47 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         CancellationToken ct
     )
     {
-        this.Trace("start");
         var result = await UserProvider.LoadTradesAsync(Settings, symbol, since);
-        this.Trace("done");
 
         return result;
     }
 
     private long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeModel> trades)
     {
-        this.Trace("start");
         var result = trades.Select(x => x.Moment).MaxBy(x => x);
-        this.Trace("done");
 
         return result;
     }
 
     private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeModel> items)
     {
-        this.Trace("start");
-
         foreach (var item in items)
             TradeWriter.Write(item);
-
-        this.Trace("done");
     }
 
     private void HandleConnected()
     {
-        this.Trace("start");
+        this.Trace<string>("{id} start", Id);
 
         _contextLoader.Start(true);
         _ordersLoader.Start(true);
 
-        this.Trace("done");
+        this.Trace<string>("{id} done", Id);
     }
 
     private void HandleDisconnected()
     {
-        this.Trace("start");
+        this.Trace<string>("{id} start", Id);
 
         _contextLoader.Stop();
         _ordersLoader.Stop();
 
-        this.Trace("done");
+        this.Trace<string>("{id} done", Id);
     }
 
     private void HandleMessage(ReadOnlyMemory<byte> data)
     {
-        this.Trace("start");
-
-        this.Trace<string>("handle {msg}", Encoding.UTF8.GetString(data.Span));
+        this.Trace<string, string>("{id} handle {msg}", Id, Encoding.UTF8.GetString(data.Span));
         // account info in event is almost useless (and position info lacks leverage value), so request account reload
         _contextLoader.Request();
 
@@ -405,14 +371,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         var orderUpdate = _orderUpdateEventSerializer.Deserialize<OrderUpdateEvent?>(data);
         if (orderUpdate is not null)
             HandleOrderUpdate(orderUpdate);
-
-        this.Trace("done");
     }
 
     private void HandleOrderUpdate(OrderUpdateEvent e)
     {
-        this.Trace("start");
-
         if (e.Status is OrderStatus.PartiallyFilled or OrderStatus.Filled)
         {
             // as far as pnl is not available here - request reload by http
@@ -442,7 +404,5 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             : ChangeEvent.Delete(order);
 
         OrderWriter.Write(item);
-
-        this.Trace("done");
     }
 }

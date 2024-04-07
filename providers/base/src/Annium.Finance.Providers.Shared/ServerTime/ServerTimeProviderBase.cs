@@ -39,7 +39,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         _cts.Cancel();
         _cts.Dispose();
 
-        this.Trace("start");
+        this.Trace("done");
     }
 
     protected abstract Task<MarketResult<long>> LoadAsync(CancellationToken ct);

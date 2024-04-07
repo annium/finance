@@ -25,6 +25,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     {
         return Task.CompletedTask;
     };
+    protected readonly string Id;
     protected readonly UserSettings Settings;
     protected readonly IUserProvider UserProvider;
     protected readonly ChannelWriter<ChangeEvent<AssetModel>> AssetWriter;
@@ -51,6 +52,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
+        Id = $"{settings.Provider}[{settings.Environment}]{settings.Key[..7]}";
         Settings = settings;
         UserProvider = userProvider;
 
@@ -112,34 +114,34 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     public void Sync()
     {
-        this.Trace("schedule sync");
+        this.Trace<string>("{id} schedule sync", Id);
         var scheduled = _executor.TrySchedule(async () =>
         {
-            this.Trace("unsubscribe readers");
+            this.Trace<string>("{id} unsubscribe readers", Id);
             UnsubscribeReaders();
 
-            this.Trace("sync start");
+            this.Trace<string>("{id} sync start", Id);
             await OnSync(Settings, UserProvider);
-            this.Trace("sync done");
+            this.Trace<string>("{id} sync done", Id);
 
-            this.Trace("subscribe readers");
+            this.Trace<string>("{id} subscribe readers", Id);
             SubscribeReaders();
 
-            this.Trace("notify {status} status", ConnectorStatus.Connected);
+            this.Trace("{id} notify {status} status", Id, ConnectorStatus.Connected);
             Status = ConnectorStatus.Connected;
             OnStatusChanged(ConnectorStatus.Connected);
 
-            this.Trace("done sync");
+            this.Trace<string>("{id} done sync", Id);
         });
 
-        this.Trace("done, result: {result}", scheduled);
+        this.Trace("{id} done, result: {result}", Id, scheduled);
     }
 
     private void HandleStatusChanged(ConnectorStatus status)
     {
         if (status is not ConnectorStatus.Connected)
         {
-            this.Trace("notify {status} status", status);
+            this.Trace("{id} notify {status} status", Id, status);
             Status = status;
             OnStatusChanged(status);
             return;

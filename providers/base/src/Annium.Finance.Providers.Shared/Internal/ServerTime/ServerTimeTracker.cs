@@ -32,7 +32,7 @@ internal class ServerTimeTracker : IServerTimeTracker, IDisposable, ILogSubject
 
         _statusReporter.Disconnected();
 
-        this.Trace("start");
+        this.Trace("done");
     }
 
     private void HandleProviderStateChanged(bool state)
