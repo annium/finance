@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Net.Http;
@@ -11,7 +10,7 @@ public static class HttpRequestUserResultExtensions
 {
     public static async Task<UserResult<TData?>> AsUserResultAsync<TData, TError>(
         this IHttpRequest request,
-        Func<HttpFailureReason, HttpContent, Exception?, Task<TError>> getFailure,
+        Func<HttpFailureReason, IHttpResponse, Exception?, Task<TError>> getFailure,
         Func<TError, UserOperationStatus?> getErrorStatus,
         Func<TError, string> getError
     )

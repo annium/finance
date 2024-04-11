@@ -21,10 +21,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public IObservable<TradeModel> Trades { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
-    public event Func<UserSettings, IUserProvider, Task> OnSync = delegate
-    {
-        return Task.CompletedTask;
-    };
+    public event Func<UserSettings, IUserProvider, Task> OnSync = delegate { return Task.CompletedTask; };
     protected readonly string Id;
     protected readonly UserSettings Settings;
     protected readonly IUserProvider UserProvider;
@@ -157,10 +154,10 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     private void SubscribeReaders()
     {
-        _sourceSubscriptions += _assetSource.Pipe(_assetTarget);
-        _sourceSubscriptions += _positionSource.Pipe(_positionTarget);
-        _sourceSubscriptions += _orderSource.Pipe(_orderTarget);
-        _sourceSubscriptions += _tradeSource.Pipe(_tradeTarget);
+        _sourceSubscriptions += _assetSource.Pipe(_assetTarget, Logger);
+        _sourceSubscriptions += _positionSource.Pipe(_positionTarget, Logger);
+        _sourceSubscriptions += _orderSource.Pipe(_orderTarget, Logger);
+        _sourceSubscriptions += _tradeSource.Pipe(_tradeTarget, Logger);
     }
 
     private void UnsubscribeReaders()
