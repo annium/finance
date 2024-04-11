@@ -21,7 +21,10 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public IObservable<TradeModel> Trades { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
-    public event Func<UserSettings, IUserProvider, Task> OnSync = delegate { return Task.CompletedTask; };
+    public event Func<UserSettings, IUserProvider, Task> OnSync = delegate
+    {
+        return Task.CompletedTask;
+    };
     protected readonly string Id;
     protected readonly UserSettings Settings;
     protected readonly IUserProvider UserProvider;
