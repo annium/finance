@@ -12,9 +12,7 @@ public class RateLimitsConverter : JsonConverter<RateLimits?>
     public override RateLimits? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
-        {
-            throw new JsonException("Read failed");
-        }
+            throw new JsonException($"Expected {JsonTokenType.StartArray}, got {reader.TokenType}");
 
         var currentDepth = reader.CurrentDepth;
 

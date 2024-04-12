@@ -11,9 +11,7 @@ internal class LeverageResponseConverter : JsonConverter<LeverageResponse>
     public override LeverageResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException("Read failed");
-        }
+            throw new JsonException($"Expected {JsonTokenType.StartObject}, got {reader.TokenType}");
 
         var currentDepth = reader.CurrentDepth;
 

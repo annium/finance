@@ -17,9 +17,7 @@ internal class BalanceAndPositionUpdateEventPositionConverter : JsonConverter<Ba
     )
     {
         if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException("Read failed");
-        }
+            throw new JsonException($"Expected {JsonTokenType.StartObject}, got {reader.TokenType}");
 
         var currentDepth = reader.CurrentDepth;
 
