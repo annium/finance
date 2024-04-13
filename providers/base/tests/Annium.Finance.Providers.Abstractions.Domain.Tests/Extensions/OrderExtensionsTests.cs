@@ -14,10 +14,10 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).IsActive().IsTrue();
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).IsActive().IsTrue();
-        position.AddLimitBuyOrder(2, 1).Fill().IsActive().IsFalse();
-        position.AddLimitBuyOrder(2, 1).Cancel().IsActive().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Data.IsActive().IsTrue();
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.IsActive().IsTrue();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsActive().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Cancel().Data.IsActive().IsFalse();
     }
 
     [Fact]
@@ -27,10 +27,10 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).IsInactive().IsFalse();
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).IsInactive().IsFalse();
-        position.AddLimitBuyOrder(2, 1).Fill().IsInactive().IsTrue();
-        position.AddLimitBuyOrder(2, 1).Cancel().IsInactive().IsTrue();
+        position.AddLimitBuyOrder(2, 1).Data.IsInactive().IsFalse();
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.IsInactive().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsInactive().IsTrue();
+        position.AddLimitBuyOrder(2, 1).Cancel().Data.IsInactive().IsTrue();
     }
 
     [Fact]
@@ -40,9 +40,9 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().IsImmediate().IsTrue();
-        position.AddStopLossMarketSellOrder(1, 0.5m).IsImmediate().IsFalse();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).IsImmediate().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsImmediate().IsTrue();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsImmediate().IsFalse();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsImmediate().IsFalse();
     }
 
     [Fact]
@@ -52,9 +52,9 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().IsLimit().IsTrue();
-        position.AddStopLossMarketSellOrder(1, 0.5m).IsLimit().IsFalse();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).IsLimit().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLimit().IsFalse();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
     }
 
     [Fact]
@@ -64,9 +64,9 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().IsLimit().IsTrue();
-        position.AddStopLossMarketSellOrder(1, 0.5m).IsLimit().IsFalse();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).IsLimit().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLimit().IsFalse();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
     }
 
     [Fact]
@@ -76,9 +76,9 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().IsMarket().IsFalse();
-        position.AddStopLossMarketSellOrder(1, 0.5m).IsMarket().IsTrue();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).IsMarket().IsTrue();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsMarket().IsFalse();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsMarket().IsTrue();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsMarket().IsTrue();
     }
 
     [Fact]
@@ -88,10 +88,10 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).OpeningQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).OpeningQty().Is(1);
-        position.AddLimitBuyOrder(2, 1).Fill().OpeningQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().OpeningQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).Data.OpeningQty().Is(2);
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.OpeningQty().Is(1);
+        position.AddLimitBuyOrder(2, 1).Fill().Data.OpeningQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.OpeningQty().Is(0);
     }
 
     [Fact]
@@ -101,10 +101,10 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).Fill().PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().PotentialQty().Is(0.5m);
+        position.AddLimitBuyOrder(2, 1).Data.PotentialQty().Is(2);
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.PotentialQty().Is(2);
+        position.AddLimitBuyOrder(2, 1).Fill().Data.PotentialQty().Is(2);
+        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.PotentialQty().Is(0.5m);
     }
 
     [Fact]
@@ -114,9 +114,9 @@ public class OrderExtensionsTests
         var position = Helper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).Fill().CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().CancellableQty().Is(1.5m);
+        position.AddLimitBuyOrder(2, 1).Data.CancellableQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.CancellableQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).Fill().Data.CancellableQty().Is(0);
+        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.CancellableQty().Is(1.5m);
     }
 }

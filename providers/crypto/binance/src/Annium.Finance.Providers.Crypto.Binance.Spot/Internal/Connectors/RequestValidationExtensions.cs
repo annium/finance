@@ -1,5 +1,4 @@
-﻿using System;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
+﻿using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using static Annium.Finance.Providers.Shared.Services.Validation;
@@ -48,7 +47,7 @@ internal static class RequestValidationExtensions
                     ?? PositivePrice(request)
                     ?? PositiveTriggerPrice(request)
                     ?? UserResult.Ok(),
-            _ => throw new InvalidOperationException($"Unexpected order type: {request.Type}")
+            _ => UserResult.New(UserOperationStatus.BadRequest, $"Unexpected order type: {request.Type}")
         };
     }
 }

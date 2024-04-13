@@ -13,6 +13,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Annium.Core.Mapper" Version="0.1.0" />
+        <PackageReference Include="Annium.Data.Operations" Version="0.1.0" />
         <PackageReference Include="NodaTime" Version="3.1.10" />
     </ItemGroup>
 </Project>

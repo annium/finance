@@ -1,7 +1,6 @@
-using System;
 using System.Runtime.CompilerServices;
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using OneOf;
 using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
@@ -9,7 +8,8 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tools;
 public static class PositionHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OneOf<PositionState, Exception> ResolveState(
+    public static IResult<PositionState> ResolveState<T>(
+        T subject,
         decimal totalQty,
         decimal openingQty,
         decimal openedQty,
@@ -17,25 +17,35 @@ public static class PositionHelper
         decimal closedQty
     )
     {
-        EnsureNonNegative(totalQty);
-        EnsureNonNegative(openingQty);
-        EnsureNonNegative(openedQty);
-        EnsureNonNegative(closingQty);
-        EnsureNonNegative(closedQty);
+        var result = Result.New(Blank);
+        CheckNonNegative(subject, totalQty, result);
+        CheckNonNegative(subject, openingQty, result);
+        CheckNonNegative(subject, openedQty, result);
+        CheckNonNegative(subject, closingQty, result);
+        CheckNonNegative(subject, closedQty, result);
+
+        if (result.HasErrors)
+            return result;
 
         if (openingQty + openedQty > totalQty)
-            return new InvalidOperationException(
-                $"Too much opens: openingQty {openingQty} + openedQty {openedQty} > TotalQty {totalQty}."
+        {
+            result.Error(
+                $"{subject} has too much opens: openingQty {openingQty} + openedQty {openedQty} > TotalQty {totalQty}."
             );
+            return result;
+        }
 
         if (closingQty + closedQty > openingQty + openedQty)
-            return new InvalidOperationException(
-                $"Too much closes: closingQty {closingQty} + closedQty {closedQty} > openingQty {openingQty} + openedQty {openedQty}."
+        {
+            result.Error(
+                $"{subject} has too much closes: closingQty {closingQty} + closedQty {closedQty} > openingQty {openingQty} + openedQty {openedQty}."
             );
+            return result;
+        }
 
-        // total and others are 0
+        // total and others are 0 - return default blank value
         if (totalQty == 0m)
-            return Blank;
+            return result;
 
         // total > 0
 
@@ -54,34 +64,48 @@ public static class PositionHelper
             state |= Closed;
 
         if (state == default)
-            return Canceled;
+            return Result.New(Canceled);
 
-        return state == (Opened | Closed) && openedQty == closedQty ? Filled : state;
+        var resultState = state == (Opened | Closed) && openedQty == closedQty ? Filled : state;
+
+        return Result.New(resultState);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal ResolvePrice(
+    public static IResult<decimal> ResolvePrice<T>(
+        T subject,
         decimal currentQty,
         decimal currentPrice,
         decimal executedQty,
         decimal executedPrice
     )
     {
-        EnsureNonNegative(currentQty);
-        EnsureNonNegative(currentPrice);
-        EnsureNonNegative(executedQty);
-        EnsureNonNegative(executedPrice);
+        var result = Result.New(0m);
+        CheckNonNegative(subject, currentQty, result);
+        CheckNonNegative(subject, currentPrice, result);
+        CheckNonNegative(subject, executedQty, result);
+        CheckNonNegative(subject, executedPrice, result);
+
+        if (result.HasErrors)
+            return result;
 
         var totalQty = currentQty + executedQty;
         if (totalQty == 0)
-            return 0;
+            return result;
 
-        return (currentQty * currentPrice + executedQty * executedPrice) / totalQty;
+        var price = (currentQty * currentPrice + executedQty * executedPrice) / totalQty;
+
+        return Result.New(price);
     }
 
-    private static void EnsureNonNegative(decimal value, [CallerArgumentExpression("value")] string ex = "")
+    private static void CheckNonNegative<TS, TR>(
+        TS subject,
+        decimal value,
+        IResult<TR> result,
+        [CallerArgumentExpression("value")] string ex = ""
+    )
     {
         if (value < 0)
-            throw new ArgumentOutOfRangeException($"{ex} must be >=0");
+            result.Error($"{subject} {ex} must be >=0");
     }
 }

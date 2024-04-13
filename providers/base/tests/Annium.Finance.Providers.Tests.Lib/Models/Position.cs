@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Tests.Lib.Models.Helpers;
@@ -32,8 +33,6 @@ public sealed record Position(
     public MarginType MarginType { get; private set; } = MarginType;
     public decimal Leverage { get; private set; } = Leverage;
     public bool IsActive => OrientationType is not null;
-    public Orientation Orientation =>
-        OrientationType ?? throw new InvalidOperationException($"Position {this} orientation is not set");
     public OrientationType? OrientationType { get; private set; }
     public long UpdatedAt { get; private set; } = UpdatedAt;
     public decimal TotalQty { get; private set; } = TotalQty;
@@ -52,10 +51,13 @@ public sealed record Position(
     private readonly decimal _borrowedPart = 1m - 1m / Leverage;
     private readonly List<Guid> _orders = new();
 
-    public Position AddOrder(Guid orderId, OrderSide side, decimal totalQty, long createdAt)
+    public void AddOrder(Guid orderId, OrderSide side, decimal totalQty, long createdAt, IResult<Order> result)
     {
         if (_orders.Contains(orderId))
-            throw new InvalidOperationException($"Order {orderId} is already tracked by position");
+        {
+            result.Error($"Position {this} already tracks order {orderId}");
+            return;
+        }
 
         _orders.Add(orderId);
 
@@ -71,11 +73,9 @@ public sealed record Position(
 
         SyncState(createdAt);
         // AssertValidity();
-
-        return this;
     }
 
-    public Position UpdateOrder(
+    public void UpdateOrder(
         Guid orderId,
         OrderSide side,
         decimal executedQty,
@@ -84,11 +84,15 @@ public sealed record Position(
         decimal fee,
         decimal prevExecutedQty,
         decimal prevFee,
-        long updatedAt
+        long updatedAt,
+        IResult<Order> result
     )
     {
         if (!_orders.Contains(orderId))
-            throw new InvalidOperationException($"Order {orderId} is not tracked by position");
+        {
+            result.Error($"Position {this} has not been tracking order {orderId}");
+            return;
+        }
 
         TrySetOrientation(side, executedQty);
 
@@ -115,11 +119,9 @@ public sealed record Position(
         SyncState(updatedAt);
         TryResetOrientation();
         // AssertValidity();
-
-        return this;
     }
 
-    public Position RemoveOrder(
+    public void RemoveOrder(
         Guid orderId,
         OrderSide side,
         decimal totalQty,
@@ -127,11 +129,15 @@ public sealed record Position(
         decimal executedQty,
         decimal executedPrice,
         decimal fee,
-        long updatedAt
+        long updatedAt,
+        IResult<Order> result
     )
     {
         if (!_orders.Remove(orderId))
-            throw new InvalidOperationException($"Order {orderId} is not tracked by position");
+        {
+            result.Error($"Position {this} has not been tracking order {orderId}");
+            return;
+        }
 
         if (IsOpenOrder(side))
         {
@@ -152,8 +158,6 @@ public sealed record Position(
         SyncState(updatedAt);
         TryResetOrientation();
         // AssertValidity();
-
-        return this;
     }
 
     public Position Update(MarginType marginType, decimal leverage)
@@ -206,5 +210,13 @@ public sealed record Position(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool IsOpenOrder(OrderSide side) => !IsActive || side == Orientation.OpenSide;
+    private bool IsOpenOrder(OrderSide side)
+    {
+        if (OrientationType is null)
+            return true;
+
+        return OrientationType is Abstractions.Domain.Enums.OrientationType.Long
+            ? side is OrderSide.Buy
+            : side is OrderSide.Sell;
+    }
 }

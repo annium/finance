@@ -1,4 +1,5 @@
 using System;
+using Annium.Data.Operations.Testing;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Lib;
@@ -16,271 +17,240 @@ public class OrderValidationExtensionsTests
     public void ValidateSide()
     {
         // arrange
-        var order = _position.AddLimitBuyOrder(2, 1).Fill();
+        var result = _position.AddLimitBuyOrder(2, 1).Fill();
+        result.HasNoErrors();
 
         // assert
-        order.ValidateSide(OrderSide.Buy);
-        Wrap.It(() => order.ValidateSide(OrderSide.Sell)).Throws<InvalidOperationException>();
+        result.ValidateSide(OrderSide.Buy);
+        result.HasNoErrors();
+        result.ValidateSide(OrderSide.Sell);
+        result.HasErrors();
+        result.PlainErrors.At(0).IsContaining($"not a {OrderSide.Sell}");
     }
 
     [Fact]
     public void ValidateIsActive()
     {
         // arrange
-        var activeOrder = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
-        var inactiveOrder = _position.AddLimitBuyOrder(2, 1).Cancel();
+        var activeResult = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
+        var inactiveResult = _position.AddLimitBuyOrder(2, 1).Cancel();
 
         // assert
-        activeOrder.ValidateIsActive();
-        Wrap.It(() => inactiveOrder.ValidateIsActive()).Throws<InvalidOperationException>();
+        activeResult.ValidateIsActive().HasNoErrors();
+        inactiveResult.ValidateIsActive().PlainErrors.At(0).IsContaining("is not Active");
     }
 
     [Fact]
     public void ValidateIsInactive()
     {
         // arrange
-        var activeOrder = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
-        var inactiveOrder = _position.AddLimitBuyOrder(2, 1).Cancel();
+        var activeResult = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
+        var inactiveResult = _position.AddLimitBuyOrder(2, 1).Cancel();
 
         // assert
-        inactiveOrder.ValidateIsInactive();
-        Wrap.It(() => activeOrder.ValidateIsInactive()).Throws<InvalidOperationException>();
+        inactiveResult.ValidateIsInactive();
+        activeResult.ValidateIsInactive().PlainErrors.At(0).IsContaining("is not Inactive");
     }
 
     [Fact]
     public void ValidateStatus()
     {
         // arrange
-        var order = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
+        var result = _position.AddLimitBuyOrder(2, 1).FillPartially(1);
 
         // assert
-        order.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled);
-        Wrap.It(() => order.ValidateStatus(OrderStatus.Filled, OrderStatus.Canceled))
-            .Throws<InvalidOperationException>();
+        result.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled);
+        result
+            .ValidateStatus(OrderStatus.Filled, OrderStatus.Canceled)
+            .PlainErrors.At(0)
+            .IsContaining($"is not {OrderStatus.Filled}, {OrderStatus.Canceled}");
     }
 
     [Fact]
     public void ValidateQtyAndPrice()
     {
         // assert - total qty
-        Wrap.It(() => _position.AddLimitBuyOrder(0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("total qty is invalid");
+        new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 0, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("total qty is invalid");
 
         // assert - level price
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.Limit,
-                        1,
-                        1,
-                        1,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("level price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.Market,
-                        1,
-                        1,
-                        1,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("level price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.TakeProfitMarket,
-                        1,
-                        0,
-                        0,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("level price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.StopLossMarket,
-                        1,
-                        0,
-                        0,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("level price is invalid");
+        new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("level price is invalid");
+
+        new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("level price is invalid");
+
+        new Order(
+            Guid.NewGuid(),
+            _position,
+            OrderSide.Buy,
+            OrderType.TakeProfitMarket,
+            1,
+            0,
+            0,
+            0,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            0
+        )
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("level price is invalid");
+
+        new Order(
+            Guid.NewGuid(),
+            _position,
+            OrderSide.Buy,
+            OrderType.StopLossMarket,
+            1,
+            0,
+            0,
+            0,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            0
+        )
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("level price is invalid");
 
         // assert - price
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.Limit,
-                        1,
-                        0,
-                        0,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("target price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.Market,
-                        1,
-                        1,
-                        0,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("target price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.TakeProfitMarket,
-                        1,
-                        1,
-                        1,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("target price is invalid");
-        Wrap.It(
-                () =>
-                    new Order(
-                        Guid.NewGuid(),
-                        _position,
-                        OrderSide.Buy,
-                        OrderType.StopLossMarket,
-                        1,
-                        1,
-                        1,
-                        0,
-                        OrderStatus.New,
-                        0,
-                        0,
-                        0,
-                        0
-                    ).ValidateQtyAndPrice()
-            )
-            .Throws<InvalidOperationException>()
-            .Reports("target price is invalid");
+
+        new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 0, 0, 0, OrderStatus.New, 0, 0, 0, 0)
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("target price is invalid");
+
+        new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 0, 0, OrderStatus.New, 0, 0, 0, 0)
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("target price is invalid");
+
+        new Order(
+            Guid.NewGuid(),
+            _position,
+            OrderSide.Buy,
+            OrderType.TakeProfitMarket,
+            1,
+            1,
+            1,
+            0,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            0
+        )
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("target price is invalid");
+
+        new Order(
+            Guid.NewGuid(),
+            _position,
+            OrderSide.Buy,
+            OrderType.StopLossMarket,
+            1,
+            1,
+            1,
+            0,
+            OrderStatus.New,
+            0,
+            0,
+            0,
+            0
+        )
+            .AsResult()
+            .ValidateQtyAndPrice()
+            .PlainErrors.At(0)
+            .IsContaining("target price is invalid");
 
         // assert - new executed qty & price
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.New, 1, 0, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.New, 0, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed price is invalid");
+        var result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.New, 1, 0, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.New, 0, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed price is invalid");
 
         // assert - partially filled executed qty & price
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.PartiallyFilled, 0, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.PartiallyFilled, 3, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.PartiallyFilled, 1, 0, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed price is invalid");
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.PartiallyFilled, 0, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.PartiallyFilled, 3, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.PartiallyFilled, 1, 0, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed price is invalid");
 
         // assert - filled executed qty & price
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Filled, 2, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Filled, 4, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Filled, 3, 0, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed price is invalid");
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Filled, 2, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Filled, 4, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Filled, 3, 0, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed price is invalid");
 
         // assert - canceled executed qty & price
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Canceled, 3, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed qty is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Canceled, 0, 1, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed price is invalid");
-        Wrap.It(() => _position.AddLimitBuyOrder(3, 2).Update(OrderStatus.Canceled, 1, 0, 0, 0))
-            .Throws<InvalidOperationException>()
-            .Reports("executed price is invalid");
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Canceled, 3, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Canceled, 0, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed price is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result = result.Data.Update(OrderStatus.Canceled, 1, 0, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed price is invalid");
     }
 
     [Fact]
     public void ValidateIsExecuted()
     {
         // arrange
-        var order = _position.AddLimitBuyOrder(2, 1);
+        var result = _position.AddLimitBuyOrder(2, 1);
 
         // assert
-        Wrap.It(() => order.ValidateIsExecuted()).Throws<InvalidOperationException>();
-        order.FillPartially(1).ValidateIsExecuted();
+        result.ValidateIsExecuted().PlainErrors.At(0).IsContaining("has not been executed");
+        result.FillPartially(1).ValidateIsExecuted();
     }
 }

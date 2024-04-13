@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 
@@ -8,207 +9,242 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Extensions;
 public static class OrderValidationExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateSide<TOrder>(this TOrder order, OrderSide side)
+    public static IResult<TOrder> ValidateSide<TOrder>(this IResult<TOrder> result, OrderSide side)
         where TOrder : IOrder
     {
-        if (order.Side != side)
-            throw new InvalidOperationException($"Order {order} is not a {side} order");
+        if (result.Data.Side != side)
+            result.Error($"Order {result.Data} is not a {side} order");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsImmediate<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsImmediate<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (!order.IsImmediate())
-            throw new InvalidOperationException($"Order {order} is not an immediate order");
+        if (!result.Data.IsImmediate())
+            result.Error($"Order {result.Data} is not an immediate order");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsLeveled<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsLeveled<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (!order.IsLeveled())
-            throw new InvalidOperationException($"Order {order} is not a leveled order");
+        if (!result.Data.IsLeveled())
+            result.Error($"Order {result.Data} is not a leveled order");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsLimit<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsLimit<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (!order.IsLimit())
-            throw new InvalidOperationException($"Order {order} is not a limit order");
+        if (!result.Data.IsLimit())
+            result.Error($"Order {result.Data} is not a limit order");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsMarket<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsMarket<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (!order.IsMarket())
-            throw new InvalidOperationException($"Order {order} is not a market order");
+        if (!result.Data.IsMarket())
+            result.Error($"Order {result.Data} is not a market order");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsActive<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsActive<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
-            throw new InvalidOperationException($"Order {order} is not Active");
+        if (result.Data.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
+            result.Error($"Order {result.Data} is not Active");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsInactive<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsInactive<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (order.Status is OrderStatus.New or OrderStatus.PartiallyFilled)
-            throw new InvalidOperationException($"Order {order} is not Inactive");
+        if (result.Data.Status is OrderStatus.New or OrderStatus.PartiallyFilled)
+            result.Error($"Order {result.Data} is not Inactive");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateStatus<TOrder>(this TOrder order, OrderStatus status)
+    public static IResult<TOrder> ValidateStatus<TOrder>(this IResult<TOrder> result, OrderStatus status)
         where TOrder : IOrder
     {
-        if (order.Status != status)
-            throw new InvalidOperationException($"Order {order} is not {status}");
+        if (result.Data.Status != status)
+            result.Error($"Order {result.Data} is not {status}");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateStatus<TOrder>(this TOrder order, params OrderStatus[] statuses)
+    public static IResult<TOrder> ValidateStatus<TOrder>(this IResult<TOrder> result, params OrderStatus[] statuses)
         where TOrder : IOrder
     {
-        if (!Array.Exists(statuses, x => x == order.Status))
-            throw new InvalidOperationException($"Order {order} is not {string.Join(", ", statuses)}");
+        if (!Array.Exists(statuses, x => x == result.Data.Status))
+            result.Error($"Order {result.Data} is not {string.Join(", ", statuses)}");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateQtyAndPrice<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateQtyAndPrice<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
+        var order = result.Data;
+
+        return result.ValidateQtyAndPrice(order.Status, order.ExecutedQty, order.ExecutedPrice);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IResult<TOrder> ValidateQtyAndPrice<TOrder>(
+        this IResult<TOrder> result,
+        OrderStatus status,
+        decimal executedQty,
+        decimal executedPrice
+    )
+        where TOrder : IOrder
+    {
+        var order = result.Data;
+
         if (order.TotalQty <= 0m)
-            throw new InvalidOperationException($"Order {order} total qty is invalid");
+        {
+            result.Error($"Order {order} total qty is invalid");
+            return result;
+        }
 
         // for immediate order - level price must be zero
         if (order.IsImmediate())
-            order.ValidateLevelPrice(PriceIsZero);
+            result.ValidateLevelPrice(PriceIsZero);
 
         // for leveled order - level price must be set
         if (order.IsLeveled())
-            order.ValidateLevelPrice(PriceIsAboveZero);
+            result.ValidateLevelPrice(PriceIsAboveZero);
 
         // for limit order - price must be set always,
         if (order.IsLimit())
-            order.ValidatePrice(PriceIsAboveZero);
+            result.ValidatePrice(PriceIsAboveZero);
 
         // for market order - price must be zero
         if (order.IsMarket())
-            order.ValidatePrice(PriceIsZero);
+            result.ValidatePrice(PriceIsZero);
 
-        return order.Status switch
+        return status switch
         {
-            OrderStatus.New => order.ValidateNewQtyAndPrice(),
-            OrderStatus.PartiallyFilled => order.ValidatePartiallyFilledQtyAndPrice(),
-            OrderStatus.Filled => order.ValidateFilledQtyAndPrice(),
-            OrderStatus.Canceled => order.ValidateCanceledQtyAndPrice(),
-            _ => throw new InvalidOperationException($"Order {order} has unexpected status")
+            OrderStatus.New => result.ValidateNewQtyAndPrice(executedQty, executedPrice),
+            OrderStatus.PartiallyFilled => result.ValidatePartiallyFilledQtyAndPrice(executedQty, executedPrice),
+            OrderStatus.Filled => result.ValidateFilledQtyAndPrice(executedQty, executedPrice),
+            OrderStatus.Canceled => result.ValidateCanceledQtyAndPrice(executedQty, executedPrice),
+            _ => result.Error($"Order {order} has unexpected status")
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOrder ValidateIsExecuted<TOrder>(this TOrder order)
+    public static IResult<TOrder> ValidateIsExecuted<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (order.ExecutedQty == 0m || order.ExecutedPrice == 0m)
-            throw new InvalidOperationException($"Order {order} has not been executed");
+        if (result.Data.ExecutedQty == 0m || result.Data.ExecutedPrice == 0m)
+            result.Error($"Order {result.Data} has not been executed");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TOrder ValidateNewQtyAndPrice<TOrder>(this TOrder order)
+    private static IResult<TOrder> ValidateNewQtyAndPrice<TOrder>(
+        this IResult<TOrder> result,
+        decimal executedQty,
+        decimal executedPrice
+    )
         where TOrder : IOrder
     {
-        if (order.ExecutedQty != 0m)
-            throw new InvalidOperationException($"Order {order} executed qty is invalid");
+        if (executedQty != 0m)
+            result.Error($"Order {result.Data} executed qty is invalid");
 
-        if (order.ExecutedPrice != 0m)
-            throw new InvalidOperationException($"Order {order} executed price is invalid");
+        if (executedPrice != 0m)
+            result.Error($"Order {result.Data} executed price is invalid");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TOrder ValidatePartiallyFilledQtyAndPrice<TOrder>(this TOrder order)
+    private static IResult<TOrder> ValidatePartiallyFilledQtyAndPrice<TOrder>(
+        this IResult<TOrder> result,
+        decimal executedQty,
+        decimal executedPrice
+    )
         where TOrder : IOrder
     {
-        if (order.ExecutedQty <= 0m || order.ExecutedQty >= order.TotalQty)
-            throw new InvalidOperationException($"Order {order} executed qty is invalid");
+        if (executedQty <= 0m || executedQty >= result.Data.TotalQty)
+            result.Error($"Order {result.Data} executed qty is invalid");
 
-        if (order.ExecutedPrice <= 0m)
-            throw new InvalidOperationException($"Order {order} executed price is invalid");
+        if (executedPrice <= 0m)
+            result.Error($"Order {result.Data} executed price is invalid");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TOrder ValidateFilledQtyAndPrice<TOrder>(this TOrder order)
+    private static IResult<TOrder> ValidateFilledQtyAndPrice<TOrder>(
+        this IResult<TOrder> result,
+        decimal executedQty,
+        decimal executedPrice
+    )
         where TOrder : IOrder
     {
-        if (order.ExecutedQty != order.TotalQty)
-            throw new InvalidOperationException($"Order {order} executed qty is invalid");
+        if (executedQty != result.Data.TotalQty)
+            result.Error($"Order {result.Data} executed qty is invalid");
 
-        if (order.ExecutedPrice <= 0m)
-            throw new InvalidOperationException($"Order {order} executed price is invalid");
+        if (executedPrice <= 0m)
+            result.Error($"Order {result.Data} executed price is invalid");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TOrder ValidateCanceledQtyAndPrice<TOrder>(this TOrder order)
+    private static IResult<TOrder> ValidateCanceledQtyAndPrice<TOrder>(
+        this IResult<TOrder> result,
+        decimal executedQty,
+        decimal executedPrice
+    )
         where TOrder : IOrder
     {
-        if (order.ExecutedQty < 0m || order.ExecutedQty >= order.TotalQty)
-            throw new InvalidOperationException($"Order {order} executed qty is invalid");
+        if (executedQty < 0m || executedQty >= result.Data.TotalQty)
+            result.Error($"Order {result.Data} executed qty is invalid");
 
-        if (order.ExecutedQty == 0 && order.ExecutedPrice != 0m)
-            throw new InvalidOperationException($"Order {order} executed price is invalid");
+        if (executedQty == 0 && executedPrice != 0m)
+            result.Error($"Order {result.Data} executed price is invalid");
 
-        if (order.ExecutedQty > 0 && order.ExecutedPrice <= 0m)
-            throw new InvalidOperationException($"Order {order} executed price is invalid");
+        if (executedQty > 0 && executedPrice <= 0m)
+            result.Error($"Order {result.Data} executed price is invalid");
 
-        return order;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ValidateLevelPrice<TOrder>(this TOrder order, Func<decimal, bool> validate)
+    private static void ValidateLevelPrice<TOrder>(this IResult<TOrder> result, Func<decimal, bool> validate)
         where TOrder : IOrder
     {
-        if (!validate(order.LevelPrice))
-            throw new InvalidOperationException($"Order {order} level price is invalid");
+        if (!validate(result.Data.LevelPrice))
+            result.Error($"Order {result.Data} level price is invalid");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ValidatePrice<TOrder>(this TOrder order, Func<decimal, bool> validate)
+    private static void ValidatePrice<TOrder>(this IResult<TOrder> result, Func<decimal, bool> validate)
         where TOrder : IOrder
     {
-        if (!validate(order.Price))
-            throw new InvalidOperationException($"Order {order} target price is invalid");
+        if (!validate(result.Data.Price))
+            result.Error($"Order {result.Data} target price is invalid");
     }
 
     private static readonly Func<decimal, bool> PriceIsZero = price => price == 0;

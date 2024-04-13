@@ -1,3 +1,4 @@
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Lib.Models;
@@ -6,63 +7,116 @@ namespace Annium.Finance.Providers.Tests.Lib;
 
 public static class OrderTestExtensions
 {
-    public static Order FillPartially(this Order order, decimal executedQty)
+    public static IResult<Order> FillPartially(this IResult<Order> result, decimal executedQty)
     {
-        order.ValidateIsLimit();
-        var qty = order.ExecutedQty + executedQty;
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(OrderStatus.PartiallyFilled, qty, order.Price, qty * order.Price.Fee(), 0);
+        var qty = result.Data.ExecutedQty + executedQty;
+
+        return result
+            .ValidateIsLimit()
+            .Join(
+                result.Data.Update(
+                    OrderStatus.PartiallyFilled,
+                    qty,
+                    result.Data.Price,
+                    qty * result.Data.Price.Fee(),
+                    0
+                )
+            );
     }
 
-    public static Order FillPartially(this Order order, decimal executedQty, decimal price)
+    public static IResult<Order> FillPartially(this IResult<Order> result, decimal executedQty, decimal price)
     {
-        order.ValidateIsMarket();
-        var qty = order.ExecutedQty + executedQty;
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(OrderStatus.PartiallyFilled, qty, price, qty * price.Fee(), 0);
+        var qty = result.Data.ExecutedQty + executedQty;
+
+        return result
+            .ValidateIsMarket()
+            .Join(result.Data.Update(OrderStatus.PartiallyFilled, qty, price, qty * price.Fee(), 0));
     }
 
-    public static Order Fill(this Order order)
+    public static IResult<Order> Fill(this IResult<Order> result)
     {
-        order.ValidateIsLimit();
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(OrderStatus.Filled, order.TotalQty, order.Price, order.TotalQty * order.Price.Fee(), 0);
+        return result
+            .ValidateIsLimit()
+            .Join(
+                result.Data.Update(
+                    OrderStatus.Filled,
+                    result.Data.TotalQty,
+                    result.Data.Price,
+                    result.Data.TotalQty * result.Data.Price.Fee(),
+                    0
+                )
+            );
     }
 
-    public static Order Fill(this Order order, decimal price)
+    public static IResult<Order> Fill(this IResult<Order> result, decimal price)
     {
-        order.ValidateIsMarket();
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(OrderStatus.Filled, order.TotalQty, price, order.TotalQty * price.Fee(), 0);
+        return result
+            .ValidateIsMarket()
+            .Join(
+                result.Data.Update(
+                    OrderStatus.Filled,
+                    result.Data.TotalQty,
+                    price,
+                    result.Data.TotalQty * price.Fee(),
+                    0
+                )
+            );
     }
 
-    public static Order Cancel(this Order order)
+    public static IResult<Order> Cancel(this IResult<Order> result)
     {
-        order.ValidateIsLimit();
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(
-            OrderStatus.Canceled,
-            order.ExecutedQty,
-            order.ExecutedQty == 0 ? 0 : order.Price,
-            order.Fee,
-            0
-        );
+        return result
+            .ValidateIsLimit()
+            .Join(
+                result.Data.Update(
+                    OrderStatus.Canceled,
+                    result.Data.ExecutedQty,
+                    result.Data.ExecutedQty == 0 ? 0 : result.Data.Price,
+                    result.Data.Fee,
+                    0
+                )
+            );
     }
 
-    public static Order Cancel(this Order order, decimal price)
+    public static IResult<Order> Cancel(this IResult<Order> result, decimal price)
     {
-        order.ValidateIsMarket();
+        if (result.HasErrors)
+            return result;
 
-        return order.Update(OrderStatus.Canceled, order.ExecutedQty, order.ExecutedQty == 0 ? 0 : price, order.Fee, 0);
+        return result
+            .ValidateIsMarket()
+            .Join(
+                result.Data.Update(
+                    OrderStatus.Canceled,
+                    result.Data.ExecutedQty,
+                    result.Data.ExecutedQty == 0 ? 0 : price,
+                    result.Data.Fee,
+                    0
+                )
+            );
     }
 
-    public static Order AddToPosition(this Order order)
+    public static IResult<Order> AddToPosition(this Order order)
     {
-        order.ValidateStatus(OrderStatus.New);
-        order.ValidateQtyAndPrice();
+        var result = order.AsResult().ValidateStatus(OrderStatus.New).ValidateQtyAndPrice();
 
-        order.Position.AddOrder(order.Id, order.Side, order.TotalQty, order.CreatedAt);
+        order.Position.AddOrder(order.Id, order.Side, order.TotalQty, order.CreatedAt, result);
 
-        return order;
+        return result;
     }
 }

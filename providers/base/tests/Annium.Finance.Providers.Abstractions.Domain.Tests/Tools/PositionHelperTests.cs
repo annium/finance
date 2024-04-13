@@ -10,47 +10,60 @@ public class PositionHelperTests
     [Fact]
     public void ResolveState_InvalidState_Fails()
     {
+        var subject = "demo";
+
         // assert
         // opening + opened is greater than total
-        ResolveState(10, 6, 5, 0, 0).AsT1.Message.Contains("Too much opens").IsTrue();
+        ResolveState(subject, 10, 6, 5, 0, 0).PlainErrors.At(0).Contains("Too much opens").IsTrue();
         // closing + closed is greater than opening + opened
-        ResolveState(10, 0, 10, 6, 5).AsT1.Message.Contains("Too much closes").IsTrue();
+        ResolveState(subject, 10, 0, 10, 6, 5).PlainErrors.At(0).Contains("Too much closes").IsTrue();
     }
 
     [Fact]
     public void ResolveState_Blank()
     {
+        var subject = "demo";
+
         // assert
-        ResolveState(0, 0, 0, 0, 0).Is(Blank);
+        ResolveState(subject, 0, 0, 0, 0, 0).Data.Is(Blank);
     }
 
     [Fact]
     public void ResolveState_Active()
     {
+        var subject = "demo";
+
         // assert
-        ResolveState(2, 1, 1, 1, 1).Is(Opening | Opened | Closing | Closed);
+        ResolveState(subject, 2, 1, 1, 1, 1).Data.Is(Opening | Opened | Closing | Closed);
     }
 
     [Fact]
     public void ResolveState_Filled()
     {
+        var subject = "demo";
+
         // assert
-        ResolveState(2, 0, 1, 0, 1).Is(Filled);
+        ResolveState(subject, 2, 0, 1, 0, 1).Data.Is(Filled);
     }
 
     [Fact]
     public void ResolveState_Canceled()
     {
+        var subject = "demo";
+
         // assert
-        ResolveState(2, 0, 0, 0, 0).Is(Canceled);
+        ResolveState(subject, 2, 0, 0, 0, 0).Data.Is(Canceled);
     }
 
     [Fact]
     public void ResolvePrice_Ok()
     {
+        var subject = "demo";
+
         // assert
-        ResolvePrice(0, 0, 0, 0).Is(0);
-        ResolvePrice(0, 0, 5, 20).Is(20);
-        ResolvePrice(5, 10, 15, 20).Is(17.5m);
+        ResolvePrice(subject, 0, 0, 0, 0).Data.Is(0);
+        ResolvePrice(subject, 0, 0, 5, 20).Data.Is(20);
+        ResolvePrice(subject, 5, 10, 15, 20).Data.Is(17.5m);
+        ResolvePrice(subject, -5, 10, 15, 20).PlainErrors.Has(1);
     }
 }

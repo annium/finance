@@ -152,6 +152,9 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 
     public void Request()
     {
+        if (_debounceTimer is null)
+            throw new InvalidOperationException("Debounce timer was not created (infinite period specified)");
+
         this.Trace("start");
 
         lock (_locker)
@@ -160,11 +163,6 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             {
                 this.Trace("can't request from {state} state", _state);
                 return;
-            }
-
-            if (_debounceTimer is null)
-            {
-                throw new InvalidOperationException("Debounce timer was not created (infinite period specified)");
             }
 
             this.Trace("request update on debounce timer");

@@ -1,4 +1,5 @@
 using System;
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
@@ -29,12 +30,30 @@ public sealed record Order(
     public decimal Fee { get; private set; } = Fee;
     public long UpdatedAt { get; private set; } = UpdatedAt;
 
-    public Order Update(OrderStatus status, decimal executedQty, decimal executedPrice, decimal fee, long now)
+    public IResult<Order> Update(OrderStatus status, decimal executedQty, decimal executedPrice, decimal fee, long now)
     {
-        this.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled);
+        var result = this.AsResult()
+            .ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled)
+            .ValidateQtyAndPrice(status,executedQty, executedPrice);
 
-        var prevExecutedQty = ExecutedQty;
-        var prevFee = Fee;
+        if (result.HasErrors)
+            return result;
+
+        Position.UpdateOrder(
+            Id,
+            Side,
+            executedQty,
+            executedPrice,
+            status is OrderStatus.Canceled ? TotalQty - executedQty : 0,
+            Fee,
+            ExecutedQty,
+            Fee,
+            UpdatedAt,
+            result
+        );
+
+        if (result.HasErrors)
+            return result;
 
         Status = status;
         ExecutedQty = executedQty;
@@ -42,21 +61,7 @@ public sealed record Order(
         Fee = fee;
         UpdatedAt = now;
 
-        this.ValidateQtyAndPrice();
-
-        Position.UpdateOrder(
-            Id,
-            Side,
-            ExecutedQty,
-            ExecutedPrice,
-            this.CancellableQty(),
-            Fee,
-            prevExecutedQty,
-            prevFee,
-            UpdatedAt
-        );
-
-        return this;
+        return result;
     }
 
     public override string ToString() =>

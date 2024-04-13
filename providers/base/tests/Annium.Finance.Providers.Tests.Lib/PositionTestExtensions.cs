@@ -1,4 +1,5 @@
 using System;
+using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Lib.Models;
@@ -99,39 +100,46 @@ public static class PositionTestExtensions
 
     #region add limit order
 
-    public static Order AddLimitBuyOrder(this Position position, decimal totalQty, decimal price) =>
+    public static IResult<Order> AddLimitBuyOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewLimitBuyOrder(totalQty, price).AddToPosition();
 
-    public static Order AddLimitSellOrder(this Position position, decimal totalQty, decimal price) =>
+    public static IResult<Order> AddLimitSellOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewLimitSellOrder(totalQty, price).AddToPosition();
 
-    public static Order AddLimitOrder(this Position position, OrderSide side, decimal totalQty, decimal price) =>
-        position.NewLimitOrder(side, totalQty, price).AddToPosition();
+    public static IResult<Order> AddLimitOrder(
+        this Position position,
+        OrderSide side,
+        decimal totalQty,
+        decimal price
+    ) => position.NewLimitOrder(side, totalQty, price).AddToPosition();
 
     #endregion
 
     #region add market order
 
-    public static Order AddMarketBuyOrder(this Position position, decimal totalQty) =>
+    public static IResult<Order> AddMarketBuyOrder(this Position position, decimal totalQty) =>
         position.NewMarketBuyOrder(totalQty).AddToPosition();
 
-    public static Order AddMarketSellOrder(this Position position, decimal totalQty) =>
+    public static IResult<Order> AddMarketSellOrder(this Position position, decimal totalQty) =>
         position.NewMarketSellOrder(totalQty).AddToPosition();
 
-    public static Order AddMarketOrder(this Position position, OrderSide side, decimal totalQty) =>
+    public static IResult<Order> AddMarketOrder(this Position position, OrderSide side, decimal totalQty) =>
         position.NewMarketOrder(side, totalQty).AddToPosition();
 
     #endregion
 
     #region add take profit market order
 
-    public static Order AddTakeProfitMarketBuyOrder(this Position position, decimal totalQty, decimal price) =>
+    public static IResult<Order> AddTakeProfitMarketBuyOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewTakeProfitMarketBuyOrder(totalQty, price).AddToPosition();
 
-    public static Order AddTakeProfitMarketSellOrder(this Position position, decimal totalQty, decimal price) =>
-        position.NewTakeProfitMarketSellOrder(totalQty, price).AddToPosition();
+    public static IResult<Order> AddTakeProfitMarketSellOrder(
+        this Position position,
+        decimal totalQty,
+        decimal price
+    ) => position.NewTakeProfitMarketSellOrder(totalQty, price).AddToPosition();
 
-    public static Order AddTakeProfitMarketOrder(
+    public static IResult<Order> AddTakeProfitMarketOrder(
         this Position position,
         OrderSide side,
         decimal totalQty,
@@ -142,13 +150,13 @@ public static class PositionTestExtensions
 
     #region add stop loss market order
 
-    public static Order AddStopLossMarketBuyOrder(this Position position, decimal totalQty, decimal price) =>
+    public static IResult<Order> AddStopLossMarketBuyOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewStopLossMarketBuyOrder(totalQty, price).AddToPosition();
 
-    public static Order AddStopLossMarketSellOrder(this Position position, decimal totalQty, decimal price) =>
+    public static IResult<Order> AddStopLossMarketSellOrder(this Position position, decimal totalQty, decimal price) =>
         position.NewStopLossMarketSellOrder(totalQty, price).AddToPosition();
 
-    public static Order AddStopLossMarketOrder(
+    public static IResult<Order> AddStopLossMarketOrder(
         this Position position,
         OrderSide side,
         decimal totalQty,
@@ -159,7 +167,9 @@ public static class PositionTestExtensions
 
     #region helpers
 
-    public static Position RemoveOrder(this Position position, Order order) =>
+    public static IResult<Order> RemoveOrder(this Position position, Order order)
+    {
+        var result = order.AsResult();
         position.RemoveOrder(
             order.Id,
             order.Side,
@@ -168,8 +178,12 @@ public static class PositionTestExtensions
             order.ExecutedQty,
             order.ExecutedPrice,
             order.Fee,
-            order.UpdatedAt
+            order.UpdatedAt,
+            result
         );
+
+        return result;
+    }
 
     #endregion
 }
