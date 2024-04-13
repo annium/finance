@@ -93,30 +93,4 @@ public class OrderExtensionsTests
         position.AddLimitBuyOrder(2, 1).Fill().Data.OpeningQty().Is(0);
         position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.OpeningQty().Is(0);
     }
-
-    [Fact]
-    public void PotentialQty()
-    {
-        // arrange
-        var position = Helper.CreatePosition(1);
-
-        // assert
-        position.AddLimitBuyOrder(2, 1).Data.PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).Fill().Data.PotentialQty().Is(2);
-        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.PotentialQty().Is(0.5m);
-    }
-
-    [Fact]
-    public void CanceledQty()
-    {
-        // arrange
-        var position = Helper.CreatePosition(1);
-
-        // assert
-        position.AddLimitBuyOrder(2, 1).Data.CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).FillPartially(1).Data.CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).Fill().Data.CancellableQty().Is(0);
-        position.AddLimitBuyOrder(2, 1).FillPartially(0.5m).Cancel().Data.CancellableQty().Is(1.5m);
-    }
 }

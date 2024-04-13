@@ -66,20 +66,6 @@ public static class OrderExtensions
     public static decimal OpeningQty<TOrder>(this TOrder order)
         where TOrder : IOrder
     {
-        return order.Status is Canceled ? 0 : order.TotalQty - order.ExecutedQty;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal PotentialQty<TOrder>(this TOrder order)
-        where TOrder : IOrder
-    {
-        return order.Status is Canceled ? order.ExecutedQty : order.TotalQty;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal CancellableQty<TOrder>(this TOrder order)
-        where TOrder : IOrder
-    {
-        return order.Status is Canceled ? order.TotalQty - order.ExecutedQty : 0;
+        return order.IsActive() ? order.TotalQty - order.ExecutedQty : 0;
     }
 }
