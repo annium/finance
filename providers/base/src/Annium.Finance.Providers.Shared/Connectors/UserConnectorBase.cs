@@ -74,6 +74,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var assetTargetChannel = Channel.CreateUnbounded<ChangeEvent<AssetModel>>();
         _assetTarget = assetTargetChannel.Writer;
         Assets = assetTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Disposable += Assets.Subscribe();
 
         // positions
         var positionSourceChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
@@ -83,6 +84,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var positionTargetChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
         _positionTarget = positionTargetChannel.Writer;
         Positions = positionTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Disposable += Positions.Subscribe();
 
         // orders
         var orderSourceChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
@@ -92,6 +94,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var orderTargetChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
         _orderTarget = orderTargetChannel.Writer;
         Orders = orderTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Disposable += Orders.Subscribe();
 
         // trades
         var tradeSourceChannel = Channel.CreateUnbounded<TradeModel>();
@@ -101,6 +104,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var tradeTargetChannel = Channel.CreateUnbounded<TradeModel>();
         _tradeTarget = tradeTargetChannel.Writer;
         Trades = tradeTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Disposable += Trades.Subscribe();
 
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
