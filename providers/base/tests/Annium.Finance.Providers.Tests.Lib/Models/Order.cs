@@ -34,7 +34,7 @@ public sealed record Order(
     {
         var result = this.AsResult()
             .ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled)
-            .ValidateQtyAndPrice(status,executedQty, executedPrice);
+            .ValidateQtyAndPrice(status, executedQty, executedPrice);
 
         if (result.HasErrors)
             return result;
