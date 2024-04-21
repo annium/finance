@@ -64,7 +64,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Error("failure: {result}", result);
+            if (!result.IsAborted)
+                this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(UserContext));
         }
@@ -96,7 +97,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Error("failure: {result}", result);
+            if (!result.IsAborted)
+                this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
         }
@@ -150,7 +152,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Error("failure: {result}", result);
+            if (!result.IsAborted)
+                this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
         }
@@ -192,7 +195,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.IsFailure)
             {
-                this.Error("failure: {result}", chunkResult);
+                if (!chunkResult.IsAborted)
+                    this.Error("failure: {result}", chunkResult);
 
                 return chunkResult;
             }
@@ -228,7 +232,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.IsFailure)
             {
-                this.Error("failure: {result}", chunkResult);
+                if (!chunkResult.IsAborted)
+                    this.Error("failure: {result}", chunkResult);
 
                 return chunkResult;
             }
@@ -270,7 +275,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
         if (result.IsFailure)
         {
-            this.Error("failure: {result}", result);
+            if (!result.IsAborted)
+                this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(IReadOnlyCollection<TradeModel>));
         }
@@ -311,7 +317,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.IsFailure)
             {
-                this.Error("failure: {result}", chunkResult);
+                if (!chunkResult.IsAborted)
+                    this.Error("failure: {result}", chunkResult);
 
                 return chunkResult;
             }
@@ -347,7 +354,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             if (chunkResult.IsFailure)
             {
-                this.Error("failure: {result}", chunkResult);
+                if (!chunkResult.IsAborted)
+                    this.Error("failure: {result}", chunkResult);
 
                 return chunkResult;
             }

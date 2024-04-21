@@ -189,7 +189,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             var cancelResult = await CancelOrder(cancelRequest);
             if (cancelResult.IsFailure)
             {
-                this.Warn("{id} cancel of order {order} failed: {result}", Id, order, cancelResult);
+                if (!cancelResult.IsAborted)
+                    this.Warn("{id} cancel of order {order} failed: {result}", Id, order, cancelResult);
                 return UserResult.From(cancelResult, default(OrderModel));
             }
 

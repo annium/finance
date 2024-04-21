@@ -12,16 +12,40 @@ internal static class HttpRequestResultExtensions
     public static Task<MarketResult<T?>> AsMarketResultAsync<T>(this IHttpRequest request)
         where T : class
     {
-        return request.AsMarketResultAsync<T, OperationResult>(HttpRequestHelper.GetFailure, GetError);
+        return request.AsMarketResultAsync<T, OperationResult>(
+            HttpRequestHelper.GetFailure,
+            GetMarketErrorStatus,
+            GetError
+        );
     }
 
     public static Task<UserResult<T?>> AsUserResultAsync<T>(this IHttpRequest request)
         where T : class
     {
-        return request.AsUserResultAsync<T, OperationResult>(HttpRequestHelper.GetFailure, GetErrorStatus, GetError);
+        return request.AsUserResultAsync<T, OperationResult>(
+            HttpRequestHelper.GetFailure,
+            GetUserErrorStatus,
+            GetError
+        );
     }
 
-    private static UserOperationStatus? GetErrorStatus(OperationResult result) => null;
+    private static MarketOperationStatus? GetMarketErrorStatus(OperationResult result) =>
+        result.Code switch
+        {
+            1 => MarketOperationStatus.NetworkError,
+            2 => MarketOperationStatus.ParseError,
+            3 => MarketOperationStatus.UnknownError,
+            _ => null
+        };
+
+    private static UserOperationStatus? GetUserErrorStatus(OperationResult result) =>
+        result.Code switch
+        {
+            1 => UserOperationStatus.NetworkError,
+            2 => UserOperationStatus.ParseError,
+            3 => UserOperationStatus.UnknownError,
+            _ => null
+        };
 
     private static string GetError(OperationResult result) => result.Message;
 }

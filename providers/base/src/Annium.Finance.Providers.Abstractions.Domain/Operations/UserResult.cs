@@ -22,6 +22,7 @@ public sealed record UserResult : IBaseResult
 
     public static UserResult<T> From<TS, T>(UserResult<TS> result, T data) => new(result.Status, data, result.Message);
 
+    public bool IsAborted { get; }
     public bool IsSuccess { get; }
     public bool IsFailure { get; }
     public UserOperationStatus Status { get; }
@@ -29,6 +30,7 @@ public sealed record UserResult : IBaseResult
 
     private UserResult(UserOperationStatus status, string message)
     {
+        IsAborted = status is UserOperationStatus.NetworkError;
         IsSuccess = status is UserOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;
@@ -40,6 +42,8 @@ public sealed record UserResult : IBaseResult
 
 public sealed record UserResult<T> : IBaseResult<T>
 {
+    public bool IsAborted { get; }
+
     [MemberNotNullWhen(true, nameof(Data))]
     public bool IsSuccess { get; }
 
@@ -51,6 +55,7 @@ public sealed record UserResult<T> : IBaseResult<T>
 
     internal UserResult(UserOperationStatus status, T? data, string message)
     {
+        IsAborted = status is UserOperationStatus.NetworkError;
         IsSuccess = status is UserOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;

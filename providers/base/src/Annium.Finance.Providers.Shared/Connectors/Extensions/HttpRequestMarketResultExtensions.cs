@@ -11,6 +11,7 @@ public static class HttpRequestResultExtensions
     public static async Task<MarketResult<TData?>> AsMarketResultAsync<TData, TError>(
         this IHttpRequest request,
         Func<HttpFailureReason, IHttpResponse, Exception?, Task<TError>> getFailure,
+        Func<TError, MarketOperationStatus?> getErrorStatus,
         Func<TError, string> getError
     )
         where TData : class
@@ -21,7 +22,7 @@ public static class HttpRequestResultExtensions
             MarketResult.Ok!,
             error =>
             {
-                var operationStatus = MapHttpStatusCodeToOperationStatus(response.StatusCode);
+                var operationStatus = getErrorStatus(error) ?? MapHttpStatusCodeToOperationStatus(response.StatusCode);
                 var errorMessage = getError(error);
 
                 return MarketResult.New<TData?>(operationStatus, null, errorMessage);

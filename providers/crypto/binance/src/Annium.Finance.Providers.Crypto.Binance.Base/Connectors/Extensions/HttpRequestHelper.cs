@@ -18,12 +18,12 @@ public static class HttpRequestHelper
                 => new OperationResult(1, $"Request aborted ({response.StatusCode} - {response.StatusText})"),
             HttpFailureReason.Parse
                 => new OperationResult(
-                    1,
+                    2,
                     $"Response parse failed. Content: {await response.Content.ReadAsStringAsync()}"
                 ),
             HttpFailureReason.Exception
                 => new OperationResult(
-                    1,
+                    3,
                     $"Request failed. Error: {e?.Message}. Content: {await response.Content.ReadAsStringAsync()}"
                 ),
             _ => new OperationResult(1, "Unmapped failure")

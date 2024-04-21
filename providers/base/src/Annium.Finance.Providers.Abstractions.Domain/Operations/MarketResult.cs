@@ -24,6 +24,7 @@ public sealed record MarketResult : IBaseResult
     public static MarketResult<T> From<TS, T>(MarketResult<TS> result, T data) =>
         new(result.Status, data, result.Message);
 
+    public bool IsAborted { get; }
     public bool IsSuccess { get; }
     public bool IsFailure { get; }
     public MarketOperationStatus Status { get; }
@@ -31,6 +32,7 @@ public sealed record MarketResult : IBaseResult
 
     private MarketResult(MarketOperationStatus status, string message)
     {
+        IsAborted = status is MarketOperationStatus.NetworkError;
         IsSuccess = status is MarketOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;
@@ -42,6 +44,7 @@ public sealed record MarketResult : IBaseResult
 
 public sealed record MarketResult<T> : IBaseResult<T>
 {
+    public bool IsAborted { get; }
     [MemberNotNullWhen(true, nameof(Data))]
     public bool IsSuccess { get; }
 
@@ -53,6 +56,7 @@ public sealed record MarketResult<T> : IBaseResult<T>
 
     internal MarketResult(MarketOperationStatus status, T? data, string message)
     {
+        IsAborted = status is MarketOperationStatus.NetworkError;
         IsSuccess = status is MarketOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;

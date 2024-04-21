@@ -14,9 +14,9 @@ public class PositionHelperTests
 
         // assert
         // opening + opened is greater than total
-        ResolveState(subject, 10, 6, 5, 0, 0).PlainErrors.At(0).Contains("Too much opens").IsTrue();
+        ResolveState(subject, 10, 6, 5, 0, 0).PlainErrors.At(0).IsContaining("too much opens");
         // closing + closed is greater than opening + opened
-        ResolveState(subject, 10, 0, 10, 6, 5).PlainErrors.At(0).Contains("Too much closes").IsTrue();
+        ResolveState(subject, 10, 0, 10, 6, 5).PlainErrors.At(0).IsContaining("too much closes");
     }
 
     [Fact]
