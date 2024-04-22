@@ -119,7 +119,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     public void Sync()
     {
         this.Trace<string>("{id} schedule sync", Id);
-        var scheduled = _executor.TrySchedule(async () =>
+        var scheduled = _executor.Schedule(async () =>
         {
             this.Trace<string>("{id} unsubscribe readers", Id);
             UnsubscribeReaders();

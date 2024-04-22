@@ -77,7 +77,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     {
         this.Trace("{settings} start", _settings);
 
-        var scheduled = _executor.TrySchedule(async () =>
+        var scheduled = _executor.Schedule(async () =>
         {
             this.Trace("{settings} start sync", _settings);
             Resources = resources;
