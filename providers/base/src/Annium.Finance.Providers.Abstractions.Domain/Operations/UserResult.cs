@@ -30,7 +30,7 @@ public sealed record UserResult : IBaseResult
 
     private UserResult(UserOperationStatus status, string message)
     {
-        IsAborted = status is UserOperationStatus.NetworkError;
+        IsAborted = status is UserOperationStatus.Aborted or UserOperationStatus.NetworkError;
         IsSuccess = status is UserOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;
@@ -55,7 +55,7 @@ public sealed record UserResult<T> : IBaseResult<T>
 
     internal UserResult(UserOperationStatus status, T? data, string message)
     {
-        IsAborted = status is UserOperationStatus.NetworkError;
+        IsAborted = status is UserOperationStatus.Aborted or UserOperationStatus.NetworkError;
         IsSuccess = status is UserOperationStatus.Ok;
         IsFailure = !IsSuccess;
         Status = status;

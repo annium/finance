@@ -51,6 +51,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
     public async Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(UserContext));
 
         var result = await _getAccountRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -84,6 +86,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings)
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
 
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -138,6 +142,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
     )
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
 
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -170,6 +176,9 @@ internal class UserProvider : UserProviderBase, IUserProvider
     )
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
+
         var orders = new Dictionary<string, OrderModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
         var start = startTime.ToUnixTimeMilliseconds();
@@ -261,6 +270,8 @@ internal class UserProvider : UserProviderBase, IUserProvider
     )
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<TradeModel>));
 
         var result = await _getTradeRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -293,6 +304,9 @@ internal class UserProvider : UserProviderBase, IUserProvider
     )
     {
         var signatureService = GetSignatureService(settings);
+        if (signatureService is null)
+            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<TradeModel>));
+
         var trades = new Dictionary<string, TradeModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
         var start = startTime.ToUnixTimeMilliseconds();
@@ -377,8 +391,15 @@ internal class UserProvider : UserProviderBase, IUserProvider
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);
     }
 
-    private SignatureService GetSignatureService(UserSettings settings)
+    private SignatureService? GetSignatureService(UserSettings settings)
     {
-        return new SignatureService(settings, _sp.ResolveKeyed<IServerTimeProvider>(settings.GetProviderKey()));
+        try
+        {
+            return new SignatureService(settings, _sp.ResolveKeyed<IServerTimeProvider>(settings.GetProviderKey()));
+        }
+        catch (ObjectDisposedException)
+        {
+            return null;
+        }
     }
 }
