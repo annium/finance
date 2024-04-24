@@ -4,6 +4,8 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Operations;
 
 public interface IBaseResult<out T>
 {
+    public bool IsAborted { get; }
+
     [MemberNotNullWhen(true, nameof(Data))]
     public bool IsSuccess { get; }
 
@@ -16,6 +18,7 @@ public interface IBaseResult<out T>
 
 public interface IBaseResult
 {
+    public bool IsAborted { get; }
     public bool IsSuccess { get; }
     public bool IsFailure { get; }
     public string Message { get; }

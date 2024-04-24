@@ -178,8 +178,12 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 this.Trace("signal connecting state");
                 _statusReporter.Connecting();
 
-                this.Trace("write error");
-                this.Error(result.Message);
+                // !aborted -> failed
+                if (!result.IsAborted)
+                {
+                    this.Trace("write error");
+                    this.Error(result.Message);
+                }
             }
         }
 
