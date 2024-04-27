@@ -42,7 +42,7 @@ public abstract class MarketProviderBase
             var result = await LoadCandlesBaseAsync(instrument, from, end, chunkSize, fetch, last);
 
             // if failure / no data - break
-            if (result.IsFailure || result.Data.Count == 0)
+            if (result.IsFailureOrAborted || result.Data.Count == 0)
                 break;
 
             // return result
@@ -73,7 +73,7 @@ public abstract class MarketProviderBase
         var result = await fetch(instrument, start, count);
 
         // fast return if failed
-        if (result.IsFailure)
+        if (result.IsFailureOrAborted)
             return MarketResult.From(result, default(IReadOnlyCollection<CandleModel>));
 
         // fast return if empty

@@ -151,7 +151,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildInitOrderQuery(request);
-        if (queryResult.IsFailure)
+        if (queryResult.IsFailureOrAborted)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
@@ -201,7 +201,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildModifyOrderQuery(request);
-        if (queryResult.IsFailure)
+        if (queryResult.IsFailureOrAborted)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
@@ -231,7 +231,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildCancelOrderQuery(request);
-        if (queryResult.IsFailure)
+        if (queryResult.IsFailureOrAborted)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);
@@ -256,12 +256,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     {
         if (Status is not ConnectorStatus.Connected)
         {
-            this.Warn<string>("{id} skip for {symbol} - not connected", Id, symbol);
+            this.Warn<string, string>("{id} skip for {symbol} - not connected", Id, symbol);
             return UserResult.New(UserOperationStatus.NotConnected);
         }
 
         var queryResult = _queryProcessor.BuildCancelAllOrdersQuery(symbol);
-        if (queryResult.IsFailure)
+        if (queryResult.IsFailureOrAborted)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);

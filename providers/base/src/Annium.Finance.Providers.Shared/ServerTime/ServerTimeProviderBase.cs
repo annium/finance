@@ -51,7 +51,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         this.Trace("load server time");
         var result = await LoadAsync(_cts.Token);
 
-        if (result.IsFailure)
+        if (result.IsFailureOrAborted)
         {
             this.Trace("server time load failed ({result})", result);
 

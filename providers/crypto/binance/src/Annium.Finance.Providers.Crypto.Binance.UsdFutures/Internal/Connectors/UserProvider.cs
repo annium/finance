@@ -64,7 +64,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<AccountResponse>();
 
-        if (result.IsFailure)
+        if (result.IsFailureOrAborted)
         {
             if (!result.IsAborted)
                 this.Error("failure: {result}", result);
@@ -100,12 +100,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
         if (result.IsFailure)
-        {
-            if (!result.IsAborted)
-                this.Error("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
+        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
-        }
 
         this.Trace("done, {count} orders loaded", result.Data.Count);
 
@@ -157,12 +155,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
         if (result.IsFailure)
-        {
-            if (!result.IsAborted)
-                this.Error("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
+        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
-        }
 
         this.Trace("done, {count} orders loaded", result.Data.Count);
 
@@ -203,12 +199,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
             if (chunkResult.IsFailure)
-            {
-                if (!chunkResult.IsAborted)
-                    this.Error("failure: {result}", chunkResult);
+                this.Error("failure: {result}", chunkResult);
 
+            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
-            }
 
             this.Trace("chunk done, {count} orders loaded, merge", chunkResult.Data.Count);
             MergeOrders(orders, chunkResult.Data);
@@ -240,12 +234,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
             if (chunkResult.IsFailure)
-            {
-                if (!chunkResult.IsAborted)
-                    this.Error("failure: {result}", chunkResult);
+                this.Error("failure: {result}", chunkResult);
 
+            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
-            }
 
             var chunkData = chunkResult.Data.Where(x => x.CreatedAt <= end).ToArray();
             this.Trace("chunk done, {count} orders loaded, merge", chunkData.Length);
@@ -285,12 +277,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
         if (result.IsFailure)
-        {
-            if (!result.IsAborted)
-                this.Error("failure: {result}", result);
+            this.Error("failure: {result}", result);
 
+        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<TradeModel>));
-        }
 
         this.Trace("done, {count} trades loaded", result.Data.Count);
 
@@ -330,12 +320,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
             if (chunkResult.IsFailure)
-            {
-                if (!chunkResult.IsAborted)
-                    this.Error("failure: {result}", chunkResult);
+                this.Error("failure: {result}", chunkResult);
 
+            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
-            }
 
             this.Trace("chunk done, {count} trades loaded, merge", chunkResult.Data.Count);
             MergeTrades(trades, chunkResult.Data);
@@ -367,12 +355,10 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
             if (chunkResult.IsFailure)
-            {
-                if (!chunkResult.IsAborted)
-                    this.Error("failure: {result}", chunkResult);
+                this.Error("failure: {result}", chunkResult);
 
+            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
-            }
 
             var chunkData = chunkResult.Data.Where(x => x.Moment <= end).ToArray();
             this.Trace("chunk done, {count} trades loaded, merge", chunkData.Length);
