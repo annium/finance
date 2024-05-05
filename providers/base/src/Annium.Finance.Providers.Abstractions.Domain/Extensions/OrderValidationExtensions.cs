@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using static Annium.Finance.Providers.Abstractions.Domain.Enums.OrderStatus;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Extensions;
 
@@ -62,7 +63,7 @@ public static class OrderValidationExtensions
     public static IResult<TOrder> ValidateIsActive<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (result.Data.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
+        if (result.Data.Status is not (New or PartiallyFilled))
             result.Error($"Order {result.Data} is not Active");
 
         return result;
@@ -72,10 +73,25 @@ public static class OrderValidationExtensions
     public static IResult<TOrder> ValidateIsInactive<TOrder>(this IResult<TOrder> result)
         where TOrder : IOrder
     {
-        if (result.Data.Status is OrderStatus.New or OrderStatus.PartiallyFilled)
+        if (result.Data.Status is New or PartiallyFilled)
             result.Error($"Order {result.Data} is not Inactive");
 
         return result;
+    }
+
+    public static IResult<TOrder> ValidateCanProcess<TOrder>(this IResult<TOrder> result, OrderStatus status)
+        where TOrder : IOrder
+    {
+        return status switch
+        {
+            New => result.ValidateStatus(New),
+            PartiallyFilled => result.ValidateStatus(New, PartiallyFilled),
+            Filled => result.ValidateStatus(New, PartiallyFilled, Filled),
+            Canceled => result.ValidateStatus(New, PartiallyFilled, Canceled),
+            Rejected => result.ValidateStatus(New, PartiallyFilled, Rejected),
+            Expired => result.ValidateStatus(New, PartiallyFilled, Expired),
+            _ => result.Error($"Unexpected status {status}")
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,10 +158,10 @@ public static class OrderValidationExtensions
 
         return status switch
         {
-            OrderStatus.New => result.ValidateNewQtyAndPrice(executedQty, executedPrice),
-            OrderStatus.PartiallyFilled => result.ValidatePartiallyFilledQtyAndPrice(executedQty, executedPrice),
-            OrderStatus.Filled => result.ValidateFilledQtyAndPrice(executedQty, executedPrice),
-            OrderStatus.Canceled => result.ValidateCanceledQtyAndPrice(executedQty, executedPrice),
+            New => result.ValidateNewQtyAndPrice(executedQty, executedPrice),
+            PartiallyFilled => result.ValidatePartiallyFilledQtyAndPrice(executedQty, executedPrice),
+            Filled => result.ValidateFilledQtyAndPrice(executedQty, executedPrice),
+            Canceled => result.ValidateCanceledQtyAndPrice(executedQty, executedPrice),
             _ => result.Error($"Order {order} has unexpected status")
         };
     }
