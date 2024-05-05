@@ -98,9 +98,10 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
                         filters = JsonSerializer.Deserialize<InstrumentFilters>(ref reader, options);
                         break;
                     case "permissions":
-                        permissions = new HashSet<string>(
-                            JsonSerializer.Deserialize<string[]>(ref reader, options) ?? Array.Empty<string>()
-                        );
+                        permissions =
+                        [
+                            .. JsonSerializer.Deserialize<string[]>(ref reader, options) ?? Array.Empty<string>()
+                        ];
                         break;
                     default:
                         reader.Skip();

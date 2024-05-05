@@ -8,7 +8,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestRateBaseExtensions
 {
-    private static readonly string[] HeaderMasks = new[] { "x-mbx-used-weight", "x-mbx-order" };
+    private static readonly string[] HeaderMasks = ["x-mbx-used-weight", "x-mbx-order"];
 
     public static IHttpRequest WithLogFromWithHeaders<T>(this IHttpRequest request, T subject, LogData log = default)
         where T : ILogSubject
