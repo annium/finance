@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -60,11 +61,14 @@ public class CompositeLoaderTests : TestBase
         for (var i = 0; i < 10; i++)
             loader.Request();
 
-        await Expect.To(() => log.Has(1));
+        var statuses = Array.Empty<ConnectorStatus>();
+        await Expect.To(() =>
+        {
+            statuses = _statuses.ToArray();
+            log.Has(1);
+        });
         log.At(0).Is(3);
-        this.Trace<string>("statuses: {statuses}", _statuses.Select(x => x.ToString()).Join(", "));
-        _statuses.Has(2);
-        _statuses.At(0).Is(Connecting);
-        _statuses.At(1).Is(Connected);
+        this.Trace<string>("statuses: {statuses}", statuses.Select(x => x.ToString()).Join(", "));
+        statuses.ToArray().IsEqual(new[] { Connecting, Connected });
     }
 }

@@ -67,25 +67,25 @@ public class OrderValidationExtensionsTests
     }
 
     [Fact]
-    public void ValidateQtyAndPrice()
+    public void ValidateCanProcess()
     {
         // assert - total qty
         new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 0, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("total qty is invalid");
 
         // assert - level price
         new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("level price is invalid");
 
         new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 1, 0, OrderStatus.New, 0, 0, 0, 0)
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("level price is invalid");
 
@@ -105,7 +105,7 @@ public class OrderValidationExtensionsTests
             0
         )
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("level price is invalid");
 
@@ -125,7 +125,7 @@ public class OrderValidationExtensionsTests
             0
         )
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("level price is invalid");
 
@@ -133,13 +133,13 @@ public class OrderValidationExtensionsTests
 
         new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Limit, 1, 0, 0, 0, OrderStatus.New, 0, 0, 0, 0)
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("target price is invalid");
 
         new Order(Guid.NewGuid(), _position, OrderSide.Buy, OrderType.Market, 1, 1, 0, 0, OrderStatus.New, 0, 0, 0, 0)
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("target price is invalid");
 
@@ -159,7 +159,7 @@ public class OrderValidationExtensionsTests
             0
         )
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("target price is invalid");
 
@@ -179,7 +179,7 @@ public class OrderValidationExtensionsTests
             0
         )
             .AsResult()
-            .ValidateQtyAndPrice()
+            .ValidateCanProcess()
             .PlainErrors.At(0)
             .IsContaining("target price is invalid");
 
@@ -198,6 +198,12 @@ public class OrderValidationExtensionsTests
         result = _position.AddLimitBuyOrder(3, 2);
         result.HasNoErrors();
         result = result.Data.Update(OrderStatus.PartiallyFilled, 0, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result.Data.Update(OrderStatus.PartiallyFilled, 2, 1, 0, 0);
+        result = result.Data.Update(OrderStatus.PartiallyFilled, 1, 1, 0, 0);
         result.PlainErrors.At(0).IsContaining("executed qty is invalid");
 
         result = _position.AddLimitBuyOrder(3, 2);
@@ -226,7 +232,7 @@ public class OrderValidationExtensionsTests
         result = result.Data.Update(OrderStatus.Filled, 3, 0, 0, 0);
         result.PlainErrors.At(0).IsContaining("executed price is invalid");
 
-        // assert - canceled executed qty & price
+        // assert - declined executed qty & price
         result = _position.AddLimitBuyOrder(3, 2);
         result.HasNoErrors();
         result = result.Data.Update(OrderStatus.Canceled, 3, 1, 0, 0);
@@ -236,6 +242,12 @@ public class OrderValidationExtensionsTests
         result.HasNoErrors();
         result = result.Data.Update(OrderStatus.Canceled, 0, 1, 0, 0);
         result.PlainErrors.At(0).IsContaining("executed price is invalid");
+
+        result = _position.AddLimitBuyOrder(3, 2);
+        result.HasNoErrors();
+        result.Data.Update(OrderStatus.PartiallyFilled, 2, 1, 0, 0);
+        result = result.Data.Update(OrderStatus.Canceled, 1, 1, 0, 0);
+        result.PlainErrors.At(0).IsContaining("executed qty is invalid");
 
         result = _position.AddLimitBuyOrder(3, 2);
         result.HasNoErrors();

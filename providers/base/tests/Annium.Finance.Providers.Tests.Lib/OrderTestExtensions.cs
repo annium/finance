@@ -113,7 +113,7 @@ public static class OrderTestExtensions
 
     public static IResult<Order> AddToPosition(this Order order)
     {
-        var result = order.AsResult().ValidateStatus(OrderStatus.New).ValidateQtyAndPrice();
+        var result = order.AsResult().ValidateStatus(OrderStatus.New).ValidateCanProcess();
 
         order.Position.AddOrder(order.Id, order.Side, order.TotalQty, order.CreatedAt, result);
 
