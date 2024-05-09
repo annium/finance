@@ -83,7 +83,7 @@ public static class ProviderRegistrationContextExtensions
     {
         var providerKey = key.CastTo<ProviderKey>();
 
-        var requestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ServerTimeKey);
+        var requestFactory = sp.ResolveHttpRequestFactory(ServerTimeKey);
         var httpApi = Endpoints.GetHttpApi(providerKey.Environment);
         var providerConfig = sp.Resolve<ProviderConfiguration>();
         var logger = sp.Resolve<ILogger>();
@@ -154,7 +154,7 @@ public static class ProviderRegistrationContextExtensions
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<UserConfig>();
-        var httpRequestFactory = sp.ResolveKeyed<IHttpRequestFactory>(ListenKeyKey);
+        var httpRequestFactory = sp.ResolveHttpRequestFactory(ListenKeyKey);
         var signatureService = sp.Resolve<SignatureService>();
         var statusReporter = sp.Resolve<IStatusReporter>();
         var logger = sp.Resolve<ILogger>();
