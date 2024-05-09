@@ -134,8 +134,7 @@ public static class ProviderRegistrationContextExtensions
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
     {
         var config = sp.Resolve<MarketConfig>();
-        var serializerKey = SerializerKey.Create(InstrumentTickerKey, MediaTypeNames.Application.Json);
-        var serializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(serializerKey);
+        var serializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(InstrumentTickerKey, MediaTypeNames.Application.Json);
         var statusReporter = sp.Resolve<IStatusReporter>();
         var logger = sp.Resolve<ILogger>();
 

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
@@ -88,9 +87,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _userStream.OnMessage += HandleMessage;
         Disposable += () => _userStream.OnMessage -= HandleMessage;
 
-        _orderUpdateEventSerializer = sp.ResolveKeyed<ISerializer<ReadOnlyMemory<byte>>>(
-            SerializerKey.Create(OrderUpdateKey, Application.Json)
-        );
+        _orderUpdateEventSerializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(OrderUpdateKey, Application.Json);
 
         // context
         Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContext);
