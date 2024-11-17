@@ -182,7 +182,8 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 if (!result.IsAborted)
                 {
                     this.Trace("write error");
-                    this.Error(result.Message);
+                    if (!result.Message.IsNullOrWhiteSpace())
+                        this.Error(result.Message);
                 }
             }
         }
@@ -194,6 +195,6 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     {
         Inactive,
         Active,
-        Disposed
+        Disposed,
     }
 }
