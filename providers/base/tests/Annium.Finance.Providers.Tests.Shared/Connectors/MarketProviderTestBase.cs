@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared;
 using Annium.Logging;
 using Annium.NodaTime.Extensions;
@@ -39,6 +40,16 @@ public abstract class MarketProviderTestBase : ConnectorTestBase
         // act - resolve market provider
         this.Trace("resolve market provider");
         var provider = GetKeyed<IMarketProvider>(providerKey.Provider);
+
+        // act - load context
+        var context = await provider.LoadContextAsync(providerKey.Environment);
+
+        // assert - context
+        context.Status.Is(MarketOperationStatus.Ok);
+        var data = context.Data;
+        data.IsNotDefault();
+        data.Resources.Count.IsGreater(0);
+        data.Instruments.Count.IsGreater(0);
 
         // act - load candles
         var end = SystemClock.Instance.GetCurrentInstant().FloorToMinute();

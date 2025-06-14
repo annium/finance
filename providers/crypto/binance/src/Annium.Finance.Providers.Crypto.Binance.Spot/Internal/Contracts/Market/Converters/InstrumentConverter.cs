@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
@@ -28,6 +29,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
         var isSpotTradingAllowed = false;
         var filters = default(InstrumentFilters);
         var permissions = new HashSet<string>();
+        var permissionSets = new HashSet<string>();
 
         while (reader.Read())
         {
@@ -37,7 +39,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
                     status != RequiredStatus
                     || !isSpotTradingAllowed
                     || filters is null
-                    || !permissions.Contains(RequiredPermission)
+                    || !(permissions.Contains(RequiredPermission) || permissionSets.Contains(RequiredPermission))
                 )
                 {
                     return default;
@@ -98,10 +100,12 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
                         filters = JsonSerializer.Deserialize<InstrumentFilters>(ref reader, options);
                         break;
                     case "permissions":
-                        permissions =
-                        [
-                            .. JsonSerializer.Deserialize<string[]>(ref reader, options) ?? [],
-                        ];
+                        permissions = [.. JsonSerializer.Deserialize<string[]>(ref reader, options) ?? []];
+                        break;
+                    case "permissionSets":
+                        permissionSets = (JsonSerializer.Deserialize<string[][]>(ref reader, options) ?? [])
+                            .SelectMany(x => x)
+                            .ToHashSet();
                         break;
                     default:
                         reader.Skip();
