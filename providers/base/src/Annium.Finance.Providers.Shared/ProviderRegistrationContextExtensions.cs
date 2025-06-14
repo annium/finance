@@ -1,5 +1,7 @@
 using System.Text.Json;
-using Annium.Core.DependencyInjection;
+using Annium.Net.Http;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Shared;
 

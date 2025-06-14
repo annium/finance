@@ -15,9 +15,9 @@ public interface IUserConnector : IConnectorBase
     IObservable<TradeModel> Trades { get; }
     event Func<UserSettings, IUserProvider, Task> OnSync;
     void Sync();
-    Task<UserResult> SetLeverage(PositionModel position, decimal leverage);
-    Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request);
-    Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request);
-    Task<UserResult> CancelOrder(ICancelOrderRequest request);
-    Task<UserResult> CancelAllOrders(string symbol);
+    Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage);
+    Task<UserResult<OrderModel?>> InitOrderAsync(IInitOrderRequest request);
+    Task<UserResult<OrderModel?>> ModifyOrderAsync(IModifyOrderRequest request);
+    Task<UserResult> CancelOrderAsync(ICancelOrderRequest request);
+    Task<UserResult> CancelAllOrdersAsync(string symbol);
 }

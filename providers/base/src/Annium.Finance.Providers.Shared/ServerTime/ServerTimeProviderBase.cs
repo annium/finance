@@ -88,6 +88,6 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
     private enum Mode
     {
         Load,
-        Confirm
+        Confirm,
     }
 }

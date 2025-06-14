@@ -1,25 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <PackageId>Annium.Finance.Providers.Shared</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
-        <Description>Annium.Finance.Providers.Shared</Description>
-        <Solutions>Annium.Finance</Solutions>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <DebugType>portable</DebugType>
-        <WarningsAsErrors>true</WarningsAsErrors>
-        <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../Annium.Finance.Providers.Abstractions.Connectors/Annium.Finance.Providers.Abstractions.Connectors.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Annium.Execution.Background" Version="0.1.0" />
-        <PackageReference Include="Annium.Extensions.Pooling" Version="0.1.0" />
-        <PackageReference Include="Annium.Net.Http" Version="0.1.0" />
-        <PackageReference Include="Annium.Net.WebSockets" Version="0.1.0" />
-        <PackageReference Include="Annium.NodaTime.Extensions" Version="0.1.0" />
-        <PackageReference Include="Annium.Serialization.Json" Version="0.1.0" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Finance</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Annium.Finance.Providers.Abstractions.Connectors/Annium.Finance.Providers.Abstractions.Connectors.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Annium.Execution.Background" />
+    <PackageReference Include="Annium.Extensions.Pooling" />
+    <PackageReference Include="Annium.Net.Http" />
+    <PackageReference Include="Annium.Net.WebSockets" />
+    <PackageReference Include="Annium.NodaTime.Extensions" />
+    <PackageReference Include="Annium.Serialization.Json" />
+  </ItemGroup>
 </Project>

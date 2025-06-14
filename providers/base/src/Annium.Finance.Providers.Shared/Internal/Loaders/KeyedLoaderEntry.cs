@@ -31,7 +31,7 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
         _getLoad = getLoad;
         var snapshotLoader = new SnapshotLoader<TData>(
             config,
-            GetLoad,
+            GetLoadAsync,
             statusReporter,
             ConnectorStatus.Connected,
             logger
@@ -44,7 +44,7 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
         Context = context;
     }
 
-    private Task<IBaseResult<TData?>> GetLoad(CancellationToken ct)
+    private Task<IBaseResult<TData?>> GetLoadAsync(CancellationToken ct)
     {
         return _getLoad(Key, Context, ct);
     }

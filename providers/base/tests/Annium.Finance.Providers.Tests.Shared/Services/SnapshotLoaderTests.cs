@@ -8,7 +8,6 @@ using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
 
 namespace Annium.Finance.Providers.Tests.Shared.Services;
@@ -51,7 +50,7 @@ public class SnapshotLoaderTests : TestBase
 
         loader.Start(true);
 
-        await Expect.To(() => log.Has(1));
+        await Expect.ToAsync(() => log.Has(1));
         log.At(0).Is(10);
         _statuses.IsEqual(new[] { Connecting, Connected });
     }

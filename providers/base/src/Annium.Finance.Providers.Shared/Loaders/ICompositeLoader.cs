@@ -5,7 +5,7 @@ namespace Annium.Finance.Providers.Shared.Loaders;
 public interface ICompositeLoader<T> : IDisposable
 {
     event Action<T> OnData;
-    public void Start(bool reportStatus);
-    public void Stop();
-    public void Request();
+    void Start(bool reportStatus);
+    void Stop();
+    void Request();
 }

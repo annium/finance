@@ -14,7 +14,6 @@ using Annium.Testing;
 using Annium.Threading.Channels;
 using Annium.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
@@ -40,7 +39,7 @@ public class UserConnectorBaseTests : TestBase
             Provider = "fake",
             Environment = ProviderEnvironment.Test,
             Key = "some_key",
-            Secret = "some_secret"
+            Secret = "some_secret",
         };
 
         // data
@@ -91,55 +90,70 @@ public class UserConnectorBaseTests : TestBase
         user.Positions.Subscribe(e => log.Add($"P:{e.Item.Symbol}"));
         user.Orders.Subscribe(e => log.Add($"O:{e.Item.Id}"));
         user.Trades.Subscribe(e => log.Add($"T:{e.Id}"));
-        Task.Run(async () =>
-            {
-                await Task.Delay(10);
-                foreach (var x in assets)
+        Task.Run(
+                async () =>
                 {
-                    await Task.Delay(1);
-                    user.Asset(x);
-                }
-            })
+                    await Task.Delay(10);
+                    foreach (var x in assets)
+                    {
+                        await Task.Delay(1);
+                        user.Asset(x);
+                    }
+                },
+                TestContext.Current.CancellationToken
+            )
             .GetAwaiter();
-        Task.Run(async () =>
-            {
-                await Task.Delay(10);
-                foreach (var x in positions)
+        Task.Run(
+                async () =>
                 {
-                    await Task.Delay(1);
-                    user.Position(x);
-                }
-            })
+                    await Task.Delay(10);
+                    foreach (var x in positions)
+                    {
+                        await Task.Delay(1);
+                        user.Position(x);
+                    }
+                },
+                TestContext.Current.CancellationToken
+            )
             .GetAwaiter();
-        Task.Run(async () =>
-            {
-                await Task.Delay(10);
-                foreach (var x in orders)
+        Task.Run(
+                async () =>
                 {
-                    await Task.Delay(1);
-                    user.Order(x);
-                }
-            })
+                    await Task.Delay(10);
+                    foreach (var x in orders)
+                    {
+                        await Task.Delay(1);
+                        user.Order(x);
+                    }
+                },
+                TestContext.Current.CancellationToken
+            )
             .GetAwaiter();
-        Task.Run(async () =>
-            {
-                await Task.Delay(10);
-                foreach (var x in trades)
+        Task.Run(
+                async () =>
                 {
-                    await Task.Delay(1);
-                    user.Trade(x);
-                }
-            })
+                    await Task.Delay(10);
+                    foreach (var x in trades)
+                    {
+                        await Task.Delay(1);
+                        user.Trade(x);
+                    }
+                },
+                TestContext.Current.CancellationToken
+            )
             .GetAwaiter();
-        Task.Run(async () =>
-            {
-                await Task.Delay(10);
-                reporter.Connected();
-                await Task.Delay(10);
-                reporter.Connecting();
-                await Task.Delay(10);
-                reporter.Connected();
-            })
+        Task.Run(
+                async () =>
+                {
+                    await Task.Delay(10);
+                    reporter.Connected();
+                    await Task.Delay(10);
+                    reporter.Connecting();
+                    await Task.Delay(10);
+                    reporter.Connected();
+                },
+                TestContext.Current.CancellationToken
+            )
             .GetAwaiter();
 
         // assert (data messages + 2 sync event pairs)

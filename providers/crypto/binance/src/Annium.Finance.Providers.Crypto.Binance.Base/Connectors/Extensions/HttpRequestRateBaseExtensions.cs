@@ -8,12 +8,12 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestRateBaseExtensions
 {
-    private static readonly string[] HeaderMasks = ["x-mbx-used-weight", "x-mbx-order"];
+    private static readonly string[] _headerMasks = ["x-mbx-used-weight", "x-mbx-order"];
 
     public static IHttpRequest WithLogFromWithHeaders<T>(this IHttpRequest request, T subject, LogData log = default)
         where T : ILogSubject
     {
-        return request.WithLogFrom(subject, log, HeaderMasks);
+        return request.WithLogFrom(subject, log, _headerMasks);
     }
 
     public static IHttpRequest WithRateDelayBase(this IHttpRequest request, string interval, int watermark) =>
@@ -24,17 +24,21 @@ public static class HttpRequestRateBaseExtensions
             var headerName = $"x-mbx-used-weight-{interval}";
             var usedHeader =
                 response.Headers.FirstOrDefault(x => x.Key.ToLowerInvariant() == headerName).Value?.ToArray()
-                ?? Array.Empty<string>();
+                ?? [];
             if (usedHeader.Length == 0)
             {
-                request.Warn($"{headerName} header not present");
+                request.Warn<string>("{headerName} header not present", headerName);
                 await Task.Delay(TimeSpan.FromSeconds(2));
                 return response;
             }
 
             if (!int.TryParse(usedHeader[0], out var used))
             {
-                request.Error($"{headerName} header failed to parse from {usedHeader[0]}");
+                request.Error<string, string>(
+                    "{headerName} header failed to parse from {usedHeader}",
+                    headerName,
+                    usedHeader[0]
+                );
                 await Task.Delay(TimeSpan.FromSeconds(2));
                 return response;
             }

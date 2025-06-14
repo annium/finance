@@ -18,7 +18,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     private readonly Func<CancellationToken, Task<IBaseResult<T?>>> _load;
     private readonly IStatusReporter _statusReporter;
     private readonly ISequentialTimer _timer;
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private State _state;
     private CancellationTokenSource _cts = new();
     private int _requestCounter;
@@ -153,7 +153,9 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 _state = State.Inactive;
 
                 this.Trace("cancel cts");
+#pragma warning disable VSTHRD103
                 _cts.Cancel();
+#pragma warning restore VSTHRD103
 
                 this.Trace("stop timer");
                 _timer.Change(Timeout.Infinite, Timeout.Infinite);

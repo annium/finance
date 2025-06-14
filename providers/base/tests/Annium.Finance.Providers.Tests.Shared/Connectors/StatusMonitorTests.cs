@@ -5,7 +5,6 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;

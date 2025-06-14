@@ -17,7 +17,6 @@ using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
@@ -51,7 +50,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         Symbol = symbol;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         this.Trace("start");
 
@@ -62,14 +61,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         var market = marketConnectorRef.Value;
 
         this.Trace("await until market connector is ready");
-        await market.WhenConnected();
+        await market.WhenConnectedAsync();
 
         this.Trace<string>("find instrument {symbol}", Symbol);
         Instrument = market.Instruments.Single(x => x.Symbol == Symbol);
         this.Trace("found instrument {instrument}", Instrument);
 
         this.Trace<string>("subscribe and wait for ticker for {symbol}", Symbol);
-        market.SubscribeTickers(new[] { Symbol });
+        market.SubscribeTickers([Symbol]);
         this.Trace<string>("find ticker for {symbol}", Symbol);
         Ticker = await market.Tickers.FirstAsync(x => x.Symbol == Symbol);
         this.Trace("found ticker for {instrument}", Instrument);
@@ -102,7 +101,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         Connector.OnError += _errors.Enqueue;
 
         this.Trace("await until user connector is ready");
-        await Connector.WhenConnected();
+        await Connector.WhenConnectedAsync();
 
         this.Trace("cancel open orders");
         await CancelOpenOrders();
@@ -121,7 +120,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -185,7 +184,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         {
             this.Trace("close {instrument} position with amount {amount}", Instrument, position.Amount);
             await Connector
-                .InitOrder(
+                .InitOrderAsync(
                     InitMarketOrder(
                         ClientOrderId(),
                         Range(),
@@ -194,7 +193,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
                         Math.Abs(position.Amount)
                     )
                 )
-                .Unwrap();
+                .UnwrapAsync();
         }
 
         EnsureNoErrors();
@@ -206,7 +205,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await Connector.InitOrder(request).EnsureFailed();
+        await Connector.InitOrderAsync(request).EnsureFailedAsync();
 
         EnsureNoErrors();
 
@@ -221,7 +220,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 
         // act
         this.Trace("execute start");
-        var order = await Connector.InitOrder(request).Unwrap();
+        var order = await Connector.InitOrderAsync(request).UnwrapAsync();
         this.Trace("execute done");
 
         EnsureNoErrors();
@@ -242,7 +241,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("start");
 
         var request = CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
-        await Connector.CancelOrder(request).EnsureFailed();
+        await Connector.CancelOrderAsync(request).EnsureFailedAsync();
 
         EnsureNoErrors();
 
@@ -258,7 +257,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         // cleanup
         this.Trace("execute start");
         var request = CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
-        await Connector.CancelOrder(request).Unwrap();
+        await Connector.CancelOrderAsync(request).UnwrapAsync();
         this.Trace("execute done");
 
         EnsureNoErrors();
@@ -275,7 +274,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await Connector.ModifyOrder(request).EnsureFailed();
+        await Connector.ModifyOrderAsync(request).EnsureFailedAsync();
 
         EnsureNoErrors();
 
@@ -290,7 +289,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
 
         // act
         this.Trace("execute start");
-        var order = await Connector.ModifyOrder(request).Unwrap();
+        var order = await Connector.ModifyOrderAsync(request).UnwrapAsync();
         this.Trace("execute done");
 
         EnsureNoErrors();
@@ -311,7 +310,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
         this.Trace("cancel all orders - start");
 
         // cancel existing orders
-        await Connector.CancelAllOrders(Symbol).Unwrap();
+        await Connector.CancelAllOrdersAsync(Symbol).UnwrapAsync();
 
         EnsureNoErrors();
 
@@ -322,14 +321,14 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     {
         // await until balances arrive and a second more before starting test
         this.Trace("await for balances");
-        await Expect.To(() => _assets.IsNotEmpty());
+        await Expect.ToAsync(() => _assets.IsNotEmpty());
         await WaitForMessages();
     }
 
     protected Task AwaitForInitialPositionsAndLeverages()
     {
         this.Trace("await for positions");
-        return Expect.To(() => _positions.IsNotEmpty());
+        return Expect.ToAsync(() => _positions.IsNotEmpty());
     }
 
     protected decimal GetPositionAmount()
@@ -371,7 +370,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalBalance)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsLess(originalBalance.Free);
@@ -388,7 +387,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalBalance)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsGreater(originalBalance.Free);
@@ -405,7 +404,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalBalance)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsGreater(originalBalance.Free);
@@ -421,7 +420,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalBalance)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentBalance = GetBalance(Instrument.Currency.Code);
             currentBalance.Free.IsLess(originalBalance.Free);
@@ -437,7 +436,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalPosition)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentPosition = GetPosition();
             currentPosition.Amount.IsGreater(originalPosition.Amount);
@@ -453,7 +452,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
             JsonSerializer.Serialize(originalPosition)
         );
 
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var currentPosition = GetPosition();
             currentPosition.Amount.IsLess(originalPosition.Amount);
@@ -463,7 +462,7 @@ public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
     private Task EnsureOrderReported(OrderModel order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
-        return Expect.To(() =>
+        return Expect.ToAsync(() =>
         {
             var orderMessage = _orders.Last(x => x.Id == order.Id);
             orderMessage.ShouldMatch(order);

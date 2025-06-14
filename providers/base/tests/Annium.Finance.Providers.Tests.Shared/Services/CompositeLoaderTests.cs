@@ -12,7 +12,6 @@ using Annium.Linq;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
 
 namespace Annium.Finance.Providers.Tests.Shared.Services;
@@ -62,7 +61,7 @@ public class CompositeLoaderTests : TestBase
             loader.Request();
 
         var statuses = Array.Empty<ConnectorStatus>();
-        await Expect.To(() =>
+        await Expect.ToAsync(() =>
         {
             statuses = _statuses.ToArray();
             log.Has(1);

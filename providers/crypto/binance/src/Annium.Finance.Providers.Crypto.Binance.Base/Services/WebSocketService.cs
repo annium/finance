@@ -60,7 +60,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
 
         this.Trace<string>("subscribe to {topics}", targets.Join(","));
         var request = new Request { Method = "SUBSCRIBE", Params = targets };
-        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request)).GetAwaiter();
 
         this.Trace("done");
     }
@@ -78,7 +78,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
 
         this.Trace<string>("unsubscribe from {topics}", targets.Join(","));
         var request = new Request { Method = "UNSUBSCRIBE", Params = targets };
-        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request)).GetAwaiter();
 
         this.Trace("done");
     }
@@ -100,7 +100,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
 
         this.Trace<string>("subscribe to {topics}", _topics.Join(","));
         var request = new Request { Method = "SUBSCRIBE", Params = _topics };
-        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request));
+        _socket.SendTextAsync(JsonSerializer.SerializeToUtf8Bytes(request)).GetAwaiter();
 
         this.Trace("done");
     }

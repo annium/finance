@@ -16,7 +16,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
     private readonly int _intervalPeriod;
     private readonly IDebounceTimer? _debounceTimer;
     private readonly int _debouncePeriod;
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private State _state;
 
     public CompositeLoader(ISnapshotLoader<T> loader, int intervalPeriod, int debouncePeriod, ILogger logger)
@@ -41,7 +41,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         if (debouncePeriod != Timeout.Infinite)
         {
             this.Trace("create debounce timer with period {0}", debouncePeriod);
-            _debounceTimer = Timers.Debounce(InitDebounceLoad, Timeout.Infinite, logger);
+            _debounceTimer = Timers.Debounce(InitDebounceLoadAsync, Timeout.Infinite, logger);
         }
         else
         {
@@ -191,7 +191,7 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         this.Trace("done");
     }
 
-    private ValueTask InitDebounceLoad()
+    private ValueTask InitDebounceLoadAsync()
     {
         this.Trace("start");
 
@@ -219,6 +219,6 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         Inactive,
         Active,
         Stopped,
-        Disposed
+        Disposed,
     }
 }

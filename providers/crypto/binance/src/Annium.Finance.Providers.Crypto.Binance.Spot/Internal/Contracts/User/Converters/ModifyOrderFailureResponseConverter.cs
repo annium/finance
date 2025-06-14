@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
+using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
 internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResult?>
 {
-    private static readonly JsonSerializerOptions OperationResultDeserializerOptions = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions _operationResultDeserializerOptions = new JsonSerializerOptions()
         .ResetConverters()
         .AddConverter<OperationResultConverter>();
 
@@ -96,7 +96,7 @@ internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResu
                             {
                                 cancelResponse = JsonSerializer.Deserialize<OperationResult>(
                                     ref reader,
-                                    OperationResultDeserializerOptions
+                                    _operationResultDeserializerOptions
                                 );
                             }
 
@@ -106,7 +106,7 @@ internal class ModifyOrderFailureResponseConverter : JsonConverter<OperationResu
                             {
                                 initResponse = JsonSerializer.Deserialize<OperationResult>(
                                     ref reader,
-                                    OperationResultDeserializerOptions
+                                    _operationResultDeserializerOptions
                                 );
                             }
 

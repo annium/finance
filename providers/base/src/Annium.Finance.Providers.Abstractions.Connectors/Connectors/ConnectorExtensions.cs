@@ -4,7 +4,7 @@ namespace Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 
 public static class ConnectorExtensions
 {
-    public static Task WhenConnected(this IConnectorBase connector)
+    public static Task WhenConnectedAsync(this IConnectorBase connector)
     {
         var tcs = new TaskCompletionSource();
 

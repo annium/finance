@@ -13,7 +13,7 @@ internal static class HttpRequestResultExtensions
         where T : class
     {
         return request.AsMarketResultAsync<T, OperationResult>(
-            HttpRequestHelper.GetFailure,
+            HttpRequestHelper.GetFailureAsync,
             GetMarketErrorStatus,
             GetError
         );
@@ -23,7 +23,7 @@ internal static class HttpRequestResultExtensions
         where T : class
     {
         return request.AsUserResultAsync<T, OperationResult>(
-            HttpRequestHelper.GetFailure,
+            HttpRequestHelper.GetFailureAsync,
             GetUserErrorStatus,
             GetError
         );
@@ -35,7 +35,7 @@ internal static class HttpRequestResultExtensions
             1 => MarketOperationStatus.NetworkError,
             2 => MarketOperationStatus.ParseError,
             3 => MarketOperationStatus.UnknownError,
-            _ => null
+            _ => null,
         };
 
     private static UserOperationStatus? GetUserErrorStatus(OperationResult result) =>
@@ -44,7 +44,7 @@ internal static class HttpRequestResultExtensions
             1 => UserOperationStatus.NetworkError,
             2 => UserOperationStatus.ParseError,
             3 => UserOperationStatus.UnknownError,
-            _ => null
+            _ => null,
         };
 
     private static string GetError(OperationResult result) => result.Message;

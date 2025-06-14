@@ -9,8 +9,7 @@
 // using Annium.Logging;
 // using Annium.Testing;
 // using Xunit;
-// using Xunit.Abstractions;
-// using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
+// // using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 //
 // namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 //
@@ -101,7 +100,7 @@
 //             JsonSerializer.Serialize(originalBalance)
 //         );
 //
-//         return Expect.To(() =>
+//         return Expect.ToAsync(() =>
 //         {
 //             var currentBalance = GetBalance(Instrument.Quote.Code);
 //             currentBalance.Free.IsGreater(originalBalance.Free);
@@ -117,7 +116,7 @@
 //             JsonSerializer.Serialize(originalBalance)
 //         );
 //
-//         return Expect.To(() =>
+//         return Expect.ToAsync(() =>
 //         {
 //             var currentBalance = GetBalance(Instrument.Quote.Code);
 //             currentBalance.Free.IsLess(originalBalance.Free);

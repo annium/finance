@@ -7,25 +7,25 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 
 public static class HttpRequestHelper
 {
-    public static async Task<OperationResult> GetFailure(
+    public static async Task<OperationResult> GetFailureAsync(
         HttpFailureReason reason,
         IHttpResponse response,
         Exception? e
     ) =>
         reason switch
         {
-            HttpFailureReason.Abort
-                => new OperationResult(1, $"Request aborted ({response.StatusCode} - {response.StatusText})"),
-            HttpFailureReason.Parse
-                => new OperationResult(
-                    2,
-                    $"Response parse failed. Content: {await response.Content.ReadAsStringAsync()}"
-                ),
-            HttpFailureReason.Exception
-                => new OperationResult(
-                    3,
-                    $"Request failed. Error: {e?.Message}. Content: {await response.Content.ReadAsStringAsync()}"
-                ),
-            _ => new OperationResult(1, "Unmapped failure")
+            HttpFailureReason.Abort => new OperationResult(
+                1,
+                $"Request aborted ({response.StatusCode} - {response.StatusText})"
+            ),
+            HttpFailureReason.Parse => new OperationResult(
+                2,
+                $"Response parse failed. Content: {await response.Content.ReadAsStringAsync()}"
+            ),
+            HttpFailureReason.Exception => new OperationResult(
+                3,
+                $"Request failed. Error: {e?.Message}. Content: {await response.Content.ReadAsStringAsync()}"
+            ),
+            _ => new OperationResult(1, "Unmapped failure"),
         };
 }

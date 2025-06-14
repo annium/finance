@@ -10,7 +10,7 @@ internal static class Endpoints
         {
             ProviderEnvironment.Real => new Uri("https://api.binance.com"),
             ProviderEnvironment.Test => new Uri("https://testnet.binance.vision"),
-            _ => throw new ArgumentException($"Unsupported {env} environment")
+            _ => throw new ArgumentException($"Unsupported {env} environment"),
         };
 
     public static Uri GetWsApi(ProviderEnvironment env) =>
@@ -18,6 +18,6 @@ internal static class Endpoints
         {
             ProviderEnvironment.Real => new Uri("wss://stream.binance.com"),
             ProviderEnvironment.Test => new Uri("wss://testnet.binance.vision"),
-            _ => throw new ArgumentException($"Unsupported {env} environment")
+            _ => throw new ArgumentException($"Unsupported {env} environment"),
         };
 }

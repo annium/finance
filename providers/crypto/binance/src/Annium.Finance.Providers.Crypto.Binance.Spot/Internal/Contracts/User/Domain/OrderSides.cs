@@ -11,7 +11,7 @@ internal static class OrderSides
 
     static OrderSides()
     {
-        ValueToString = new Dictionary<OrderSide, string> { { OrderSide.Buy, "BUY" }, { OrderSide.Sell, "SELL" }, };
+        ValueToString = new Dictionary<OrderSide, string> { { OrderSide.Buy, "BUY" }, { OrderSide.Sell, "SELL" } };
 
         StringToValue = ValueToString.ToDictionary(x => x.Value, x => x.Key);
     }

@@ -11,8 +11,7 @@
 // using Annium.Logging;
 // using Annium.Testing;
 // using Xunit;
-// using Xunit.Abstractions;
-// using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
+// // using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 //
 // namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 //
@@ -95,7 +94,7 @@
 //     protected Task AwaitForInitialPositionsAndLeverages()
 //     {
 //         this.Trace("await for positions");
-//         return Expect.To(() => _.Count.IsGreater(0));
+//         return Expect.ToAsync(() => _.Count.IsGreater(0));
 //     }
 //
 //     protected decimal GetPositionAmount()
@@ -115,7 +114,7 @@
 //             JsonSerializer.Serialize(originalPosition)
 //         );
 //
-//         return Expect.To(() =>
+//         return Expect.ToAsync(() =>
 //         {
 //             var currentPosition = GetPosition();
 //             currentPosition.Amount.IsGreater(originalPosition.Amount);
@@ -131,7 +130,7 @@
 //             JsonSerializer.Serialize(originalPosition)
 //         );
 //
-//         return Expect.To(() =>
+//         return Expect.ToAsync(() =>
 //         {
 //             var currentPosition = GetPosition();
 //             currentPosition.Amount.IsLess(originalPosition.Amount);

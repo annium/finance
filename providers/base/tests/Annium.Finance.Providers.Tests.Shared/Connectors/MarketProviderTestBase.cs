@@ -10,7 +10,7 @@ using Annium.Logging;
 using Annium.NodaTime.Extensions;
 using Annium.Testing;
 using NodaTime;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 

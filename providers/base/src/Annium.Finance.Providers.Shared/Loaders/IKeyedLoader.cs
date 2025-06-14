@@ -6,5 +6,5 @@ public interface IKeyedLoader<TKey, TContext, TData> : IDisposable
     where TKey : notnull
 {
     event Action<TKey, TContext, TData> OnData;
-    public void Request(TKey key);
+    void Request(TKey key);
 }

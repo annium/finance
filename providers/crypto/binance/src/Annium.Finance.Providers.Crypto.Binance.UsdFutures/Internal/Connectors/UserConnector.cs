@@ -90,12 +90,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _orderUpdateEventSerializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(OrderUpdateKey, Application.Json);
 
         // context
-        Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContext);
+        Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContextAsync);
         _contextLoader.OnData += HandleContext;
         Disposable += () => _contextLoader.OnData -= HandleContext;
 
         // orders
-        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(_config.ReloadOrders, LoadOrders);
+        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(_config.ReloadOrders, LoadOrdersAsync);
         _ordersLoader.OnData += HandleOrders;
         Disposable += () => _ordersLoader.OnData -= HandleOrders;
 
@@ -103,7 +103,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
             _config.ReloadTrades,
             SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds(),
-            LoadTrades,
+            LoadTradesAsync,
             GetTradesContext
         );
         _tradesLoader.OnData += HandleTrades;
@@ -115,7 +115,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public async Task<UserResult> SetLeverage(PositionModel position, decimal leverage)
+    public async Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage)
     {
         if (Status is not ConnectorStatus.Connected)
         {
@@ -139,7 +139,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return UserResult.Ok();
     }
 
-    public async Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request)
+    public async Task<UserResult<OrderModel?>> InitOrderAsync(IInitOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
@@ -169,7 +169,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public async Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request)
+    public async Task<UserResult<OrderModel?>> ModifyOrderAsync(IModifyOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
@@ -183,7 +183,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             // try cancel order
             var order = request.Order;
             var cancelRequest = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
-            var cancelResult = await CancelOrder(cancelRequest);
+            var cancelResult = await CancelOrderAsync(cancelRequest);
             if (cancelResult.IsFailure)
             {
                 if (!cancelResult.IsAborted)
@@ -192,7 +192,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             }
 
             var initRequest = request.ToInitOrderRequest();
-            var initResult = await InitOrder(initRequest);
+            var initResult = await InitOrderAsync(initRequest);
 
             return initResult;
         }
@@ -219,7 +219,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return result;
     }
 
-    public async Task<UserResult> CancelOrder(ICancelOrderRequest request)
+    public async Task<UserResult> CancelOrderAsync(ICancelOrderRequest request)
     {
         if (Status is not ConnectorStatus.Connected)
         {
@@ -249,7 +249,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return UserResult.From(result);
     }
 
-    public async Task<UserResult> CancelAllOrders(string symbol)
+    public async Task<UserResult> CancelAllOrdersAsync(string symbol)
     {
         if (Status is not ConnectorStatus.Connected)
         {
@@ -290,7 +290,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
     }
 
-    private async Task<IBaseResult<UserContext?>> LoadContext(CancellationToken ct)
+    private async Task<IBaseResult<UserContext?>> LoadContextAsync(CancellationToken ct)
     {
         var result = await UserProvider.LoadContextAsync(Settings);
 
@@ -303,7 +303,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         PositionWriter.Write(ChangeEvent.Init(context.Positions));
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrders(CancellationToken ct)
+    private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(CancellationToken ct)
     {
         var result = await UserProvider.LoadOpenOrdersAsync(Settings);
 
@@ -315,7 +315,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         OrderWriter.Write(ChangeEvent.Init(orders));
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTrades(
+    private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
         string symbol,
         long since,
         CancellationToken ct

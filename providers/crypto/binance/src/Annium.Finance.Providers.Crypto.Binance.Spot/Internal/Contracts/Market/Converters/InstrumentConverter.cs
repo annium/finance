@@ -100,7 +100,7 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
                     case "permissions":
                         permissions =
                         [
-                            .. JsonSerializer.Deserialize<string[]>(ref reader, options) ?? Array.Empty<string>()
+                            .. JsonSerializer.Deserialize<string[]>(ref reader, options) ?? [],
                         ];
                         break;
                     default:

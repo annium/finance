@@ -17,7 +17,7 @@ public static class OrderRequestExtensions
             Qty = request.Qty,
             Price = request.Price,
             LevelPrice = request.LevelPrice,
-            ReduceOnly = request.Order.ReduceOnly
+            ReduceOnly = request.Order.ReduceOnly,
         };
     }
 }

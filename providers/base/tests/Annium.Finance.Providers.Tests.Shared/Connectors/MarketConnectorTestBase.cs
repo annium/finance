@@ -8,7 +8,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Shared;
 using Annium.Logging;
 using Annium.Testing;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
@@ -38,17 +38,17 @@ public abstract class MarketConnectorTestBase : ConnectorTestBase
         var marketConfig = new MarketSettings
         {
             Provider = providerKey.Provider,
-            Environment = providerKey.Environment
+            Environment = providerKey.Environment,
         };
         this.Trace("get market connector for {config}", marketConfig);
         await using var marketRef = await marketCache.GetAsync(marketConfig);
         var market = marketRef.Value;
 
         this.Trace("await market is connected");
-        await market.WhenConnected();
+        await market.WhenConnectedAsync();
 
         this.Trace("subscribe to instrument tickers");
-        market.SubscribeTickers(new[] { _symbol });
+        market.SubscribeTickers([_symbol]);
 
         // assert - instruments
         market.Instruments.Count.IsGreater(0);

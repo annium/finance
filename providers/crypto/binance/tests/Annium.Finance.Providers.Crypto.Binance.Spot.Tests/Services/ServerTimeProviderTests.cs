@@ -5,7 +5,6 @@ using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Services;
 
@@ -28,7 +27,7 @@ public class ServerTimeProviderTests : ConnectorTestBase
         monitor.OnStatusChanged += s => status = s;
 
         // assert
-        await Expect.To(() => status.Is(ConnectorStatus.Connected));
+        await Expect.ToAsync(() => status.Is(ConnectorStatus.Connected));
         tracker.ServerTime.IsNotDefault();
     }
 }

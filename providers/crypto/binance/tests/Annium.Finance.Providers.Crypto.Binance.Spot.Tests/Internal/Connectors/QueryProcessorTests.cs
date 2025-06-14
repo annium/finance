@@ -7,7 +7,6 @@ using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors;
@@ -15,8 +14,8 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors
 public class QueryProcessorTests : ConnectorTestBase
 {
     private const string Symbol = "BTCUSDT";
-    private static readonly string ClientOrderId = Guid.NewGuid().ToString();
-    private static readonly OrientationRange Range = OrientationRange.Both;
+    private static readonly string _clientOrderId = Guid.NewGuid().ToString();
+    private static readonly OrientationRange _range = OrientationRange.Both;
 
     public QueryProcessorTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
@@ -26,7 +25,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Buy, 10.5m, 15.2m);
+        var request = InitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m, 15.2m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -48,7 +47,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Buy, 10.5m);
+        var request = InitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -68,7 +67,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitStopLossMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
+        var request = InitStopLossMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -89,7 +88,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitTakeProfitMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
+        var request = InitTakeProfitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -110,7 +109,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitStopLossLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.6m);
+        var request = InitStopLossLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.6m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -133,7 +132,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitTakeProfitLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m);
+        var request = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
@@ -156,7 +155,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Buy, 10.5m, 15.2m).ToOrder();
+        var order = InitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m, 15.2m).ToOrder();
         var request = ModifyToLimitOrder(order, OrderSide.Buy, 11.3m, 12.7m);
 
         // act
@@ -181,7 +180,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Buy, 10.5m).ToOrder();
+        var order = InitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m).ToOrder();
         var request = ModifyToMarketOrder(order, OrderSide.Buy, 11.3m);
 
         // act
@@ -205,7 +204,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitStopLossMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m).ToOrder();
+        var order = InitStopLossMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m).ToOrder();
         var request = ModifyToStopLossMarketOrder(order, OrderSide.Sell, 11.3m, 12.7m);
 
         // act
@@ -230,7 +229,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitTakeProfitMarketOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m).ToOrder();
+        var order = InitTakeProfitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m).ToOrder();
         var request = ModifyToTakeProfitMarketOrder(order, OrderSide.Sell, 11.3m, 12.7m);
 
         // act
@@ -255,7 +254,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitStopLossLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.6m).ToOrder();
+        var order = InitStopLossLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.6m).ToOrder();
         var request = ModifyToStopLossLimitOrder(order, OrderSide.Sell, 11.3m, 12.7m, 12.9m);
 
         // act
@@ -281,7 +280,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitTakeProfitLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
+        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
         var request = ModifyToTakeProfitLimitOrder(order, OrderSide.Sell, 11.3m, 12.7m, 12.5m);
 
         // act
@@ -307,7 +306,7 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitTakeProfitLimitOrder(ClientOrderId, Range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
+        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
         var request = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
 
         // act

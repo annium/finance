@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Linq;
@@ -14,7 +15,7 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
     public ConnectorStatus Status { get; private set; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly Dictionary<string, ConnectorStatus> _targets = new();
 
     public StatusMonitor(ILogger logger)

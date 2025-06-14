@@ -13,7 +13,7 @@ public static class HttpRequestResultExtensions
         where T : class
     {
         return request.AsMarketResultAsync<T, OperationResult>(
-            HttpRequestHelper.GetFailure,
+            HttpRequestHelper.GetFailureAsync,
             GetMarketErrorStatus,
             GetError
         );
@@ -23,7 +23,7 @@ public static class HttpRequestResultExtensions
         where T : class
     {
         return request.AsUserResultAsync<T, OperationResult>(
-            HttpRequestHelper.GetFailure,
+            HttpRequestHelper.GetFailureAsync,
             GetUserErrorStatus,
             GetError
         );
@@ -35,7 +35,7 @@ public static class HttpRequestResultExtensions
             1 => MarketOperationStatus.NetworkError,
             2 => MarketOperationStatus.ParseError,
             3 => MarketOperationStatus.UnknownError,
-            _ => null
+            _ => null,
         };
 
     private static UserOperationStatus? GetUserErrorStatus(OperationResult result) =>
@@ -46,7 +46,7 @@ public static class HttpRequestResultExtensions
             3 => UserOperationStatus.UnknownError,
             -2018 => UserOperationStatus.InsufficientBalance, // BALANCE_NOT_SUFFICIENT
             -2019 => UserOperationStatus.InsufficientBalance, // MARGIN_NOT_SUFFICIENT
-            _ => null
+            _ => null,
         };
 
     private static string GetError(OperationResult result) => result.Message;

@@ -1,17 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <PackageId>Annium.Finance.Providers.Crypto.Binance.UsdFutures</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
-        <Description>Annium.Finance.Providers.Crypto.Binance.UsdFutures</Description>
-        <Solutions>Annium.Finance</Solutions>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <DebugType>portable</DebugType>
-        <WarningsAsErrors>true</WarningsAsErrors>
-        <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../Annium.Finance.Providers.Crypto.Binance.Base/Annium.Finance.Providers.Crypto.Binance.Base.csproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Finance</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Annium.Finance.Providers.Crypto.Binance.Base/Annium.Finance.Providers.Crypto.Binance.Base.csproj" />
+  </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Services;
 

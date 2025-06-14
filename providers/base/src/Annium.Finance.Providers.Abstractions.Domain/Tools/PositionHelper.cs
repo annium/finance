@@ -102,7 +102,7 @@ public static class PositionHelper
         TS subject,
         decimal value,
         IResult<TR> result,
-        [CallerArgumentExpression("value")] string ex = ""
+        [CallerArgumentExpression(nameof(value))] string ex = ""
     )
     {
         if (value < 0)

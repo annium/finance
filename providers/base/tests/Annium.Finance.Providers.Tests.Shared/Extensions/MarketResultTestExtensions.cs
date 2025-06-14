@@ -6,10 +6,12 @@ namespace Annium.Finance.Providers.Tests.Shared.Extensions;
 
 public static class MarketResultTestExtensions
 {
-    public static async Task<T> Unwrap<T>(this Task<MarketResult<T>> task)
+    public static async Task<T> UnwrapAsync<T>(this Task<MarketResult<T>> task)
         where T : class
     {
+#pragma warning disable VSTHRD003
         var result = await task;
+#pragma warning restore VSTHRD003
 
         result.Message.IsNullOrWhiteSpace().IsTrue();
         result.Status.Is(MarketOperationStatus.Ok);
@@ -20,9 +22,11 @@ public static class MarketResultTestExtensions
         return data;
     }
 
-    public static async Task Unwrap(this Task<MarketResult> task)
+    public static async Task UnwrapAsync(this Task<MarketResult> task)
     {
+#pragma warning disable VSTHRD003
         var result = await task;
+#pragma warning restore VSTHRD003
 
         result.Message.IsNullOrWhiteSpace().IsTrue();
         result.Status.Is(MarketOperationStatus.Ok);
@@ -46,17 +50,21 @@ public static class MarketResultTestExtensions
         result.Status.Is(MarketOperationStatus.Ok);
     }
 
-    public static async Task EnsureFailed<T>(this Task<MarketResult<T>> task)
+    public static async Task EnsureFailedAsync<T>(this Task<MarketResult<T>> task)
     {
+#pragma warning disable VSTHRD003
         var result = await task;
+#pragma warning restore VSTHRD003
 
         result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
-    public static async Task EnsureFailed(this Task<MarketResult> task)
+    public static async Task EnsureFailedAsync(this Task<MarketResult> task)
     {
+#pragma warning disable VSTHRD003
         var result = await task;
+#pragma warning restore VSTHRD003
 
         result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);

@@ -12,7 +12,7 @@ namespace Annium.Finance.Providers.Shared.Connectors;
 
 public abstract class MarketProviderBase
 {
-    private static readonly long Minute = Duration.FromMinutes(1).TotalMilliseconds.FloorInt64();
+    private static readonly long _minute = Duration.FromMinutes(1).TotalMilliseconds.FloorInt64();
 
     protected Dictionary<string, ResourceModel> ResolveResources(IReadOnlyCollection<InstrumentModel> instruments)
     {
@@ -50,7 +50,7 @@ public abstract class MarketProviderBase
 
             // adjust window
             last = result.Data.Last();
-            from = Instant.FromUnixTimeMilliseconds(last.Moment + Minute);
+            from = Instant.FromUnixTimeMilliseconds(last.Moment + _minute);
 
             // if window closed - break
             if (end <= from)
@@ -78,7 +78,7 @@ public abstract class MarketProviderBase
 
         // fast return if empty
         if (result.Data.Count == 0)
-            return MarketResult.Ok<IReadOnlyCollection<CandleModel>?>(Array.Empty<CandleModel>());
+            return MarketResult.Ok<IReadOnlyCollection<CandleModel>?>([]);
 
         var candles = result.Data;
 
@@ -95,8 +95,8 @@ public abstract class MarketProviderBase
             var prev = candles[i - 1];
             var curr = candles[i];
 
-            if (curr.Moment - prev.Moment > Minute)
-                candles.Insert(i, CandlePlug(prev.Moment + Minute, prev.Close));
+            if (curr.Moment - prev.Moment > _minute)
+                candles.Insert(i, CandlePlug(prev.Moment + _minute, prev.Close));
         }
 
         // return processed candles

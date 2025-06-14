@@ -5,22 +5,22 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Operations;
 public interface IBaseResult<out T>
 {
     [MemberNotNullWhen(true, nameof(Data))]
-    public bool IsSuccess { get; }
-    public bool IsAborted { get; }
-    public bool IsFailure { get; }
+    bool IsSuccess { get; }
+    bool IsAborted { get; }
+    bool IsFailure { get; }
 
     [MemberNotNullWhen(false, nameof(Data))]
-    public bool IsFailureOrAborted { get; }
+    bool IsFailureOrAborted { get; }
 
-    public T? Data { get; }
-    public string Message { get; }
+    T? Data { get; }
+    string Message { get; }
 }
 
 public interface IBaseResult
 {
-    public bool IsSuccess { get; }
-    public bool IsAborted { get; }
-    public bool IsFailure { get; }
-    public bool IsFailureOrAborted { get; }
-    public string Message { get; }
+    bool IsSuccess { get; }
+    bool IsAborted { get; }
+    bool IsFailure { get; }
+    bool IsFailureOrAborted { get; }
+    string Message { get; }
 }

@@ -6,7 +6,6 @@ using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Annium.Logging;
 using Xunit;
-using Xunit.Abstractions;
 using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors;

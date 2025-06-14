@@ -1,19 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <PackageId>Annium.Finance.Providers.Abstractions.Domain</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
-        <Description>Annium.Finance.Providers.Abstractions.Domain</Description>
-        <Solutions>Annium.Finance</Solutions>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <DebugType>portable</DebugType>
-        <WarningsAsErrors>true</WarningsAsErrors>
-        <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Annium.Core.Mapper" Version="0.1.0" />
-        <PackageReference Include="Annium.Data.Operations" Version="0.1.0" />
-        <PackageReference Include="NodaTime" Version="3.1.10" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Finance</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Annium.Core.Mapper" />
+    <PackageReference Include="Annium.Data.Operations" />
+    <PackageReference Include="NodaTime" />
+  </ItemGroup>
 </Project>

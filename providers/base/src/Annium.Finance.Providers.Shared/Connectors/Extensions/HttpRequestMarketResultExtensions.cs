@@ -34,6 +34,6 @@ public static class HttpRequestResultExtensions
         code switch
         {
             HttpStatusCode.BadRequest => MarketOperationStatus.BadRequest,
-            _ => MarketOperationStatus.UnknownError
+            _ => MarketOperationStatus.UnknownError,
         };
 }

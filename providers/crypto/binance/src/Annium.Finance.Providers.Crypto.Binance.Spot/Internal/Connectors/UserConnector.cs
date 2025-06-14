@@ -5,7 +5,6 @@ using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base;
-using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,21 +13,14 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
 internal class UserConnector : UserConnectorBase, IUserConnector
 {
-    private readonly QueryProcessor _queryProcessor;
-    private readonly SignatureService _signatureService;
-
     public UserConnector(
         UserConfig config,
-        QueryProcessor queryProcessor,
-        SignatureService signatureService,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
         IStatusMonitor monitor,
         ILogger logger
     )
         : base(config.GetSettings(), userProvider, monitor, logger)
     {
-        _queryProcessor = queryProcessor;
-        _signatureService = signatureService;
         // init load
         // schedule sync on connected
     }
@@ -38,27 +30,27 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         return ValueTask.CompletedTask;
     }
 
-    public Task<UserResult> SetLeverage(PositionModel position, decimal leverage)
+    public Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderModel?>> InitOrder(IInitOrderRequest request)
+    public Task<UserResult<OrderModel?>> InitOrderAsync(IInitOrderRequest request)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult<OrderModel?>> ModifyOrder(IModifyOrderRequest request)
+    public Task<UserResult<OrderModel?>> ModifyOrderAsync(IModifyOrderRequest request)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult> CancelOrder(ICancelOrderRequest order)
+    public Task<UserResult> CancelOrderAsync(ICancelOrderRequest order)
     {
         throw new NotImplementedException();
     }
 
-    public Task<UserResult> CancelAllOrders(string symbol)
+    public Task<UserResult> CancelAllOrdersAsync(string symbol)
     {
         throw new NotImplementedException();
     }

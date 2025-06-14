@@ -75,10 +75,10 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         [EnumeratorCancellation] CancellationToken ct
     )
     {
-        await foreach (var candles in LoadCandlesBaseAsync(instrument, start, end, 1000, Fetch, ct))
+        await foreach (var candles in LoadCandlesBaseAsync(instrument, start, end, 1000, FetchAsync, ct))
             yield return candles;
 
-        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count) =>
+        Task<MarketResult<List<CandleModel>?>> FetchAsync(string symbol, Instant from, int count) =>
             _candleRequestFactory
                 .New(Endpoints.GetHttpApi(env))
                 .Get("fapi/v1/klines")

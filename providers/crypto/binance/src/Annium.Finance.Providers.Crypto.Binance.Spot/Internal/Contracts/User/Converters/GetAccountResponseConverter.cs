@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
 internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<AssetModel>>
 {
-    private static readonly JsonSerializerOptions BalanceOptions = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions _balanceOptions = new JsonSerializerOptions()
         .ResetConverters()
         .AddConverter<GetAccountResponseBalanceConverter>();
 
@@ -44,7 +44,7 @@ internal class GetAccountResponseConverter : JsonConverter<IReadOnlyCollection<A
                     case "balances":
                         balances = JsonSerializer.Deserialize<IReadOnlyCollection<AssetModel>>(
                             ref reader,
-                            BalanceOptions
+                            _balanceOptions
                         );
                         break;
                     default:

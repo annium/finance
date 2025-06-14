@@ -5,7 +5,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Enums;
 
 public sealed class Orientation
 {
-    private static readonly IDictionary<OrientationType, Orientation> Values =
+    private static readonly IDictionary<OrientationType, Orientation> _values =
         new Dictionary<OrientationType, Orientation>();
     public static Orientation Long { get; } = new(OrientationType.Long, OrderSide.Buy, OrderSide.Sell);
     public static Orientation Short { get; } = new(OrientationType.Short, OrderSide.Sell, OrderSide.Buy);
@@ -19,13 +19,13 @@ public sealed class Orientation
         Type = type;
         OpenSide = openSide;
         CloseSide = closeSide;
-        Values[Type] = this;
+        _values[Type] = this;
     }
 
     public override string ToString() => $"{Type} ({OpenSide} -> {CloseSide})";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Orientation(OrientationType type) => Values[type];
+    public static implicit operator Orientation(OrientationType type) => _values[type];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator OrientationType(Orientation orientation) => orientation.Type;

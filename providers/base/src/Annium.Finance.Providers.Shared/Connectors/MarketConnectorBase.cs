@@ -15,8 +15,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public ConnectorStatus Status { get; private set; }
-    public IReadOnlyCollection<ResourceModel> Resources { get; private set; } = Array.Empty<ResourceModel>();
-    public IReadOnlyCollection<InstrumentModel> Instruments { get; private set; } = Array.Empty<InstrumentModel>();
+    public IReadOnlyCollection<ResourceModel> Resources { get; private set; } = [];
+    public IReadOnlyCollection<InstrumentModel> Instruments { get; private set; } = [];
     public IObservable<InstrumentTicker> Tickers { get; }
     public event Action<ConnectorStatus> OnStatusChanged = delegate { };
     public event Action<ConnectorError> OnError = delegate { };

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 
 internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderModel?>
 {
-    private static readonly JsonSerializerOptions OrderResponseDeserializerOptions = new JsonSerializerOptions()
+    private static readonly JsonSerializerOptions _orderResponseDeserializerOptions = new JsonSerializerOptions()
         .ResetConverters()
         .AddConverter<InitOrderResponseConverter>();
 
@@ -37,7 +37,7 @@ internal class ModifyOrderSuccessResponseConverter : JsonConverter<OrderModel?>
                 switch (propertyName)
                 {
                     case "newOrderResponse":
-                        order = JsonSerializer.Deserialize<OrderModel?>(ref reader, OrderResponseDeserializerOptions);
+                        order = JsonSerializer.Deserialize<OrderModel?>(ref reader, _orderResponseDeserializerOptions);
                         break;
                     default:
                         reader.Skip();

@@ -16,5 +16,5 @@ public enum UserOperationStatus
     UnknownError,
 
     // custom statuses
-    InsufficientBalance
+    InsufficientBalance,
 }

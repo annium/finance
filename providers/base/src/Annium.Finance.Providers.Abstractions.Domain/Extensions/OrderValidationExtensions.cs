@@ -105,44 +105,39 @@ public static class OrderValidationExtensions
 
         // for immediate order - level price must be zero
         if (order.IsImmediate())
-            result.ValidateLevelPrice(PriceIsZero);
+            result.ValidateLevelPrice(_priceIsZero);
 
         // for leveled order - level price must be set
         if (order.IsLeveled())
-            result.ValidateLevelPrice(PriceIsAboveZero);
+            result.ValidateLevelPrice(_priceIsAboveZero);
 
         // for limit order - price must be set always,
         if (order.IsLimit())
-            result.ValidatePrice(PriceIsAboveZero);
+            result.ValidatePrice(_priceIsAboveZero);
 
         // for market order - price must be zero
         if (order.IsMarket())
-            result.ValidatePrice(PriceIsZero);
+            result.ValidatePrice(_priceIsZero);
 
         return status switch
         {
             New => result.ValidateStatus(New).ValidateNewQtyAndPrice(executedQty, executedPrice),
-            PartiallyFilled
-                => result
-                    .ValidateStatus(New, PartiallyFilled)
-                    .ValidatePartiallyFilledQtyAndPrice(executedQty, executedPrice),
-            Filled
-                => result
-                    .ValidateStatus(New, PartiallyFilled, Filled)
-                    .ValidateFilledQtyAndPrice(executedQty, executedPrice),
-            Canceled
-                => result
-                    .ValidateStatus(New, PartiallyFilled, Canceled)
-                    .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
-            Rejected
-                => result
-                    .ValidateStatus(New, PartiallyFilled, Rejected)
-                    .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
-            Expired
-                => result
-                    .ValidateStatus(New, PartiallyFilled, Expired)
-                    .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
-            _ => result.Error($"Unexpected status {status}")
+            PartiallyFilled => result
+                .ValidateStatus(New, PartiallyFilled)
+                .ValidatePartiallyFilledQtyAndPrice(executedQty, executedPrice),
+            Filled => result
+                .ValidateStatus(New, PartiallyFilled, Filled)
+                .ValidateFilledQtyAndPrice(executedQty, executedPrice),
+            Canceled => result
+                .ValidateStatus(New, PartiallyFilled, Canceled)
+                .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
+            Rejected => result
+                .ValidateStatus(New, PartiallyFilled, Rejected)
+                .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
+            Expired => result
+                .ValidateStatus(New, PartiallyFilled, Expired)
+                .ValidateDeclinedQtyAndPrice(executedQty, executedPrice),
+            _ => result.Error($"Unexpected status {status}"),
         };
     }
 
@@ -310,6 +305,6 @@ public static class OrderValidationExtensions
             result.Error($"Order {result.Data} target price is invalid");
     }
 
-    private static readonly Func<decimal, bool> PriceIsZero = price => price == 0;
-    private static readonly Func<decimal, bool> PriceIsAboveZero = price => price > 0;
+    private static readonly Func<decimal, bool> _priceIsZero = price => price == 0;
+    private static readonly Func<decimal, bool> _priceIsAboveZero = price => price > 0;
 }
