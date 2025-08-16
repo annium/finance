@@ -23,8 +23,7 @@ public static class HttpRequestRateBaseExtensions
 
             var headerName = $"x-mbx-used-weight-{interval}";
             var usedHeader =
-                response.Headers.FirstOrDefault(x => x.Key.ToLowerInvariant() == headerName).Value?.ToArray()
-                ?? [];
+                response.Headers.FirstOrDefault(x => x.Key.ToLowerInvariant() == headerName).Value?.ToArray() ?? [];
             if (usedHeader.Length == 0)
             {
                 request.Warn<string>("{headerName} header not present", headerName);

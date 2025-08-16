@@ -280,7 +280,8 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
+        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m)
+            .ToOrder();
         var request = ModifyToTakeProfitLimitOrder(order, OrderSide.Sell, 11.3m, 12.7m, 12.5m);
 
         // act
@@ -306,7 +307,8 @@ public class QueryProcessorTests : ConnectorTestBase
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m).ToOrder();
+        var order = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m)
+            .ToOrder();
         var request = RequestBuilder.CancelOrder(order.Id, order.ClientOrderId, order.Symbol);
 
         // act

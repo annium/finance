@@ -2,17 +2,38 @@
   "version": 1,
   "isRoot": true,
   "tools": {
+    "annium.doclint": {
+      "version": "1.1.11",
+      "commands": [
+        "doclint"
+      ],
+      "rollForward": false
+    },
+    "annium.versioning": {
+      "version": "1.1.11",
+      "commands": [
+        "versioning"
+      ],
+      "rollForward": false
+    },
     "annium.xs.cli": {
-      "version": "1.1.6",
+      "version": "1.1.7",
       "commands": [
         "xs"
       ],
       "rollForward": false
     },
     "csharpier": {
-      "version": "1.0.3",
+      "version": "1.1.1",
       "commands": [
         "csharpier"
+      ],
+      "rollForward": false
+    },
+    "docfx": {
+      "version": "2.78.3",
+      "commands": [
+        "docfx"
       ],
       "rollForward": false
     }
