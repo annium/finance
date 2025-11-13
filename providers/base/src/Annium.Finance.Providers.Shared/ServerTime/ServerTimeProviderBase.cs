@@ -12,13 +12,12 @@ namespace Annium.Finance.Providers.Shared.ServerTime;
 public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public long ServerTime => _serverTime + _watch.ElapsedMilliseconds;
+    public long ServerTime { get => field + _watch.ElapsedMilliseconds; private set; } = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     public event Action<bool> OnStateChanged = delegate { };
     private readonly ServerTimeProviderConfig _config;
     private readonly Stopwatch _watch = new();
     private readonly ISequentialTimer _timer;
     private readonly CancellationTokenSource _cts = new();
-    private long _serverTime = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     private Mode _mode = Mode.Load;
 
     protected ServerTimeProviderBase(ServerTimeProviderConfig config, ILogger logger)
@@ -70,7 +69,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         }
 
         this.Trace("update server time and restart watch");
-        _serverTime = result.Data;
+        ServerTime = result.Data;
         _watch.Restart();
 
         OnStateChanged(true);
