@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Shared.Connectors;
 using Xunit;
 
@@ -10,10 +10,9 @@ public class MarketConnectorTests : MarketConnectorTestBase
     public MarketConnectorTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), "BTCUSDT", outputHelper) { }
 
-    [Theory]
-    [ClassData(typeof(ProviderMarketEnvironments))]
-    public Task MarketConnectorAsync(ProviderKey providerKey)
+    [Fact]
+    public Task MarketConnectorAsync()
     {
-        return MarketConnectorBaseAsync(providerKey);
+        return MarketConnectorBaseAsync(Settings.Market.GetProviderKey());
     }
 }

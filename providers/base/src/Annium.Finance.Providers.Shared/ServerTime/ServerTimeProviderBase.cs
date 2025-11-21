@@ -12,7 +12,11 @@ namespace Annium.Finance.Providers.Shared.ServerTime;
 public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
-    public long ServerTime { get => field + _watch.ElapsedMilliseconds; private set; } = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
+    public long ServerTime
+    {
+        get => field + _watch.ElapsedMilliseconds;
+        private set;
+    } = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
     public event Action<bool> OnStateChanged = delegate { };
     private readonly ServerTimeProviderConfig _config;
     private readonly Stopwatch _watch = new();

@@ -10,8 +10,8 @@ public class SignatureServiceTests : ConnectorTestBase
     public SignatureServiceTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper)
     {
-        Inject(Markets.Test);
-        Inject(Users.Test);
+        Inject(Settings.Market);
+        Inject(Settings.User);
     }
 
     [Fact]
@@ -19,7 +19,7 @@ public class SignatureServiceTests : ConnectorTestBase
     {
         // arrange
         var service = Get<SignatureService>();
-        var expectedSignature = "0faa87b885c8901ac1d20c21d9181a404f5a2db737f5338f3e4384d0f0069b6e";
+        var expectedSignature = Settings.ExpectedSignature;
         var query =
             "symbol=LTCBTC&side=BUY&type=LIMIT&timeInForce=GTC&quantity=1&price=0.1&recvWindow=5000&timestamp=1499827319559";
 
@@ -27,7 +27,7 @@ public class SignatureServiceTests : ConnectorTestBase
         var signature = service.GetSignature(query);
 
         // assert
-        service.GetKey().Is(Users.Test.Key);
+        service.GetKey().Is(Settings.User.Key);
         signature.Is(expectedSignature);
     }
 }

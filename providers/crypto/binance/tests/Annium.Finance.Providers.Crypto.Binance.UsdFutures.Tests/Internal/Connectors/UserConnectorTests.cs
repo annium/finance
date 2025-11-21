@@ -37,8 +37,8 @@ public class UserConnectorTests : UserConnectorTestBase
                         ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
                     }
                 ),
-            Users.Test,
-            "BTCUSDT",
+            Settings.User,
+            "DOTUSDT",
             output
         ) { }
 

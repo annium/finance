@@ -13,8 +13,8 @@ public class ServerTimeProviderTests : ConnectorTestBase
     public ServerTimeProviderTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper)
     {
-        Inject(Markets.Test);
-        Inject(Users.Test);
+        Inject(Settings.Market);
+        Inject(Settings.User);
     }
 
     [Fact]
