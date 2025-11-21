@@ -62,8 +62,12 @@ internal class StatusReporter : IStatusReporter, ILogSubject
         _monitor.TrackStatus(target, status);
     }
 
-    private string GetTarget() =>
-        _target == string.Empty
+    private string GetTarget()
+    {
+        var target = _target;
+
+        return target == string.Empty
             ? throw new InvalidOperationException($"{this.GetFullId()} is not bound to any target")
-            : _target;
+            : target;
+    }
 }

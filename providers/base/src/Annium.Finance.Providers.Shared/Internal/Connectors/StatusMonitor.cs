@@ -34,7 +34,8 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         lock (_locker)
         {
             this.Trace<string>("add {target}", target);
-            _targets.Add(target, status);
+            if (!_targets.TryAdd(target, status))
+                throw new InvalidOperationException($"Target {target} is already registered");
 
             UpdateStatus();
         }
@@ -46,7 +47,7 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         {
             this.Trace<string>("remove {target}", target);
             if (!_targets.Remove(target))
-                throw new InvalidOperationException($"Target {target} was not registered");
+                throw new InvalidOperationException($"Target {target} is not registered");
 
             UpdateStatus();
         }
@@ -57,6 +58,9 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
         lock (_locker)
         {
             this.Trace("{target} - {status}", target, status);
+            if (!_targets.ContainsKey(target))
+                throw new InvalidOperationException($"Target {target} is not registered");
+
             _targets[target] = status;
 
             UpdateStatus();
