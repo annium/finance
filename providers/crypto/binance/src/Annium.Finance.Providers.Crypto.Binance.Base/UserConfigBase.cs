@@ -27,9 +27,3 @@ public static class UserConfigBaseExtensions
             Secret = config.Secret,
         };
 }
-
-public sealed record ListenKeyConfiguration
-{
-    public int FetchInterval { get; init; } = 5_000;
-    public int ConfirmInterval { get; init; } = 60_000;
-}

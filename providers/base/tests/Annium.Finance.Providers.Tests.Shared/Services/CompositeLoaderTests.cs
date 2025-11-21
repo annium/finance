@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Linq;
@@ -25,7 +25,7 @@ public class CompositeLoaderTests : TestBase
     {
         Register(container =>
         {
-            container.AddProviders();
+            container.AddFinanceProviders();
         });
         RegisterTestLogs();
 
