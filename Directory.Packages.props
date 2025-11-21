@@ -3,18 +3,18 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Annium.Core.Mapper" Version="1.1.23" />
-    <PackageVersion Include="Annium.Data.Operations" Version="1.1.23" />
-    <PackageVersion Include="Annium.Data.Operations.Testing" Version="1.1.23" />
-    <PackageVersion Include="Annium.Data.Tables" Version="1.1.23" />
-    <PackageVersion Include="Annium.Execution.Background" Version="1.1.23" />
-    <PackageVersion Include="Annium.Extensions.Pooling" Version="1.1.23" />
-    <PackageVersion Include="Annium.Net.Http" Version="1.1.23" />
-    <PackageVersion Include="Annium.Net.WebSockets" Version="1.1.23" />
-    <PackageVersion Include="Annium.NodaTime.Extensions" Version="1.1.23" />
-    <PackageVersion Include="Annium.Serialization.Abstractions" Version="1.1.23" />
-    <PackageVersion Include="Annium.Serialization.Json" Version="1.1.23" />
-    <PackageVersion Include="Annium.Testing" Version="1.1.23" />
+    <PackageVersion Include="Annium.Core.Mapper" Version="1.1.24" />
+    <PackageVersion Include="Annium.Data.Operations" Version="1.1.24" />
+    <PackageVersion Include="Annium.Data.Operations.Testing" Version="1.1.24" />
+    <PackageVersion Include="Annium.Data.Tables" Version="1.1.24" />
+    <PackageVersion Include="Annium.Execution.Background" Version="1.1.24" />
+    <PackageVersion Include="Annium.Extensions.Pooling" Version="1.1.24" />
+    <PackageVersion Include="Annium.Net.Http" Version="1.1.24" />
+    <PackageVersion Include="Annium.Net.WebSockets" Version="1.1.24" />
+    <PackageVersion Include="Annium.NodaTime.Extensions" Version="1.1.24" />
+    <PackageVersion Include="Annium.Serialization.Abstractions" Version="1.1.24" />
+    <PackageVersion Include="Annium.Serialization.Json" Version="1.1.24" />
+    <PackageVersion Include="Annium.Testing" Version="1.1.24" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19" />
