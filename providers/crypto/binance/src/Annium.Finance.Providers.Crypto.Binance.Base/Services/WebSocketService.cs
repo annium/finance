@@ -30,7 +30,7 @@ public abstract class WebSocketService : IDisposable, ILogSubject
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
 
-        _socket.Connect(new Uri(config.WsApi, config.WsMarketEndpoint));
+        _socket.Connect(new Uri(config.WsApi, config.WsUriPath));
         _statusReporter.Connecting();
     }
 

@@ -102,7 +102,7 @@ public static class ProviderRegistrationContextExtensions
             Environment = marketSettings.Environment,
             HttpApi = httpApi,
             WsApi = wsApi,
-            WsMarketEndpoint = "/stream",
+            WsUriPath = "/stream",
         };
     }
 
@@ -123,7 +123,7 @@ public static class ProviderRegistrationContextExtensions
             Secret = userSettings.Secret,
             HttpApi = httpApi,
             WsApi = wsApi,
-            ListenKeyBase = "/ws/",
+            ListenKeyUriPath = "/ws/",
             ListenKey = providerConfig.ListenKey,
             ReloadContext = providerConfig.ReloadContext,
             ReloadOrders = providerConfig.ReloadOrders,

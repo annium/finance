@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Concurrent;
-using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Testing;
 using Xunit;
@@ -18,7 +18,7 @@ public class StatusMonitorTests : TestBase
     {
         Register(container =>
         {
-            container.AddProviders();
+            container.AddFinanceProviders();
         });
 
         var monitor = Get<IStatusMonitor>();

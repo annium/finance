@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Testing;
@@ -22,7 +22,7 @@ public class UserConnectorBaseTests : TestBase
     public UserConnectorBaseTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Register(container => container.AddProviders());
+        Register(container => container.AddFinanceProviders());
     }
 
     [Fact]
