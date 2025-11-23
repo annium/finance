@@ -13,7 +13,7 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(MarketOperationStatus.Ok);
 
         var data = result.Data;
@@ -28,14 +28,14 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(MarketOperationStatus.Ok);
     }
 
     public static T Unwrap<T>(this MarketResult<T> result)
         where T : class
     {
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(MarketOperationStatus.Ok);
 
         var data = result.Data;
@@ -46,7 +46,7 @@ public static class MarketResultTestExtensions
 
     public static void Unwrap(this MarketResult result)
     {
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(MarketOperationStatus.Ok);
     }
 
@@ -56,7 +56,7 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
@@ -66,19 +66,19 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
     public static void EnsureFailed<T>(this MarketResult<T> result)
     {
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
     public static void EnsureFailed(this MarketResult result)
     {
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 }

@@ -1,13 +1,13 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Contracts.User.Converters;
 
-public class AccountConfigUpdateEventConverterTests : ConnectorTestBase
+public class AccountConfigUpdateEventConverterTests : ProvidersTestBase
 {
     public AccountConfigUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }

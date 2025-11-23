@@ -1,14 +1,14 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.User.Converters;
 
-public class ModifyOrderSuccessResponseConverterTests : ConnectorTestBase
+public class ModifyOrderSuccessResponseConverterTests : ProvidersTestBase
 {
     public ModifyOrderSuccessResponseConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }

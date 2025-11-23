@@ -1,13 +1,13 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Contracts.User.Converters;
 
-public class LeverageResponseConverterTests : ConnectorTestBase
+public class LeverageResponseConverterTests : ProvidersTestBase
 {
     public LeverageResponseConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }

@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
-public abstract class MarketProviderTestBase : ConnectorTestBase
+public abstract class MarketProviderTestBase : ProvidersTestBase
 {
     private readonly string _symbol;
 

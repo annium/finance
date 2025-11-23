@@ -13,7 +13,7 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(UserOperationStatus.Ok);
 
         var data = result.Data;
@@ -28,14 +28,14 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(UserOperationStatus.Ok);
     }
 
     public static T Unwrap<T>(this UserResult<T> result)
         where T : class
     {
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(UserOperationStatus.Ok);
 
         var data = result.Data;
@@ -46,7 +46,7 @@ public static class UserResultTestExtensions
 
     public static void Unwrap(this UserResult result)
     {
-        result.Message.IsNullOrWhiteSpace().IsTrue();
+        result.Message.Is(string.Empty);
         result.Status.Is(UserOperationStatus.Ok);
     }
 
@@ -56,7 +56,7 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 
@@ -66,13 +66,13 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 
     public static void EnsureFailed<T>(this UserResult<T> result)
     {
-        result.Message.IsNullOrWhiteSpace().IsFalse();
+        result.Message.IsNot(string.Empty);
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 

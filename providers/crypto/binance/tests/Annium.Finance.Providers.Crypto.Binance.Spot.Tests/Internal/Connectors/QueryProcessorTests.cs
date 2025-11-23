@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Tools;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
@@ -11,7 +11,7 @@ using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors;
 
-public class QueryProcessorTests : ConnectorTestBase
+public class QueryProcessorTests : ProvidersTestBase
 {
     private const string Symbol = "BTCUSDT";
     private static readonly string _clientOrderId = Guid.NewGuid().ToString();

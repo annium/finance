@@ -1,11 +1,11 @@
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Services;
 
-public class SignatureServiceTests : ConnectorTestBase
+public class SignatureServiceTests : ProvidersTestBase
 {
     public SignatureServiceTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper)

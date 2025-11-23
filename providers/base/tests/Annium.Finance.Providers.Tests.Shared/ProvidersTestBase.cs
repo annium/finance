@@ -1,16 +1,18 @@
 using System;
-using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime;
 using Annium.Finance.Providers.Shared;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+namespace Annium.Finance.Providers.Tests.Shared;
 
-public abstract class ConnectorTestBase : TestBase
+public abstract class ProvidersTestBase : TestBase
 {
-    protected ConnectorTestBase(Action<ProviderRegistrationContext> registerProvider, ITestOutputHelper outputHelper)
+    protected ProvidersTestBase(ITestOutputHelper outputHelper)
+        : this(_ => { }, outputHelper) { }
+
+    protected ProvidersTestBase(Action<ProviderRegistrationContext> registerProvider, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(container =>

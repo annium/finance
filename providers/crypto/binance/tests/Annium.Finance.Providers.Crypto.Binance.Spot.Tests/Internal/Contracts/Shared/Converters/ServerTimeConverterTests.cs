@@ -1,13 +1,13 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.Shared.Converters;
 
-public class ServerTimeConverterTests : ConnectorTestBase
+public class ServerTimeConverterTests : ProvidersTestBase
 {
     public ServerTimeConverterTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }

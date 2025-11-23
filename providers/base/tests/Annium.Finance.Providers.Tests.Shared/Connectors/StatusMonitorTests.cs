@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Testing;
 using Xunit;
@@ -9,18 +8,13 @@ using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.Connect
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
-public class StatusMonitorTests : TestBase
+public class StatusMonitorTests : ProvidersTestBase
 {
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
     public StatusMonitorTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Register(container =>
-        {
-            container.AddFinanceProviders();
-        });
-
         var monitor = Get<IStatusMonitor>();
         monitor.OnStatusChanged += _statuses.Enqueue;
     }

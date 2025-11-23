@@ -7,7 +7,6 @@ using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Testing;
@@ -17,13 +16,10 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
-public class UserConnectorBaseTests : TestBase
+public class UserConnectorBaseTests : ProvidersTestBase
 {
     public UserConnectorBaseTests(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-        Register(container => container.AddFinanceProviders());
-    }
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Sync_Works()

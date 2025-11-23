@@ -21,7 +21,7 @@ using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 
 namespace Annium.Finance.Providers.Tests.Shared.Connectors;
 
-public abstract class UserConnectorTestBase : ConnectorTestBase, IAsyncLifetime
+public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     protected InstrumentModel Instrument { get; private set; } = default!;
     protected string Symbol { get; }

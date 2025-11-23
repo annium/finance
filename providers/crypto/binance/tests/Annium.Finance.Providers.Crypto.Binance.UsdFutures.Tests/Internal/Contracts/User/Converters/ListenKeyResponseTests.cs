@@ -1,13 +1,13 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
-using Annium.Finance.Providers.Tests.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Shared;
 using Annium.Finance.Providers.Tests.Shared.Extensions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Contracts.User.Converters;
 
-public class ListenKeyResponseTests : ConnectorTestBase
+public class ListenKeyResponseTests : ProvidersTestBase
 {
     public ListenKeyResponseTests(ITestOutputHelper outputHelper)
         : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }
