@@ -1,26 +1,21 @@
-using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
-using Annium.Linq;
-using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
 
-namespace Annium.Finance.Providers.Tests.Shared.Loaders;
+namespace Annium.Finance.Providers.Shared.Tests.Loaders;
 
-public class CompositeLoaderTests : TestBase
+public class SnapshotLoaderTests : TestBase
 {
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
-    public CompositeLoaderTests(ITestOutputHelper outputHelper)
+    public SnapshotLoaderTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(container =>
@@ -33,14 +28,10 @@ public class CompositeLoaderTests : TestBase
         monitor.OnStatusChanged += _statuses.Enqueue;
     }
 
-    [Theory]
-    [InlineData(200, 3000)]
-    [InlineData(200, 0)]
-    [InlineData(3000, 50)]
-    [InlineData(0, 50)]
-    public async Task Works(int interval, int debounce)
+    [Fact]
+    public async Task Works()
     {
-        var cfg = new CompositeLoaderConfig(1, 5, 2, interval, debounce);
+        var cfg = new SnapshotLoaderConfig(1, 2, 5);
         var attempt = 0;
         var log = Get<TestLog<int>>();
         async Task<MarketResult<int>> Load()
@@ -49,25 +40,17 @@ public class CompositeLoaderTests : TestBase
 
             await Task.Delay(5, CancellationToken.None);
 
-            return attempt != 3
+            return attempt < 10
                 ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
                 : MarketResult.Ok(attempt++);
         }
-        using var loader = Get<ILoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load());
+        using var loader = Get<ILoaderFactory>().CreateSnapshotLoader<int>(cfg, async _ => await Load());
         loader.OnData += log.Add;
 
         loader.Start(true);
-        for (var i = 0; i < 10; i++)
-            loader.Request();
 
-        var statuses = Array.Empty<ConnectorStatus>();
-        await Expect.ToAsync(() =>
-        {
-            statuses = _statuses.ToArray();
-            log.Has(1);
-        });
-        log.At(0).Is(3);
-        this.Trace<string>("statuses: {statuses}", statuses.Select(x => x.ToString()).Join(", "));
-        statuses.ToArray().IsEqual(new[] { Connecting, Connected });
+        await Expect.ToAsync(() => log.Has(1));
+        log.At(0).Is(10);
+        _statuses.IsEqual(new[] { Connecting, Connected });
     }
 }

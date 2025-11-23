@@ -13,7 +13,7 @@
 // using Xunit;
 // // using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
 //
-// namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+// namespace Annium.Finance.Providers.Tests.Lib.Connectors;
 //
 // public abstract class UserConnectorPositionalTestBase : UserConnectorTestBase, IAsyncLifetime
 // {

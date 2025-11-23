@@ -1,5 +1,5 @@
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
-using Annium.Finance.Providers.Tests.Shared;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 

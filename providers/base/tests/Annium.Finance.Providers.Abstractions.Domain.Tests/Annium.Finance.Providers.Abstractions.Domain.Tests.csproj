@@ -10,7 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Annium.Data.Operations.Testing" />
-    <PackageReference Include="Annium.Testing" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />

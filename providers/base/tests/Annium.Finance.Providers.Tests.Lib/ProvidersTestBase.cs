@@ -5,7 +5,7 @@ using Annium.Finance.Providers.Shared;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared;
+namespace Annium.Finance.Providers.Tests.Lib;
 
 public abstract class ProvidersTestBase : TestBase
 {

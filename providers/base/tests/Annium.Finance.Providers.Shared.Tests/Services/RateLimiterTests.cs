@@ -1,10 +1,11 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared.Services;
+namespace Annium.Finance.Providers.Shared.Tests.Services;
 
 public class RateLimiterTests : ProvidersTestBase
 {

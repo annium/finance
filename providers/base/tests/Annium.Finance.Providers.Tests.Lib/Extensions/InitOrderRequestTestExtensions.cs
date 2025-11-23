@@ -2,7 +2,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 
-namespace Annium.Finance.Providers.Tests.Shared.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 
 public static class InitOrderRequestTestExtensions
 {

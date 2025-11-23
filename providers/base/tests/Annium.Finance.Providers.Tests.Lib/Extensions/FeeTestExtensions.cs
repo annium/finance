@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Annium.Finance.Providers.Tests.Lib;
+namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 
 public static class FeeTestExtensions
 {

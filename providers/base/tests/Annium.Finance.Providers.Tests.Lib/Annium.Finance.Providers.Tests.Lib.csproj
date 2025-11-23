@@ -5,6 +5,9 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Annium.Finance.Providers.Abstractions.Connectors/Annium.Finance.Providers.Abstractions.Connectors.csproj" />
+    <ProjectReference Include="../../src/Annium.Finance.Providers.Shared/Annium.Finance.Providers.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Annium.Testing" />
   </ItemGroup>
 </Project>

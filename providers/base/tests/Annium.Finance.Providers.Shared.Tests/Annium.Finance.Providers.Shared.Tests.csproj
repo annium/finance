@@ -6,12 +6,9 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Annium.Finance.Providers.Shared/Annium.Finance.Providers.Shared.csproj" />
     <ProjectReference Include="../Annium.Finance.Providers.Tests.Lib/Annium.Finance.Providers.Tests.Lib.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Annium.Serialization.Abstractions" />
-    <PackageReference Include="Annium.Testing" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />

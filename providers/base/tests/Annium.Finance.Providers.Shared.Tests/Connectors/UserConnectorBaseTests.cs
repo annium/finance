@@ -8,13 +8,14 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading.Channels;
 using Annium.Threading.Tasks;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+namespace Annium.Finance.Providers.Shared.Tests.Connectors;
 
 public class UserConnectorBaseTests : ProvidersTestBase
 {

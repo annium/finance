@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
-using Annium.Finance.Providers.Tests.Shared;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 

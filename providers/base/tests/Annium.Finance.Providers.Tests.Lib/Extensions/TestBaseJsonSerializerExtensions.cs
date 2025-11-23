@@ -3,9 +3,9 @@ using System.Net.Mime;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Shared.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 
-public static class TestBaseExtensions
+public static class TestBaseJsonSerializerExtensions
 {
     public static ISerializer<ReadOnlyMemory<byte>> GetJsonSerializer(this TestBase testBase, string key)
     {

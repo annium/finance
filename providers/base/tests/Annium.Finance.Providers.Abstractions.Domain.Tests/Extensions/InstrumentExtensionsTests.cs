@@ -1,6 +1,6 @@
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Tests.Lib;
+using Annium.Finance.Providers.Tests.Lib.Helpers;
 using Annium.Testing;
 using Xunit;
 

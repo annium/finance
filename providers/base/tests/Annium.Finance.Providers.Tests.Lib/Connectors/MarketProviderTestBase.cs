@@ -13,7 +13,7 @@ using Annium.Testing;
 using NodaTime;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+namespace Annium.Finance.Providers.Tests.Lib.Connectors;
 
 public abstract class MarketProviderTestBase : ProvidersTestBase
 {

@@ -2,11 +2,12 @@ using System;
 using System.Collections.Concurrent;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
 
-namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+namespace Annium.Finance.Providers.Shared.Tests.Connectors;
 
 public class StatusMonitorTests : ProvidersTestBase
 {

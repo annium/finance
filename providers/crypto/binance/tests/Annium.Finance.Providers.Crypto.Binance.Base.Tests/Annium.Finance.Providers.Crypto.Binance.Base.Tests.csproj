@@ -6,10 +6,10 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../../base/tests/Annium.Finance.Providers.Tests.Lib/Annium.Finance.Providers.Tests.Lib.csproj" />
     <ProjectReference Include="../../src/Annium.Finance.Providers.Crypto.Binance.Base/Annium.Finance.Providers.Crypto.Binance.Base.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Annium.Testing" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />

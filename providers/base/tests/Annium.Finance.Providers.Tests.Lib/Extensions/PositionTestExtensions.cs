@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Tests.Lib.Models;
 
-namespace Annium.Finance.Providers.Tests.Lib;
+namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 
 public static class PositionTestExtensions
 {

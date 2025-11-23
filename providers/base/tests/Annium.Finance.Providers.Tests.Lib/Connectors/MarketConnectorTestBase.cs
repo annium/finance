@@ -10,7 +10,7 @@ using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Tests.Shared.Connectors;
+namespace Annium.Finance.Providers.Tests.Lib.Connectors;
 
 public abstract class MarketConnectorTestBase : ProvidersTestBase
 {

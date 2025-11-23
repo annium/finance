@@ -2,9 +2,9 @@
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Shared.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 
-public static class OrderTestExtensions
+public static class OrderModelTestExtensions
 {
     public static void ShouldMatch(this OrderModel order, IInitOrderRequest request)
     {
