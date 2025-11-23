@@ -8,6 +8,7 @@ using Annium.Finance.Providers.Shared.Internal.Connectors;
 using Annium.Finance.Providers.Shared.Internal.Loaders;
 using Annium.Finance.Providers.Shared.Internal.Services;
 using Annium.Finance.Providers.Shared.Loaders;
+using Annium.Finance.Providers.Shared.Services;
 
 namespace Annium.Finance.Providers.Shared;
 
@@ -35,6 +36,7 @@ public static class ServiceContainerExtensions
 
         // services
         container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(lifetime);
+        container.Add<IRateLimiterFactory, RateLimiterFactory>().Singleton();
 
         var ctx = new ProviderRegistrationContext(container, lifetime);
 
