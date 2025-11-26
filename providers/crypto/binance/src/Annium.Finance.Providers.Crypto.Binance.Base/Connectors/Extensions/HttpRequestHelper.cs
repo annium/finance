@@ -11,21 +11,24 @@ public static class HttpRequestHelper
         HttpFailureReason reason,
         IHttpResponse response,
         Exception? e
-    ) =>
-        reason switch
+    )
+    {
+        var result = reason switch
         {
             HttpFailureReason.Abort => new OperationResult(
-                1,
+                OperationResult.Aborted,
                 $"Request aborted ({response.StatusCode} - {response.StatusText})"
             ),
             HttpFailureReason.Parse => new OperationResult(
-                2,
+                OperationResult.ParseError,
                 $"Response parse failed. Content: {await response.Content.ReadAsStringAsync()}"
             ),
-            HttpFailureReason.Exception => new OperationResult(
-                3,
+            _ => new OperationResult(
+                OperationResult.ParseError,
                 $"Request failed. Error: {e?.Message}. Content: {await response.Content.ReadAsStringAsync()}"
             ),
-            _ => new OperationResult(1, "Unmapped failure"),
         };
+
+        return result;
+    }
 }
