@@ -10,6 +10,7 @@
     <PackageVersion Include="Annium.Execution.Background" Version="1.1.23" />
     <PackageVersion Include="Annium.Extensions.Pooling" Version="1.1.23" />
     <PackageVersion Include="Annium.Net.Http" Version="1.1.23" />
+    <PackageVersion Include="Annium.Net.Servers.Web" Version="1.1.23" />
     <PackageVersion Include="Annium.Net.WebSockets" Version="1.1.23" />
     <PackageVersion Include="Annium.NodaTime.Extensions" Version="1.1.23" />
     <PackageVersion Include="Annium.Serialization.Abstractions" Version="1.1.23" />
