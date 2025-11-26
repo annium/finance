@@ -9,6 +9,7 @@ public enum UserOperationStatus
     NotConnected,
     Aborted,
     NetworkError,
+    TooManyRequests,
     BadRequest,
     Forbidden,
     NotFound,

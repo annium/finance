@@ -23,7 +23,7 @@ public static class TestBaseHttpServerExtensions
     }
 
     public static IHttpRequest CreateHttpRequest(this TestBase test, ITestServer server) =>
-        test.Get<IHttpRequestFactory>().New(server.Uri);
+        test.GetKeyed<IHttpRequestFactory>(string.Empty).New(server.Uri);
 
     public static ITestServer RunHttpServerWithJsonResponse<T>(this TestBase test, HttpStatusCode statusCode, T body) =>
         test.RunHttpServerWithResponse(statusCode, MediaTypeNames.Application.Json, JsonSerializer.Serialize(body));

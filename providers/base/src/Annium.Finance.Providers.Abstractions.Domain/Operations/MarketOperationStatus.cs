@@ -9,6 +9,7 @@ public enum MarketOperationStatus
     NotConnected,
     Aborted,
     NetworkError,
+    TooManyRequests,
     BadRequest,
     NotFound,
     ParseError,

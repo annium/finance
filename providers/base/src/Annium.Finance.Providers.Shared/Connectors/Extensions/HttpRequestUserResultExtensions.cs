@@ -1,8 +1,8 @@
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Net.Http;
+using OneOf;
 
 namespace Annium.Finance.Providers.Shared.Connectors.Extensions;
 
@@ -11,31 +11,13 @@ public static class HttpRequestUserResultExtensions
     public static async Task<UserResult<TData?>> AsUserResultAsync<TData, TError>(
         this IHttpRequest request,
         Func<HttpFailureReason, IHttpResponse, Exception?, Task<TError>> getFailure,
-        Func<TError, UserOperationStatus?> getErrorStatus,
-        Func<TError, string> getError
+        Func<IHttpResponse<OneOf<TData, TError>>, UserResult<TData?>> mapResponse
     )
         where TData : class
     {
         var response = await request.AsResponseAsync<TData, TError>(getFailure);
+        var result = mapResponse(response);
 
-        return response.Data.Match<UserResult<TData?>>(
-            UserResult.Ok!,
-            error =>
-            {
-                var operationStatus = getErrorStatus(error) ?? MapHttpStatusCodeToOperationStatus(response.StatusCode);
-                var errorMessage = getError(error);
-
-                return UserResult.New<TData?>(operationStatus, null, errorMessage);
-            }
-        );
+        return result;
     }
-
-    private static UserOperationStatus MapHttpStatusCodeToOperationStatus(HttpStatusCode code) =>
-        code switch
-        {
-            HttpStatusCode.BadRequest => UserOperationStatus.BadRequest,
-            HttpStatusCode.Unauthorized => UserOperationStatus.Forbidden,
-            HttpStatusCode.NotFound => UserOperationStatus.Forbidden,
-            _ => UserOperationStatus.UnknownError,
-        };
 }
