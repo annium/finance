@@ -2,6 +2,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Finance.Providers.Tests.Lib.Connectors;
 using Annium.Logging;
@@ -27,20 +28,19 @@ public class UserConnectorTests : UserConnectorTestBase
     }
 
     public UserConnectorTests(ITestOutputHelper output)
-        : base(
-            ctx =>
-                ctx.WithBinanceUsdFutures(
-                    new ProviderConfiguration
-                    {
-                        ReloadContext = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
-                        ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
-                        ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
-                    }
-                ),
-            Settings.User,
-            "DOTUSDT",
-            output
-        ) { }
+        : base(Settings.User, "DOTUSDT", output) { }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceUsdFutures(
+            new ProviderConfiguration
+            {
+                ReloadContext = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                ReloadOrders = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+                ReloadTrades = new CompositeLoaderConfig(200, 5, 1000, 1000, 100),
+            }
+        );
+    }
 
     [Fact]
     public async Task InitOrder_Limit_Invalid()

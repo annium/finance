@@ -1,8 +1,9 @@
 ﻿using System.Linq;
 using System.Text;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.Extensions;
+using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
 using Annium.Testing;
 using Xunit;
 
@@ -11,7 +12,12 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Contracts.
 public class AccountUpdateEventConverterTests : ProvidersTestBase
 {
     public AccountUpdateEventConverterTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
+        : base(outputHelper) { }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceSpot();
+    }
 
     [Fact]
     public void Works()

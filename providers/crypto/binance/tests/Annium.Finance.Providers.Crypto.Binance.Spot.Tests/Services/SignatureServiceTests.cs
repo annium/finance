@@ -1,4 +1,5 @@
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
 using Xunit;
@@ -8,10 +9,15 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Services;
 public class SignatureServiceTests : ProvidersTestBase
 {
     public SignatureServiceTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceSpot(), outputHelper)
+        : base(outputHelper)
     {
         Inject(Settings.Market);
         Inject(Settings.User);
+    }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceSpot();
     }
 
     [Fact]

@@ -1,7 +1,8 @@
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.Extensions;
+using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
 using Annium.Testing;
 using Xunit;
 
@@ -10,7 +11,12 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Cont
 public class InstrumentTickerConverterTests : ProvidersTestBase
 {
     public InstrumentTickerConverterTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }
+        : base(outputHelper) { }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceUsdFutures();
+    }
 
     [Fact]
     public void Works()

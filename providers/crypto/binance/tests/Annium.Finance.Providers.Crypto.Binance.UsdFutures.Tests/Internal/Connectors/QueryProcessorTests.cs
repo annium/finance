@@ -4,6 +4,7 @@ using System.Globalization;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Tools;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Testing;
@@ -19,7 +20,12 @@ public class QueryProcessorTests : ProvidersTestBase
     private static readonly OrientationRange _range = OrientationRange.Both;
 
     public QueryProcessorTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceUsdFutures(), outputHelper) { }
+        : base(outputHelper) { }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceUsdFutures();
+    }
 
     [Theory]
     [InlineData(9, false)]

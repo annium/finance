@@ -1,4 +1,3 @@
-using System;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime;
 using Annium.Finance.Providers.Shared;
@@ -10,9 +9,6 @@ namespace Annium.Finance.Providers.Tests.Lib;
 public abstract class ProvidersTestBase : TestBase
 {
     protected ProvidersTestBase(ITestOutputHelper outputHelper)
-        : this(_ => { }, outputHelper) { }
-
-    protected ProvidersTestBase(Action<ProviderRegistrationContext> registerProvider, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(container =>
@@ -20,7 +16,9 @@ public abstract class ProvidersTestBase : TestBase
             // todo: use server time
             container.AddTime().WithRealTime().SetDefault();
             container.AddMapper();
-            registerProvider(container.AddFinanceProviders());
+            RegisterProvider(container.AddFinanceProviders());
         });
     }
+
+    protected virtual void RegisterProvider(ProviderRegistrationContext ctx) { }
 }

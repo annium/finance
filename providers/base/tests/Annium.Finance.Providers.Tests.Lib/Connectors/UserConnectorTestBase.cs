@@ -12,7 +12,6 @@ using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Extensions;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Logging;
 using Annium.Testing;
@@ -23,7 +22,7 @@ namespace Annium.Finance.Providers.Tests.Lib.Connectors;
 
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
-    protected InstrumentModel Instrument { get; private set; } = default!;
+    protected InstrumentModel Instrument { get; private set; } = null!;
     protected string Symbol { get; }
     protected InstrumentTicker Ticker { get; private set; } = default!;
     private IUserConnector Connector { get; set; } = default!;
@@ -37,13 +36,8 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     private AssetModel _balance = default!;
     private PositionModel _position = default!;
 
-    protected UserConnectorTestBase(
-        Action<ProviderRegistrationContext> registerProvider,
-        UserSettings config,
-        string symbol,
-        ITestOutputHelper output
-    )
-        : base(registerProvider, output)
+    protected UserConnectorTestBase(UserSettings config, string symbol, ITestOutputHelper output)
+        : base(output)
     {
         Disposable = Annium.Disposable.AsyncBox(Logger);
         _config = config;

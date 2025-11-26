@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Finance.Providers.Tests.Lib;
@@ -11,10 +12,15 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Services;
 public class ServerTimeProviderTests : ProvidersTestBase
 {
     public ServerTimeProviderTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceSpot(), outputHelper)
+        : base(outputHelper)
     {
         Inject(Settings.Market);
         Inject(Settings.User);
+    }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceSpot();
     }
 
     [Fact]

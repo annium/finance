@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
-using Annium.Finance.Providers.Shared;
 using Annium.Logging;
 using Annium.NodaTime.Extensions;
 using Annium.Testing;
@@ -19,12 +18,8 @@ public abstract class MarketProviderTestBase : ProvidersTestBase
 {
     private readonly string _symbol;
 
-    protected MarketProviderTestBase(
-        Action<ProviderRegistrationContext> registerProvider,
-        string symbol,
-        ITestOutputHelper outputHelper
-    )
-        : base(registerProvider, outputHelper)
+    protected MarketProviderTestBase(string symbol, ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _symbol = symbol;
     }

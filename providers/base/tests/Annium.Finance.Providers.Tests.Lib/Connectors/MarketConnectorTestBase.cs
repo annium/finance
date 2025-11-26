@@ -1,11 +1,9 @@
-using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Models;
-using Annium.Finance.Providers.Shared;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
@@ -16,12 +14,8 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
 {
     private readonly string _symbol;
 
-    protected MarketConnectorTestBase(
-        Action<ProviderRegistrationContext> registerProvider,
-        string symbol,
-        ITestOutputHelper outputHelper
-    )
-        : base(registerProvider, outputHelper)
+    protected MarketConnectorTestBase(string symbol, ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _symbol = symbol;
     }

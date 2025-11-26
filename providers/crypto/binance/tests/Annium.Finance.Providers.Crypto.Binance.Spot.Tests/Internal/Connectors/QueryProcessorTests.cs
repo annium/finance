@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Tools;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
+using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Testing;
@@ -18,7 +19,12 @@ public class QueryProcessorTests : ProvidersTestBase
     private static readonly OrientationRange _range = OrientationRange.Both;
 
     public QueryProcessorTests(ITestOutputHelper outputHelper)
-        : base(ctx => ctx.WithBinanceSpot(), outputHelper) { }
+        : base(outputHelper) { }
+
+    protected override void RegisterProvider(ProviderRegistrationContext ctx)
+    {
+        ctx.WithBinanceSpot();
+    }
 
     [Fact]
     public void InitOrder_Limit()
