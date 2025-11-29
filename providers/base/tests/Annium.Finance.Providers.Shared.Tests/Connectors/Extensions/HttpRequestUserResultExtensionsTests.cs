@@ -22,15 +22,28 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     }
 
     [Fact]
+    public async Task NetworkError()
+    {
+        // arrange
+        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
+        await server.DisposeAsync();
+
+        // act
+        var result = await this.CreateHttpRequest(server)
+            .Get("/")
+            .AsUserResultAsync<Response, UserError>(GetFailure, MapResponse);
+
+        // assert
+        result.Status.Is(UserOperationStatus.NetworkError);
+        result.Data.IsDefault();
+        result.Message.IsEmpty();
+    }
+
+    [Fact]
     public async Task Abort()
     {
         // arrange
-        await using var server = this.RunHttpServer(
-            async (_, _) =>
-            {
-                await Task.Delay(100);
-            }
-        );
+        await using var server = this.RunHttpServer((_, _) => Task.Delay(100));
 
         // act
         var result = await this.CreateHttpRequest(server)
@@ -105,6 +118,10 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     {
         var error = reason switch
         {
+            HttpFailureReason.Network => new UserError(
+                UserOperationStatus.NetworkError,
+                $"Request not sent ({response.StatusCode} - {response.StatusText})"
+            ),
             HttpFailureReason.Abort => new UserError(
                 UserOperationStatus.Aborted,
                 $"Request aborted ({response.StatusCode} - {response.StatusText})"
@@ -125,6 +142,9 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
 
     private static UserResult<Response?> MapResponse(IHttpResponse<OneOf<Response, UserError>> response)
     {
+        if (response.IsNetworkError)
+            return UserResult.New<Response?>(UserOperationStatus.NetworkError, null);
+
         if (response.IsAbort)
             return UserResult.New<Response?>(UserOperationStatus.Aborted, null);
 

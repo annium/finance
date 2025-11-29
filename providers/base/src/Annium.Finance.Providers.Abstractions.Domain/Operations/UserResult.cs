@@ -20,21 +20,27 @@ public sealed record UserResult : IBaseResult
 
     public static UserResult<T> From<T>(UserResult result, T data) => new(result.Status, data, result.Message);
 
-    public static UserResult<T> From<TS, T>(UserResult<TS> result, T data) => new(result.Status, data, result.Message);
+    public static UserResult<T> From<TSource, T>(UserResult<TSource> result, T data) =>
+        new(result.Status, data, result.Message);
+
+    public bool IsNetworkError { get; }
 
     public bool IsSuccess { get; }
+
     public bool IsAborted { get; }
+
     public bool IsFailure { get; }
-    public bool IsFailureOrAborted { get; }
+
     public UserOperationStatus Status { get; }
+
     public string Message { get; }
 
     private UserResult(UserOperationStatus status, string message)
     {
+        IsNetworkError = status is UserOperationStatus.NetworkError;
+        IsAborted = status is UserOperationStatus.Aborted;
         IsSuccess = status is UserOperationStatus.Ok;
-        IsAborted = status is UserOperationStatus.Aborted or UserOperationStatus.NetworkError;
-        IsFailure = !IsSuccess && !IsAborted;
-        IsFailureOrAborted = !IsSuccess;
+        IsFailure = !IsNetworkError && !IsAborted && !IsSuccess;
         Status = status;
         Message = message;
     }
@@ -44,23 +50,27 @@ public sealed record UserResult : IBaseResult
 
 public sealed record UserResult<T> : IBaseResult<T>
 {
+    public bool IsNetworkError { get; }
+
+    public bool IsAborted { get; }
+
     [MemberNotNullWhen(true, nameof(Data))]
     public bool IsSuccess { get; }
-    public bool IsAborted { get; }
+
     public bool IsFailure { get; }
 
-    [MemberNotNullWhen(false, nameof(Data))]
-    public bool IsFailureOrAborted { get; }
     public UserOperationStatus Status { get; }
+
     public T? Data { get; }
+
     public string Message { get; }
 
     internal UserResult(UserOperationStatus status, T? data, string message)
     {
+        IsNetworkError = status is UserOperationStatus.NetworkError;
+        IsAborted = status is UserOperationStatus.Aborted;
         IsSuccess = status is UserOperationStatus.Ok;
-        IsAborted = status is UserOperationStatus.Aborted or UserOperationStatus.NetworkError;
-        IsFailure = !IsSuccess && !IsAborted;
-        IsFailureOrAborted = !IsSuccess;
+        IsFailure = !IsNetworkError && !IsAborted && !IsSuccess;
         Status = status;
         Data = data;
         Message = message;

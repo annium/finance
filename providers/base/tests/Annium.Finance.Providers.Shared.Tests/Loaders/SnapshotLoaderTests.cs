@@ -22,7 +22,7 @@ public class SnapshotLoaderTests : TestBase
         {
             container.AddFinanceProviders();
         });
-        RegisterTestLogs();
+        this.RegisterTestLogs();
 
         var monitor = Get<IStatusMonitor>();
         monitor.OnStatusChanged += _statuses.Enqueue;

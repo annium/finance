@@ -7,8 +7,8 @@ public enum UserOperationStatus
 {
     Ok,
     NotConnected,
-    Aborted,
     NetworkError,
+    Aborted,
     TooManyRequests,
     BadRequest,
     Forbidden,

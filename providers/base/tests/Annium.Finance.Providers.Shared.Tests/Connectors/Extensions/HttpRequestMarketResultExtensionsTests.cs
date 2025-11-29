@@ -22,15 +22,28 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     }
 
     [Fact]
+    public async Task NetworkError()
+    {
+        // arrange
+        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
+        await server.DisposeAsync();
+
+        // act
+        var result = await this.CreateHttpRequest(server)
+            .Get("/")
+            .AsMarketResultAsync<Response, MarketError>(GetFailure, MapResponse);
+
+        // assert
+        result.Status.Is(MarketOperationStatus.NetworkError);
+        result.Data.IsDefault();
+        result.Message.IsEmpty();
+    }
+
+    [Fact]
     public async Task Abort()
     {
         // arrange
-        await using var server = this.RunHttpServer(
-            async (_, _) =>
-            {
-                await Task.Delay(100);
-            }
-        );
+        await using var server = this.RunHttpServer((_, _) => Task.Delay(100));
 
         // act
         var result = await this.CreateHttpRequest(server)
@@ -105,6 +118,10 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     {
         var error = reason switch
         {
+            HttpFailureReason.Network => new MarketError(
+                MarketOperationStatus.NetworkError,
+                $"Request not sent ({response.StatusCode} - {response.StatusText})"
+            ),
             HttpFailureReason.Abort => new MarketError(
                 MarketOperationStatus.Aborted,
                 $"Request aborted ({response.StatusCode} - {response.StatusText})"
@@ -125,6 +142,9 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
 
     private static MarketResult<Response?> MapResponse(IHttpResponse<OneOf<Response, MarketError>> response)
     {
+        if (response.IsNetworkError)
+            return MarketResult.New<Response?>(MarketOperationStatus.NetworkError, null);
+
         if (response.IsAbort)
             return MarketResult.New<Response?>(MarketOperationStatus.Aborted, null);
 

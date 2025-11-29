@@ -7,8 +7,8 @@ public enum MarketOperationStatus
 {
     Ok,
     NotConnected,
-    Aborted,
     NetworkError,
+    Aborted,
     TooManyRequests,
     BadRequest,
     NotFound,

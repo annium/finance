@@ -4,23 +4,29 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Operations;
 
 public interface IBaseResult<out T>
 {
+    bool IsNetworkError { get; }
+
+    bool IsAborted { get; }
+
     [MemberNotNullWhen(true, nameof(Data))]
     bool IsSuccess { get; }
-    bool IsAborted { get; }
+
     bool IsFailure { get; }
 
-    [MemberNotNullWhen(false, nameof(Data))]
-    bool IsFailureOrAborted { get; }
-
     T? Data { get; }
+
     string Message { get; }
 }
 
 public interface IBaseResult
 {
-    bool IsSuccess { get; }
+    bool IsNetworkError { get; }
+
     bool IsAborted { get; }
+
+    bool IsSuccess { get; }
+
     bool IsFailure { get; }
-    bool IsFailureOrAborted { get; }
+
     string Message { get; }
 }
