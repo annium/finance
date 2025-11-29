@@ -19,39 +19,48 @@ internal static class HttpRequestUserResultExtensions
 
     private static UserResult<T?> MapResponse<T>(IHttpResponse<OneOf<T, OperationResult>> response)
     {
-        if (response.Data.IsT1)
+        // if response mapped to success
+        if (response.Data.IsT0)
+        {
+            var data = response.Data.AsT0;
+
+            // if response is successful - return Ok
+            if (response.IsSuccess)
+                return UserResult.Ok<T?>(data);
+
+            // otherwise response is mapped to success, but is failure - use response.StatusCode
+            {
+                var status = MapStatusCode(response.StatusCode);
+                return UserResult.New<T?>(status, data);
+            }
+        }
+
+        // if response mapped to error, OperationResult - use it to construct response
         {
             var error = response.Data.AsT1;
             var status = MapOperationCode(error.Code);
 
             return UserResult.New<T?>(status, default, error.Message);
         }
-
-        var data = response.Data.AsT0;
-
-        if (response.IsSuccess)
-            return UserResult.Ok<T?>(data);
-
-        {
-            var status = MapStatusCode(response.StatusCode);
-            return UserResult.New<T?>(status, data);
-        }
     }
-
-    private static UserOperationStatus MapOperationCode(long code) =>
-        code switch
-        {
-            OperationResult.Aborted => UserOperationStatus.Aborted,
-            OperationResult.ParseError => UserOperationStatus.ParseError,
-            < 0 => UserOperationStatus.BadRequest,
-            _ => UserOperationStatus.UnknownError,
-        };
 
     private static UserOperationStatus MapStatusCode(HttpStatusCode code) =>
         code switch
         {
             (HttpStatusCode)418 or HttpStatusCode.TooManyRequests => UserOperationStatus.TooManyRequests,
             HttpStatusCode.BadRequest => UserOperationStatus.BadRequest,
+            HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => UserOperationStatus.Forbidden,
+            HttpStatusCode.NotFound => UserOperationStatus.NotFound,
+            _ => UserOperationStatus.UnknownError,
+        };
+
+    private static UserOperationStatus MapOperationCode(long code) =>
+        code switch
+        {
+            OperationResult.NetworkError => UserOperationStatus.NetworkError,
+            OperationResult.Aborted => UserOperationStatus.Aborted,
+            OperationResult.ParseError => UserOperationStatus.ParseError,
+            < 0 => UserOperationStatus.BadRequest,
             _ => UserOperationStatus.UnknownError,
         };
 }

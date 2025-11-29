@@ -15,6 +15,10 @@ public static class HttpRequestHelper
     {
         var result = reason switch
         {
+            HttpFailureReason.Network => new OperationResult(
+                OperationResult.NetworkError,
+                $"Request not sent ({response.StatusCode} - {response.StatusText})"
+            ),
             HttpFailureReason.Abort => new OperationResult(
                 OperationResult.Aborted,
                 $"Request aborted ({response.StatusCode} - {response.StatusText})"

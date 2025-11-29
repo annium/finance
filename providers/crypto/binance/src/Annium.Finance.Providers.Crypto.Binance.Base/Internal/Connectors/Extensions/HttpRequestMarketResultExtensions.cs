@@ -19,39 +19,46 @@ internal static class HttpRequestMarketResultExtensions
 
     private static MarketResult<T?> MapResponse<T>(IHttpResponse<OneOf<T, OperationResult>> response)
     {
-        if (response.Data.IsT1)
+        // if response mapped to success
+        if (response.Data.IsT0)
+        {
+            var data = response.Data.AsT0;
+
+            // if response is successful - return Ok
+            if (response.IsSuccess)
+                return MarketResult.Ok<T?>(data);
+
+            // otherwise response is mapped to success, but is failure - use response.StatusCode
+            {
+                var status = MapStatusCode(response.StatusCode);
+                return MarketResult.New<T?>(status, data);
+            }
+        }
+
+        // if response mapped to error, OperationResult - use it to construct response
         {
             var error = response.Data.AsT1;
             var status = MapOperationCode(error.Code);
 
             return MarketResult.New<T?>(status, default, error.Message);
         }
-
-        var data = response.Data.AsT0;
-
-        if (response.IsSuccess)
-            return MarketResult.Ok<T?>(data);
-
-        {
-            var status = MapStatusCode(response.StatusCode);
-            return MarketResult.New<T?>(status, data);
-        }
     }
-
-    private static MarketOperationStatus MapOperationCode(long code) =>
-        code switch
-        {
-            OperationResult.Aborted => MarketOperationStatus.Aborted,
-            OperationResult.ParseError => MarketOperationStatus.ParseError,
-            < 0 => MarketOperationStatus.BadRequest,
-            _ => MarketOperationStatus.UnknownError,
-        };
 
     private static MarketOperationStatus MapStatusCode(HttpStatusCode code) =>
         code switch
         {
             (HttpStatusCode)418 or HttpStatusCode.TooManyRequests => MarketOperationStatus.TooManyRequests,
             HttpStatusCode.BadRequest => MarketOperationStatus.BadRequest,
+            _ => MarketOperationStatus.UnknownError,
+        };
+
+    private static MarketOperationStatus MapOperationCode(long code) =>
+        code switch
+        {
+            OperationResult.NetworkError => MarketOperationStatus.NetworkError,
+            OperationResult.Aborted => MarketOperationStatus.Aborted,
+            OperationResult.ParseError => MarketOperationStatus.ParseError,
+            < 0 => MarketOperationStatus.BadRequest,
             _ => MarketOperationStatus.UnknownError,
         };
 }

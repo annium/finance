@@ -33,15 +33,26 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     }
 
     [Fact]
+    public async Task NetworkError()
+    {
+        // arrange
+        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
+        await server.DisposeAsync();
+
+        // act
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
+
+        // assert
+        result.Status.Is(UserOperationStatus.NetworkError);
+        result.Data.IsDefault();
+        result.Message.IsNotEmpty();
+    }
+
+    [Fact]
     public async Task Abort()
     {
         // arrange
-        await using var server = this.RunHttpServer(
-            async (_, _) =>
-            {
-                await Task.Delay(100);
-            }
-        );
+        await using var server = this.RunHttpServer((_, _) => Task.Delay(100));
 
         // act
         var result = await this.CreateHttpRequest(server)
