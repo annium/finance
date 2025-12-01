@@ -22,8 +22,8 @@ public static class TestBaseHttpServerExtensions
         });
     }
 
-    public static IHttpRequest CreateHttpRequest(this TestBase test, ITestServer server) =>
-        test.GetKeyed<IHttpRequestFactory>(string.Empty).New(server.Uri);
+    public static IHttpRequest CreateHttpRequest(this TestBase test, ITestServer server, string key = "") =>
+        test.GetKeyed<IHttpRequestFactory>(key).New(server.Uri);
 
     public static ITestServer RunHttpServerWithJsonResponse<T>(this TestBase test, HttpStatusCode statusCode, T body) =>
         test.RunHttpServerWithResponse(statusCode, MediaTypeNames.Application.Json, JsonSerializer.Serialize(body));
@@ -48,7 +48,7 @@ public static class TestBaseHttpServerExtensions
     /// <summary>
     /// The port number used.
     /// </summary>
-    private static int _port = 50000;
+    private static readonly Random _random = new();
 
     /// <summary>
     /// Runs a test server with the specified request handler.
@@ -82,7 +82,8 @@ public static class TestBaseHttpServerExtensions
             test.Trace("done");
         });
 
-        var port = Interlocked.Increment(ref _port);
+        var port = _random.Next(64000, 65000);
+        test.Trace("start server at port {port}", port);
         var server = ServerBuilder.New(test.Get<IServiceProvider>(), port).WithHttpHandler(handler).Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
