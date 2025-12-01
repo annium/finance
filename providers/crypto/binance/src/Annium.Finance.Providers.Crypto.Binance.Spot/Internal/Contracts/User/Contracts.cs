@@ -37,7 +37,8 @@ internal class Contracts
         new JsonSerializerOptions()
             .ResetConverters()
             .AddConverter<ModifyOrderSuccessResponseConverter>()
-            .AddConverter<ModifyOrderFailureResponseConverter>();
+            .AddConverter<ModifyOrderFailureResponseConverter>()
+            .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions CancelOrder { get; } =
         new JsonSerializerOptions()
@@ -58,8 +59,12 @@ internal class Contracts
         new JsonSerializerOptions()
             .ResetConverters()
             .AddConverter<AccountUpdateEventConverter>()
-            .AddConverter<AccountUpdateEventBalanceConverter>();
+            .AddConverter<AccountUpdateEventBalanceConverter>()
+            .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions OrderUpdate { get; } =
-        new JsonSerializerOptions().ResetConverters().AddConverter<OrderUpdateEventConverter>();
+        new JsonSerializerOptions()
+            .ResetConverters()
+            .AddConverter<OrderUpdateEventConverter>()
+            .AddConverter<OperationResultConverter>();
 }
