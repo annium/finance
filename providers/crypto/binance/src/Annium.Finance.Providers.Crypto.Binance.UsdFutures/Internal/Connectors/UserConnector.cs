@@ -148,7 +148,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildInitOrderQuery(request);
-        if (queryResult.IsFailureOrAborted)
+        if (!queryResult.IsSuccess)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
@@ -198,7 +198,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildModifyOrderQuery(request);
-        if (queryResult.IsFailureOrAborted)
+        if (!queryResult.IsSuccess)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult, default(OrderModel));
@@ -228,7 +228,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildCancelOrderQuery(request);
-        if (queryResult.IsFailureOrAborted)
+        if (!queryResult.IsSuccess)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);
@@ -258,7 +258,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
 
         var queryResult = _queryProcessor.BuildCancelAllOrdersQuery(symbol);
-        if (queryResult.IsFailureOrAborted)
+        if (!queryResult.IsSuccess)
         {
             this.Warn("{id} query processing failed: {result}", Id, queryResult);
             return UserResult.From(queryResult);

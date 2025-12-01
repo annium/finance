@@ -69,8 +69,12 @@ internal class Contracts
             .ResetConverters()
             .AddConverter<BalanceAndPositionUpdateEventConverter>()
             .AddConverter<BalanceAndPositionUpdateEventBalanceConverter>()
-            .AddConverter<BalanceAndPositionUpdateEventPositionConverter>();
+            .AddConverter<BalanceAndPositionUpdateEventPositionConverter>()
+            .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions OrderUpdate { get; } =
-        new JsonSerializerOptions().ResetConverters().AddConverter<OrderUpdateEventConverter>();
+        new JsonSerializerOptions()
+            .ResetConverters()
+            .AddConverter<OrderUpdateEventConverter>()
+            .AddConverter<OperationResultConverter>();
 }

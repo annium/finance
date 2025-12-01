@@ -52,7 +52,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(UserContext));
+            return UserResult.New(UserOperationStatus.NotConnected, default(UserContext));
 
         var result = await _getAccountRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -64,9 +64,9 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<AccountResponse>();
 
-        if (result.IsFailureOrAborted)
+        if (!result.IsSuccess)
         {
-            if (!result.IsAborted)
+            if (result.IsFailure)
                 this.Error("failure: {result}", result);
 
             return UserResult.From(result, default(UserContext));
@@ -87,7 +87,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
+            return UserResult.New(UserOperationStatus.NotConnected, default(IReadOnlyCollection<OrderModel>));
 
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -99,11 +99,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
-        if (result.IsFailure)
-            this.Error("failure: {result}", result);
+        if (!result.IsSuccess)
+        {
+            if (result.IsFailure)
+                this.Error("failure: {result}", result);
 
-        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
+        }
 
         this.Trace("done, {count} orders loaded", result.Data.Count);
 
@@ -141,7 +143,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
+            return UserResult.New(UserOperationStatus.NotConnected, default(IReadOnlyCollection<OrderModel>));
 
         var result = await _getOrderRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -154,11 +156,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
-        if (result.IsFailure)
-            this.Error("failure: {result}", result);
+        if (!result.IsSuccess)
+        {
+            if (result.IsFailure)
+                this.Error("failure: {result}", result);
 
-        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<OrderModel>));
+        }
 
         this.Trace("done, {count} orders loaded", result.Data.Count);
 
@@ -173,7 +177,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<OrderModel>));
+            return UserResult.New(UserOperationStatus.NotConnected, default(IReadOnlyCollection<OrderModel>));
 
         var orders = new Dictionary<string, OrderModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
@@ -198,11 +202,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
-            if (chunkResult.IsFailure)
-                this.Error("failure: {result}", chunkResult);
+            if (!chunkResult.IsSuccess)
+            {
+                if (chunkResult.IsFailure)
+                    this.Error("failure: {result}", chunkResult);
 
-            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
+            }
 
             this.Trace("chunk done, {count} orders loaded, merge", chunkResult.Data.Count);
             MergeOrders(orders, chunkResult.Data);
@@ -233,11 +239,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
-            if (chunkResult.IsFailure)
-                this.Error("failure: {result}", chunkResult);
+            if (!chunkResult.IsSuccess)
+            {
+                if (chunkResult.IsFailure)
+                    this.Error("failure: {result}", chunkResult);
 
-            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
+            }
 
             var chunkData = chunkResult.Data.Where(x => x.CreatedAt <= end).ToArray();
             this.Trace("chunk done, {count} orders loaded, merge", chunkData.Length);
@@ -263,7 +271,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<TradeModel>));
+            return UserResult.New(UserOperationStatus.NotConnected, default(IReadOnlyCollection<TradeModel>));
 
         var result = await _getTradeRequestFactory
             .New(Endpoints.GetHttpApi(settings.Environment))
@@ -276,11 +284,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
-        if (result.IsFailure)
-            this.Error("failure: {result}", result);
+        if (!result.IsSuccess)
+        {
+            if (result.IsFailure)
+                this.Error("failure: {result}", result);
 
-        if (result.IsFailureOrAborted)
             return UserResult.From(result, default(IReadOnlyCollection<TradeModel>));
+        }
 
         this.Trace("done, {count} trades loaded", result.Data.Count);
 
@@ -295,7 +305,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         var signatureService = GetSignatureService(settings);
         if (signatureService is null)
-            return UserResult.New(UserOperationStatus.Aborted, default(IReadOnlyCollection<TradeModel>));
+            return UserResult.New(UserOperationStatus.NotConnected, default(IReadOnlyCollection<TradeModel>));
 
         var trades = new Dictionary<string, TradeModel>();
         var (startTime, endTime) = ResolveHistoryBounds(since);
@@ -319,11 +329,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
-            if (chunkResult.IsFailure)
-                this.Error("failure: {result}", chunkResult);
+            if (!chunkResult.IsSuccess)
+            {
+                if (chunkResult.IsFailure)
+                    this.Error("failure: {result}", chunkResult);
 
-            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
+            }
 
             this.Trace("chunk done, {count} trades loaded, merge", chunkResult.Data.Count);
             MergeTrades(trades, chunkResult.Data);
@@ -354,11 +366,13 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
-            if (chunkResult.IsFailure)
-                this.Error("failure: {result}", chunkResult);
+            if (!chunkResult.IsSuccess)
+            {
+                if (chunkResult.IsFailure)
+                    this.Error("failure: {result}", chunkResult);
 
-            if (chunkResult.IsFailureOrAborted)
                 return chunkResult;
+            }
 
             var chunkData = chunkResult.Data.Where(x => x.Moment <= end).ToArray();
             this.Trace("chunk done, {count} trades loaded, merge", chunkData.Length);

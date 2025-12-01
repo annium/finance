@@ -16,15 +16,20 @@ internal class Contracts
             .AddConverter<RateLimitsConverter>()
             .AddConverter<AssetConverter>()
             .AddConverter<InstrumentConverter>()
-            .AddConverter<InstrumentFiltersConverter>();
+            .AddConverter<InstrumentFiltersConverter>()
+            .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions InstrumentTicker { get; } =
         new JsonSerializerOptions()
             .ResetConverters()
             .AddConverter<CommandResultConverter>()
             .AddConverter<InstrumentTickerConverter>()
-            .AddConverter<StreamDataConverter<InstrumentTicker>>();
+            .AddConverter<StreamDataConverter<InstrumentTicker>>()
+            .AddConverter<OperationResultConverter>();
 
     public JsonSerializerOptions Candle { get; } =
-        new JsonSerializerOptions().ResetConverters().AddConverter<CandleConverter>();
+        new JsonSerializerOptions()
+            .ResetConverters()
+            .AddConverter<CandleConverter>()
+            .AddConverter<OperationResultConverter>();
 }

@@ -14,8 +14,8 @@ public class ServerTimeProviderTests : ProvidersTestBase
     public ServerTimeProviderTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Inject(Settings.Market);
-        Inject(Settings.User);
+        this.Inject(Settings.Market);
+        this.Inject(Settings.User);
     }
 
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
