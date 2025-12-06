@@ -10,6 +10,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,16 +23,19 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
     public ILogger Logger { get; }
     private readonly IHttpRequestFactory _exchangeInfoRequestFactory;
     private readonly IHttpRequestFactory _candleRequestFactory;
+    private readonly IRateLimiter _rateLimiter;
 
     public MarketProvider(
         [FromKeyedServices(Constants.ExchangeInfoKey)] IHttpRequestFactory exchangeInfoRequestFactory,
         [FromKeyedServices(Constants.CandleKey)] IHttpRequestFactory candleRequestFactory,
+        IRateLimiter rateLimiter,
         ILogger logger
     )
     {
         Logger = logger;
         _exchangeInfoRequestFactory = exchangeInfoRequestFactory;
         _candleRequestFactory = candleRequestFactory;
+        _rateLimiter = rateLimiter;
     }
 
     public async Task<MarketResult<MarketContext?>> LoadContextAsync(ProviderEnvironment env)
@@ -42,11 +46,11 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         var result = await _exchangeInfoRequestFactory
             .New(Endpoints.GetHttpApi(env))
             .Get("api/v3/exchangeInfo")
-            .WithLogFromWithHeaders(this)
-            .WithRateDelay1M()
+            .WithLogFromWithHeaders(this, LogData.Headers)
+            .WithRateDelay1M(_rateLimiter)
             .AsMarketResultAsync<ExchangeInfo>();
 
-        if (result.IsFailureOrAborted || result.Data is null)
+        if (!result.IsSuccess || result.Data is null)
         {
             this.Trace("exchange info load failed");
 
@@ -56,8 +60,9 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
         this.Trace("resolve resources");
         var resources = ResolveResources(result.Data.Instruments);
 
-        this.Trace("update watermark (can change over time)");
-        HttpRequestRateExtensions.UpdateRequestWeightLimit(result.Data.RateLimits.RequestWeightLimit);
+        var weightLimit = result.Data.RateLimits.RequestWeightLimit;
+        this.Trace("update watermark to {limit}", weightLimit);
+        _rateLimiter.UpdateLimit(weightLimit);
 
         this.Trace("done");
 
@@ -83,8 +88,8 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
                 .Param("interval", "1m")
                 .Param("limit", count)
                 .Param("startTime", from.ToUnixTimeMilliseconds())
-                .WithLogFromWithHeaders(this)
-                .WithRateDelay1M()
+                .WithLogFromWithHeaders(this, LogData.Headers)
+                .WithRateDelay1M(_rateLimiter)
                 .AsMarketResultAsync<List<CandleModel>>();
     }
 }

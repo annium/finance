@@ -12,6 +12,7 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
@@ -71,6 +72,7 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
+        ctx.Container.Add(RateLimiterFactory).AsSelf().Singleton();
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
@@ -131,6 +133,13 @@ public static class ProviderRegistrationContextExtensions
             ReloadOrders = providerConfig.ReloadOrders,
             ReloadTrades = providerConfig.ReloadTrades,
         };
+    }
+
+    private static IRateLimiter RateLimiterFactory(IServiceProvider sp)
+    {
+        var factory = sp.Resolve<IRateLimiterFactory>();
+
+        return factory.CreateRateLimiter(2400, 300, 3_000);
     }
 
     private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)

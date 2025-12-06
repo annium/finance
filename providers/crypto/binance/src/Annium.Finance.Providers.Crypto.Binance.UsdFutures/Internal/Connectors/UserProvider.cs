@@ -13,6 +13,7 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Ext
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     private readonly IHttpRequestFactory _getAccountRequestFactory;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
+    private readonly IRateLimiter _rateLimiter;
 
     public UserProvider(
         IServiceProvider sp,
@@ -38,6 +40,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
         [FromKeyedServices(GetAccountKey)] IHttpRequestFactory getAccountRequestFactory,
         [FromKeyedServices(GetOrderKey)] IHttpRequestFactory getOrderRequestFactory,
         [FromKeyedServices(GetTradeKey)] IHttpRequestFactory getTradeRequestFactory,
+        IRateLimiter rateLimiter,
         ILogger logger
     )
         : base(timeProvider, logger)
@@ -46,6 +49,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
         _getAccountRequestFactory = getAccountRequestFactory;
         _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
+        _rateLimiter = rateLimiter;
     }
 
     public async Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
@@ -59,7 +63,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .Get("/fapi/v2/account")
             .ReceiveWindow()
             .Sign(signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<AccountResponse>();
@@ -94,7 +98,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .Get("/fapi/v1/openOrders")
             .ReceiveWindow()
             .Sign(signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             // .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .WithLogFromWithHeaders(this, LogData.Headers)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
@@ -152,7 +156,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .Param("limit", OrderQueryLimit)
             .ReceiveWindow()
             .Sign(signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
@@ -198,7 +202,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .Param("endTime", until)
                 .ReceiveWindow()
                 .Sign(signatureService)
-                .WithRateDelay1M()
+                .WithRateDelay1M(_rateLimiter)
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
@@ -235,7 +239,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .Param("orderId", fromOrder)
                 .ReceiveWindow()
                 .Sign(signatureService)
-                .WithRateDelay1M()
+                .WithRateDelay1M(_rateLimiter)
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<OrderModel>>();
 
@@ -280,7 +284,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             .Param("limit", TradeQueryLimit)
             .ReceiveWindow()
             .Sign(signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
@@ -325,7 +329,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .Param("endTime", until)
                 .ReceiveWindow()
                 .Sign(signatureService)
-                .WithRateDelay1M()
+                .WithRateDelay1M(_rateLimiter)
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 
@@ -362,7 +366,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
                 .Param("fromId", fromTrade)
                 .ReceiveWindow()
                 .Sign(signatureService)
-                .WithRateDelay1M()
+                .WithRateDelay1M(_rateLimiter)
                 .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
                 .AsUserResultAsync<IReadOnlyCollection<TradeModel>>();
 

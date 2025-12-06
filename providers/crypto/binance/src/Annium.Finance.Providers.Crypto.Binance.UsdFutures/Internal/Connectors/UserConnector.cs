@@ -22,6 +22,7 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Ext
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
+using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
@@ -44,6 +45,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _cancelOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
     private readonly UserStream _userStream;
+    private readonly IRateLimiter _rateLimiter;
     private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
@@ -62,6 +64,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         UserStream userStream,
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
+        IRateLimiter rateLimiter,
         IStatusMonitor monitor,
         ILogger logger
     )
@@ -78,6 +81,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
         // user stream
         _userStream = userStream;
+        _rateLimiter = rateLimiter;
         _userStream.OnConnected += HandleConnected;
         Disposable += () => _userStream.OnConnected -= HandleConnected;
 
@@ -130,7 +134,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Param("leverage", leverage.FloorInt32())
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<LeverageResponse>();
 
@@ -160,7 +164,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Params(queryResult.Data)
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OrderModel>();
 
@@ -210,7 +214,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Params(queryResult.Data)
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OrderModel>();
 
@@ -240,7 +244,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Params(queryResult.Data)
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<CancelOrderResponse>();
 
@@ -270,7 +274,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             .Params(queryResult.Data)
             .ReceiveWindow()
             .Sign(_signatureService)
-            .WithRateDelay1M()
+            .WithRateDelay1M(_rateLimiter)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
             .AsUserResultAsync<OperationResult>();
 
