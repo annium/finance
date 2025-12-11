@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -7,6 +6,7 @@ using Annium.Finance.Providers.Shared.Services;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
 using Annium.Net.Http;
+using Annium.Net.Servers.Web;
 using Annium.Testing;
 using Xunit;
 
@@ -37,7 +37,7 @@ public class HttpRequestRateExtensionsTests : ProvidersTestBase
         );
 
         // act
-        var response = await SendAsync(limiter, server.Uri);
+        var response = await SendAsync(server, limiter);
 
         // assert
         response.StatusCode.Is(HttpStatusCode.TooManyRequests);
@@ -63,7 +63,7 @@ public class HttpRequestRateExtensionsTests : ProvidersTestBase
         );
 
         // act
-        var httpResponse = await SendAsync(limiter, server.Uri);
+        var httpResponse = await SendAsync(server, limiter);
 
         // assert
         httpResponse.StatusCode.Is(HttpStatusCode.OK);
@@ -86,7 +86,7 @@ public class HttpRequestRateExtensionsTests : ProvidersTestBase
         );
 
         // act
-        await SendAsync(limiter, server.Uri);
+        await SendAsync(server, limiter);
 
         // assert
         limiter.UsedWeights.IsEmpty();
@@ -108,15 +108,15 @@ public class HttpRequestRateExtensionsTests : ProvidersTestBase
         );
 
         // act
-        await SendAsync(limiter, server.Uri);
+        await SendAsync(server, limiter);
 
         // assert
         limiter.UsedWeights.IsEmpty();
     }
 
-    private Task<IHttpResponse> SendAsync(FakeRateLimiter limiter, Uri uri)
+    private Task<IHttpResponse> SendAsync(IServer server, FakeRateLimiter limiter)
     {
-        var request = Get<IHttpRequestFactory>().New(uri).Get("rate-limit").WithRateDelay1M(limiter);
+        var request = this.CreateHttpRequest(server).Get("rate-limit").WithRateDelay1M(limiter);
 
         return request.RunAsync();
     }

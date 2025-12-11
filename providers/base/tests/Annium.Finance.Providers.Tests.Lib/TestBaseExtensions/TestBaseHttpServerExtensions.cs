@@ -22,13 +22,13 @@ public static class TestBaseHttpServerExtensions
         });
     }
 
-    public static IHttpRequest CreateHttpRequest(this TestBase test, ITestServer server, string key = "") =>
-        test.GetKeyed<IHttpRequestFactory>(key).New(server.Uri);
+    public static IHttpRequest CreateHttpRequest(this TestBase test, IServer server, string key = "") =>
+        test.GetKeyed<IHttpRequestFactory>(key).New(server.HttpUri());
 
-    public static ITestServer RunHttpServerWithJsonResponse<T>(this TestBase test, HttpStatusCode statusCode, T body) =>
+    public static IServer RunHttpServerWithJsonResponse<T>(this TestBase test, HttpStatusCode statusCode, T body) =>
         test.RunHttpServerWithResponse(statusCode, MediaTypeNames.Application.Json, JsonSerializer.Serialize(body));
 
-    public static ITestServer RunHttpServerWithResponse(
+    public static IServer RunHttpServerWithResponse(
         this TestBase test,
         HttpStatusCode statusCode,
         string contentType,
@@ -46,17 +46,12 @@ public static class TestBaseHttpServerExtensions
         );
 
     /// <summary>
-    /// The port number used.
-    /// </summary>
-    private static readonly Random _random = new();
-
-    /// <summary>
     /// Runs a test server with the specified request handler.
     /// </summary>
     /// <param name="test">Test instance</param>
     /// <param name="handle">The function to handle HTTP requests.</param>
     /// <returns>An IAsyncDisposable to stop the server.</returns>
-    public static ITestServer RunHttpServer(
+    public static IServer RunHttpServer(
         this TestBase test,
         Func<HttpListenerRequest, HttpListenerResponse, Task> handle
     )
@@ -82,24 +77,10 @@ public static class TestBaseHttpServerExtensions
             test.Trace("done");
         });
 
-        var port = _random.Next(64000, 65000);
-        test.Trace("start server at port {port}", port);
-        var server = ServerBuilder.New(test.Get<IServiceProvider>(), port).WithHttpHandler(handler).Build();
-        var cts = new CancellationTokenSource();
-        var serverTask = server.RunAsync(cts.Token);
+        var server = ServerBuilder.New(test.Get<IServiceProvider>()).WithHttpHandler(handler).Start().NotNull();
+        test.Trace("started server at port {port}", server.Port);
 
-        return new TestServer(
-            new Uri($"http://127.0.0.1:{port}"),
-            async () =>
-            {
-                // await before cancellation for a while
-                await Task.Delay(5, CancellationToken.None);
-                await cts.CancelAsync();
-#pragma warning disable VSTHRD003
-                await serverTask;
-#pragma warning restore VSTHRD003
-            }
-        );
+        return server;
     }
 }
 
