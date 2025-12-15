@@ -27,6 +27,7 @@ public class UserConnectorBaseTests : ProvidersTestBase
     {
         // arrange
         // prerequisites
+        this.Trace("prepare components");
         var provider = new FakeUserProvider(Get<ITimeProvider>(), Logger);
         var monitor = Get<IStatusMonitor>();
         var reporter = Get<IStatusReporter>();
@@ -40,6 +41,7 @@ public class UserConnectorBaseTests : ProvidersTestBase
         };
 
         // data
+        this.Trace("prepare data");
         var count = 1000;
         var assets = Enumerable.Range(0, count).Select(i => new AssetModel(i.ToString(), 0m, 0m)).ToArray();
         var positions = Enumerable
@@ -71,9 +73,13 @@ public class UserConnectorBaseTests : ProvidersTestBase
             .Select(i => new TradeModel(i.ToString(), string.Empty, string.Empty, 0m, 0m, string.Empty, 0m, true, 0L))
             .ToArray();
 
-        var log = new TestLog<string>();
+        // act
 
+        this.Trace("create connector");
         await using var user = new FakeUserConnector(settings, provider, monitor, Logger);
+
+        var log = new TestLog<string>();
+        this.Trace("setup sync handler");
         user.OnSync += async (s, p) =>
         {
             s.Is(settings);
@@ -83,79 +89,51 @@ public class UserConnectorBaseTests : ProvidersTestBase
             await Task.Delay(200);
             log.Add("sync:done");
         };
-        user.Assets.Subscribe(e => log.Add($"A:{e.Item.Resource}"));
-        user.Positions.Subscribe(e => log.Add($"P:{e.Item.Symbol}"));
-        user.Orders.Subscribe(e => log.Add($"O:{e.Item.Id}"));
-        user.Trades.Subscribe(e => log.Add($"T:{e.Id}"));
-        Task.Run(
-                async () =>
-                {
-                    await Task.Delay(10);
-                    foreach (var x in assets)
-                    {
-                        await Task.Delay(1);
-                        user.Asset(x);
-                    }
-                },
-                TestContext.Current.CancellationToken
-            )
-            .GetAwaiter();
-        Task.Run(
-                async () =>
-                {
-                    await Task.Delay(10);
-                    foreach (var x in positions)
-                    {
-                        await Task.Delay(1);
-                        user.Position(x);
-                    }
-                },
-                TestContext.Current.CancellationToken
-            )
-            .GetAwaiter();
-        Task.Run(
-                async () =>
-                {
-                    await Task.Delay(10);
-                    foreach (var x in orders)
-                    {
-                        await Task.Delay(1);
-                        user.Order(x);
-                    }
-                },
-                TestContext.Current.CancellationToken
-            )
-            .GetAwaiter();
-        Task.Run(
-                async () =>
-                {
-                    await Task.Delay(10);
-                    foreach (var x in trades)
-                    {
-                        await Task.Delay(1);
-                        user.Trade(x);
-                    }
-                },
-                TestContext.Current.CancellationToken
-            )
-            .GetAwaiter();
-        Task.Run(
-                async () =>
-                {
-                    await Task.Delay(10);
-                    reporter.Connected();
-                    await Task.Delay(10);
-                    reporter.Connecting();
-                    await Task.Delay(10);
-                    reporter.Connected();
-                },
-                TestContext.Current.CancellationToken
-            )
-            .GetAwaiter();
+
+        this.Trace("subscribe to user data");
+        user.Assets.Subscribe(HandleEvent<ChangeEvent<AssetModel>>(log, e => $"A:{e.Item.Resource}"));
+        user.Positions.Subscribe(HandleEvent<ChangeEvent<PositionModel>>(log, e => $"P:{e.Item.Symbol}"));
+        user.Orders.Subscribe(HandleEvent<ChangeEvent<OrderModel>>(log, e => $"A:{e.Item.Id}"));
+        user.Trades.Subscribe(HandleEvent<TradeModel>(log, e => $"A:{e.Id}"));
+        // user.Assets.Subscribe(e => log.Add($"A:{e.Item.Resource}"));
+        // user.Positions.Subscribe(e => log.Add($"P:{e.Item.Symbol}"));
+        // user.Orders.Subscribe(e => log.Add($"O:{e.Item.Id}"));
+        // user.Trades.Subscribe(e => log.Add($"T:{e.Id}"));
+
+        this.Trace("run assets emit");
+        Emit(assets, user.Asset);
+
+        this.Trace("run positions emit");
+        Emit(positions, user.Position);
+
+        this.Trace("run orders emit");
+        Emit(orders, user.Order);
+
+        this.Trace("run trades emit");
+        Emit(trades, user.Trade);
+
+        this.Trace("run disconnect simulation");
+        Run(async () =>
+        {
+            await Task.Delay(10);
+            this.Trace("set connected");
+            reporter.Connected();
+
+            await Task.Delay(10);
+            this.Trace("set connecting");
+            reporter.Connecting();
+
+            await Task.Delay(10);
+            this.Trace("set connected");
+            reporter.Connected();
+        });
 
         // assert (data messages + 2 sync event pairs)
+        this.Trace("await for all events");
         var targetCount = count * 4 + 4;
         await Wait.UntilAsync(() => log.Count == targetCount);
+
+        this.Trace("examine {count} events arrived", targetCount);
         var entries = log.ToArray();
         try
         {
@@ -167,11 +145,37 @@ public class UserConnectorBaseTests : ProvidersTestBase
         }
         catch
         {
-            this.Trace("entries");
+            this.Error("sync log is not as expected:");
             for (var i = 0; i < entries.Length - 1; i++)
                 this.Trace(entries[i]);
             throw;
         }
+    }
+
+    private void Emit<T>(IReadOnlyList<T> data, Action<T> emit)
+    {
+        Run(async () =>
+        {
+            await Task.Delay(10);
+            foreach (var x in data)
+            {
+                await Task.Delay(1);
+                emit(x);
+            }
+        });
+    }
+
+    private Action<T> HandleEvent<T>(TestLog<string> log, Func<T, string> getEntry) =>
+        e =>
+        {
+            var entry = getEntry(e);
+            log.Add(entry);
+            // this.Trace(entry);
+        };
+
+    private void Run(Func<ValueTask> handle)
+    {
+        Task.Run(async () => await handle(), TestContext.Current.CancellationToken).GetAwaiter();
     }
 
     private class FakeUserConnector : UserConnectorBase

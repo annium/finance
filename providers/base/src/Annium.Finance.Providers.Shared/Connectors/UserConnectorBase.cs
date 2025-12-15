@@ -67,48 +67,42 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += () => monitor.OnError -= HandleError;
 
         // assets
-        var assetSourceChannel = Channel.CreateUnbounded<ChangeEvent<AssetModel>>();
-        AssetWriter = assetSourceChannel.Writer;
-        _assetSource = assetSourceChannel.Reader;
-
-        var assetTargetChannel = Channel.CreateUnbounded<ChangeEvent<AssetModel>>();
-        _assetTarget = assetTargetChannel.Writer;
-        Assets = assetTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Assets = CreateChannelsPair(out AssetWriter, out _assetSource, out _assetTarget);
         Disposable += Assets.Subscribe();
 
         // positions
-        var positionSourceChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
-        PositionWriter = positionSourceChannel.Writer;
-        _positionSource = positionSourceChannel.Reader;
-
-        var positionTargetChannel = Channel.CreateUnbounded<ChangeEvent<PositionModel>>();
-        _positionTarget = positionTargetChannel.Writer;
-        Positions = positionTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Positions = CreateChannelsPair(out PositionWriter, out _positionSource, out _positionTarget);
         Disposable += Positions.Subscribe();
 
         // orders
-        var orderSourceChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
-        OrderWriter = orderSourceChannel.Writer;
-        _orderSource = orderSourceChannel.Reader;
-
-        var orderTargetChannel = Channel.CreateUnbounded<ChangeEvent<OrderModel>>();
-        _orderTarget = orderTargetChannel.Writer;
-        Orders = orderTargetChannel.Reader.AsObservable().Publish().RefCount();
-        Disposable += Orders.Subscribe();
+        Orders = CreateChannelsPair(out OrderWriter, out _orderSource, out _orderTarget);
+        Disposable += Assets.Subscribe();
 
         // trades
-        var tradeSourceChannel = Channel.CreateUnbounded<TradeModel>();
-        TradeWriter = tradeSourceChannel.Writer;
-        _tradeSource = tradeSourceChannel.Reader;
-
-        var tradeTargetChannel = Channel.CreateUnbounded<TradeModel>();
-        _tradeTarget = tradeTargetChannel.Writer;
-        Trades = tradeTargetChannel.Reader.AsObservable().Publish().RefCount();
+        Trades = CreateChannelsPair(out TradeWriter, out _tradeSource, out _tradeTarget);
         Disposable += Trades.Subscribe();
 
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
+        return;
+
+        static IObservable<T> CreateChannelsPair<T>(
+            out ChannelWriter<T> sourceWriter,
+            out ChannelReader<T> sourceReader,
+            out ChannelWriter<T> targetWriter
+        )
+        {
+            var source = Channel.CreateUnbounded<T>();
+            sourceWriter = source.Writer;
+            sourceReader = source.Reader;
+
+            var target = Channel.CreateUnbounded<T>();
+            targetWriter = target.Writer;
+            var targetObservable = target.Reader.AsObservable().Publish().RefCount();
+
+            return targetObservable;
+        }
     }
 
     public ValueTask DisposeAsync()
@@ -131,27 +125,29 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             this.Trace<string>("{id} subscribe readers", Id);
             SubscribeReaders();
 
-            this.Trace("{id} notify {status} status", Id, ConnectorStatus.Connected);
-            Status = ConnectorStatus.Connected;
-            OnStatusChanged(ConnectorStatus.Connected);
+            this.Trace<string>("{id} complete status change", Id);
+            CompleteStatusChange(ConnectorStatus.Connected);
 
             this.Trace<string>("{id} done sync", Id);
         });
 
-        this.Trace("{id} done, result: {result}", Id, scheduled);
+        this.Trace("{id} done, scheduled: {result}", Id, scheduled);
     }
 
     private void HandleStatusChanged(ConnectorStatus status)
     {
-        if (status is not ConnectorStatus.Connected)
-        {
-            this.Trace("{id} notify {status} status", Id, status);
-            Status = status;
-            OnStatusChanged(status);
-            return;
-        }
+        if (status is ConnectorStatus.Connected)
+            Sync();
+        else
+            CompleteStatusChange(status);
+    }
 
-        Sync();
+    private void CompleteStatusChange(ConnectorStatus status)
+    {
+        this.Trace("{id} notify {status} status", Id, status);
+        Status = status;
+        OnStatusChanged(status);
+        this.Trace("{id} update to {status} status", Id, status);
     }
 
     private void HandleError(ConnectorError error)
