@@ -190,22 +190,22 @@ public class UserConnectorBaseTests : ProvidersTestBase
 
         public void Asset(AssetModel x)
         {
-            AssetWriter.Write(ChangeEvent.Set(x));
+            Write(ChangeEvent.Set(x));
         }
 
         public void Position(PositionModel x)
         {
-            PositionWriter.Write(ChangeEvent.Set(x));
+            Write(ChangeEvent.Set(x));
         }
 
         public void Order(OrderModel x)
         {
-            OrderWriter.Write(ChangeEvent.Set(x));
+            Write(ChangeEvent.Set(x));
         }
 
         public void Trade(TradeModel x)
         {
-            TradeWriter.Write(x);
+            Write(x);
         }
     }
 

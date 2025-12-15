@@ -28,19 +28,11 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     protected readonly string Id;
     protected readonly UserSettings Settings;
     protected readonly IUserProvider UserProvider;
-    protected readonly ChannelWriter<ChangeEvent<AssetModel>> AssetWriter;
-    protected readonly ChannelWriter<ChangeEvent<PositionModel>> PositionWriter;
-    protected readonly ChannelWriter<ChangeEvent<OrderModel>> OrderWriter;
-    protected readonly ChannelWriter<TradeModel> TradeWriter;
     protected AsyncDisposableBox Disposable;
-    private readonly ChannelReader<ChangeEvent<AssetModel>> _assetSource;
-    private readonly ChannelWriter<ChangeEvent<AssetModel>> _assetTarget;
-    private readonly ChannelReader<ChangeEvent<PositionModel>> _positionSource;
-    private readonly ChannelWriter<ChangeEvent<PositionModel>> _positionTarget;
-    private readonly ChannelReader<ChangeEvent<OrderModel>> _orderSource;
-    private readonly ChannelWriter<ChangeEvent<OrderModel>> _orderTarget;
-    private readonly ChannelReader<TradeModel> _tradeSource;
-    private readonly ChannelWriter<TradeModel> _tradeTarget;
+    private readonly ChannelPair<ChangeEvent<AssetModel>> _assets;
+    private readonly ChannelPair<ChangeEvent<PositionModel>> _positions;
+    private readonly ChannelPair<ChangeEvent<OrderModel>> _orders;
+    private readonly ChannelPair<TradeModel> _trades;
     private readonly IExecutor _executor;
     private DisposableBox _sourceSubscriptions;
 
@@ -67,42 +59,28 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += () => monitor.OnError -= HandleError;
 
         // assets
-        Assets = CreateChannelsPair(out AssetWriter, out _assetSource, out _assetTarget);
+        _assets = new ChannelPair<ChangeEvent<AssetModel>>(logger);
+        Assets = _assets.Observable;
         Disposable += Assets.Subscribe();
 
         // positions
-        Positions = CreateChannelsPair(out PositionWriter, out _positionSource, out _positionTarget);
+        _positions = new ChannelPair<ChangeEvent<PositionModel>>(logger);
+        Positions = _positions.Observable;
         Disposable += Positions.Subscribe();
 
         // orders
-        Orders = CreateChannelsPair(out OrderWriter, out _orderSource, out _orderTarget);
-        Disposable += Assets.Subscribe();
+        _orders = new ChannelPair<ChangeEvent<OrderModel>>(logger);
+        Orders = _orders.Observable;
+        Disposable += Orders.Subscribe();
 
         // trades
-        Trades = CreateChannelsPair(out TradeWriter, out _tradeSource, out _tradeTarget);
+        _trades = new ChannelPair<TradeModel>(logger);
+        Trades = _trades.Observable;
         Disposable += Trades.Subscribe();
 
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
-        return;
-
-        static IObservable<T> CreateChannelsPair<T>(
-            out ChannelWriter<T> sourceWriter,
-            out ChannelReader<T> sourceReader,
-            out ChannelWriter<T> targetWriter
-        )
-        {
-            var source = Channel.CreateUnbounded<T>();
-            sourceWriter = source.Writer;
-            sourceReader = source.Reader;
-
-            var target = Channel.CreateUnbounded<T>();
-            targetWriter = target.Writer;
-            var targetObservable = target.Reader.AsObservable().Publish().RefCount();
-
-            return targetObservable;
-        }
     }
 
     public ValueTask DisposeAsync()
@@ -134,6 +112,14 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         this.Trace("{id} done, scheduled: {result}", Id, scheduled);
     }
 
+    protected void Write(ChangeEvent<AssetModel> asset) => _assets.Write(asset);
+
+    protected void Write(ChangeEvent<PositionModel> position) => _positions.Write(position);
+
+    protected void Write(ChangeEvent<OrderModel> order) => _orders.Write(order);
+
+    protected void Write(TradeModel trade) => _trades.Write(trade);
+
     private void HandleStatusChanged(ConnectorStatus status)
     {
         if (status is ConnectorStatus.Connected)
@@ -157,14 +143,41 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     private void SubscribeReaders()
     {
-        _sourceSubscriptions += _assetSource.Pipe(_assetTarget, Logger);
-        _sourceSubscriptions += _positionSource.Pipe(_positionTarget, Logger);
-        _sourceSubscriptions += _orderSource.Pipe(_orderTarget, Logger);
-        _sourceSubscriptions += _tradeSource.Pipe(_tradeTarget, Logger);
+        _sourceSubscriptions += _assets.Connect();
+        _sourceSubscriptions += _positions.Connect();
+        _sourceSubscriptions += _orders.Connect();
+        _sourceSubscriptions += _trades.Connect();
     }
 
     private void UnsubscribeReaders()
     {
         _sourceSubscriptions.DisposeAndReset();
+    }
+
+    private class ChannelPair<T>
+    {
+        public IObservable<T> Observable { get; }
+
+        private readonly ChannelWriter<T> _sourceWriter;
+        private readonly ChannelReader<T> _sourceReader;
+        private readonly ChannelWriter<T> _targetWriter;
+        private readonly ILogger _logger;
+
+        public ChannelPair(ILogger logger)
+        {
+            var source = Channel.CreateUnbounded<T>();
+            _sourceWriter = source.Writer;
+            _sourceReader = source.Reader;
+
+            var target = Channel.CreateUnbounded<T>();
+            _targetWriter = target.Writer;
+            Observable = target.Reader.AsObservable().Publish().RefCount();
+
+            _logger = logger;
+        }
+
+        public void Write(T value) => _sourceWriter.Write(value);
+
+        public IDisposable Connect() => _sourceReader.Pipe(_targetWriter, _logger);
     }
 }

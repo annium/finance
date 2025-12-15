@@ -26,7 +26,6 @@ using Annium.Finance.Providers.Shared.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
-using Annium.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using static System.Net.Mime.MediaTypeNames;
@@ -303,8 +302,8 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private void HandleContext(UserContext context)
     {
-        AssetWriter.Write(ChangeEvent.Init(context.Assets));
-        PositionWriter.Write(ChangeEvent.Init(context.Positions));
+        Write(ChangeEvent.Init(context.Assets));
+        Write(ChangeEvent.Init(context.Positions));
     }
 
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(CancellationToken ct)
@@ -316,7 +315,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private void HandleOrders(IReadOnlyCollection<OrderModel> orders)
     {
-        OrderWriter.Write(ChangeEvent.Init(orders));
+        Write(ChangeEvent.Init(orders));
     }
 
     private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
@@ -340,7 +339,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeModel> items)
     {
         foreach (var item in items)
-            TradeWriter.Write(item);
+            Write(item);
     }
 
     private void HandleConnected()
@@ -405,6 +404,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
             ? ChangeEvent.Set(order)
             : ChangeEvent.Delete(order);
 
-        OrderWriter.Write(item);
+        Write(item);
     }
 }
