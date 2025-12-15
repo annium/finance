@@ -34,11 +34,13 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelPair<ChangeEvent<OrderModel>> _orders;
     private readonly ChannelPair<TradeModel> _trades;
     private readonly IExecutor _executor;
+    private readonly IStatusReporter _reporter;
     private DisposableBox _sourceSubscriptions;
 
     protected UserConnectorBase(
         UserSettings settings,
         IUserProvider userProvider,
+        IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
@@ -49,6 +51,9 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         UserProvider = userProvider;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
+
+        _reporter = reporter;
+        _reporter.Bind(this, ConnectorStatus.Connected);
 
         Status = monitor.Status;
 
@@ -90,6 +95,33 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     public void Sync()
     {
+        this.Trace("{id} signal {state} state", Id, ConnectorStatus.Connecting);
+        _reporter.Connecting();
+
+        this.Trace("{id} signal {state} state", Id, ConnectorStatus.Connected);
+        _reporter.Connected();
+
+        this.Trace("{id} done");
+    }
+
+    protected void Write(ChangeEvent<AssetModel> asset) => _assets.Write(asset);
+
+    protected void Write(ChangeEvent<PositionModel> position) => _positions.Write(position);
+
+    protected void Write(ChangeEvent<OrderModel> order) => _orders.Write(order);
+
+    protected void Write(TradeModel trade) => _trades.Write(trade);
+
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        if (status is ConnectorStatus.Connected)
+            HandleSync();
+        else
+            CompleteStatusChange(status);
+    }
+
+    private void HandleSync()
+    {
         this.Trace<string>("{id} schedule sync", Id);
         var scheduled = _executor.Schedule(async () =>
         {
@@ -110,22 +142,6 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         });
 
         this.Trace("{id} done, scheduled: {result}", Id, scheduled);
-    }
-
-    protected void Write(ChangeEvent<AssetModel> asset) => _assets.Write(asset);
-
-    protected void Write(ChangeEvent<PositionModel> position) => _positions.Write(position);
-
-    protected void Write(ChangeEvent<OrderModel> order) => _orders.Write(order);
-
-    protected void Write(TradeModel trade) => _trades.Write(trade);
-
-    private void HandleStatusChanged(ConnectorStatus status)
-    {
-        if (status is ConnectorStatus.Connected)
-            Sync();
-        else
-            CompleteStatusChange(status);
     }
 
     private void CompleteStatusChange(ConnectorStatus status)

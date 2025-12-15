@@ -11,7 +11,6 @@ using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Threading.Channels;
 using Annium.Threading.Tasks;
 using Xunit;
 
@@ -28,10 +27,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
         // arrange
         // prerequisites
         this.Trace("prepare components");
-        var provider = new FakeUserProvider(Get<ITimeProvider>(), Logger);
-        var monitor = Get<IStatusMonitor>();
-        var reporter = Get<IStatusReporter>();
-        reporter.Bind(this);
         var settings = new UserSettings
         {
             Provider = "fake",
@@ -39,17 +34,18 @@ public class UserConnectorBaseTests : ProvidersTestBase
             Key = "some_key",
             Secret = "some_secret",
         };
+        var provider = new FakeUserProvider(Get<ITimeProvider>(), Logger);
 
         // data
         this.Trace("prepare data");
-        var count = 1000;
-        var assets = Enumerable.Range(0, count).Select(i => new AssetModel(i.ToString(), 0m, 0m)).ToArray();
+        const int dataSize = 1000;
+        var assets = Enumerable.Range(0, dataSize).Select(i => new AssetModel(i.ToString(), 0m, 0m)).ToArray();
         var positions = Enumerable
-            .Range(0, count)
+            .Range(0, dataSize)
             .Select(i => new PositionModel(i.ToString(), OrientationRange.Both, MarginType.Cross, 0m, 0m))
             .ToArray();
         var orders = Enumerable
-            .Range(0, count)
+            .Range(0, dataSize)
             .Select(i => new OrderModel(
                 i.ToString(),
                 string.Empty,
@@ -69,36 +65,35 @@ public class UserConnectorBaseTests : ProvidersTestBase
             ))
             .ToArray();
         var trades = Enumerable
-            .Range(0, count)
+            .Range(0, dataSize)
             .Select(i => new TradeModel(i.ToString(), string.Empty, string.Empty, 0m, 0m, string.Empty, 0m, true, 0L))
             .ToArray();
 
         // act
 
         this.Trace("create connector");
-        await using var user = new FakeUserConnector(settings, provider, monitor, Logger);
+        await using var user = CreateConnector(settings, provider);
 
-        var log = new TestLog<string>();
         this.Trace("setup sync handler");
         user.OnSync += async (s, p) =>
         {
             s.Is(settings);
             p.Is(provider);
 
-            log.Add("sync:start");
+            this.Trace("sync:start");
             await Task.Delay(200);
-            log.Add("sync:done");
+            this.Trace("sync:done");
         };
 
         this.Trace("subscribe to user data");
-        user.Assets.Subscribe(HandleEvent<ChangeEvent<AssetModel>>(log, e => $"A:{e.Item.Resource}"));
-        user.Positions.Subscribe(HandleEvent<ChangeEvent<PositionModel>>(log, e => $"P:{e.Item.Symbol}"));
-        user.Orders.Subscribe(HandleEvent<ChangeEvent<OrderModel>>(log, e => $"A:{e.Item.Id}"));
-        user.Trades.Subscribe(HandleEvent<TradeModel>(log, e => $"A:{e.Id}"));
-        // user.Assets.Subscribe(e => log.Add($"A:{e.Item.Resource}"));
-        // user.Positions.Subscribe(e => log.Add($"P:{e.Item.Symbol}"));
-        // user.Orders.Subscribe(e => log.Add($"O:{e.Item.Id}"));
-        // user.Trades.Subscribe(e => log.Add($"T:{e.Id}"));
+        var assetsLog = new TestLog<int>();
+        user.Assets.Subscribe(e => assetsLog.Add(int.Parse(e.Item.Resource)));
+        var positionsLog = new TestLog<int>();
+        user.Positions.Subscribe(e => positionsLog.Add(int.Parse(e.Item.Symbol)));
+        var ordersLog = new TestLog<int>();
+        user.Orders.Subscribe(e => ordersLog.Add(int.Parse(e.Item.Id)));
+        var tradesLog = new TestLog<int>();
+        user.Trades.Subscribe(e => tradesLog.Add(int.Parse(e.Id)));
 
         this.Trace("run assets emit");
         Emit(assets, user.Asset);
@@ -112,70 +107,66 @@ public class UserConnectorBaseTests : ProvidersTestBase
         this.Trace("run trades emit");
         Emit(trades, user.Trade);
 
-        this.Trace("run disconnect simulation");
-        Run(async () =>
-        {
-            await Task.Delay(10);
-            this.Trace("set connected");
-            reporter.Connected();
+        this.Trace("trigger sync");
+        user.Sync();
 
-            await Task.Delay(10);
-            this.Trace("set connecting");
-            reporter.Connecting();
-
-            await Task.Delay(10);
-            this.Trace("set connected");
-            reporter.Connected();
-        });
-
-        // assert (data messages + 2 sync event pairs)
+        // assert (data messages)
         this.Trace("await for all events");
-        var targetCount = count * 4 + 4;
-        await Wait.UntilAsync(() => log.Count == targetCount);
+        await Wait.UntilAsync(() =>
+            assetsLog.Count == dataSize
+            && positionsLog.Count == dataSize
+            && ordersLog.Count == dataSize
+            && tradesLog.Count == dataSize
+        );
 
-        this.Trace("examine {count} events arrived", targetCount);
-        var entries = log.ToArray();
-        try
-        {
-            for (var i = 0; i < entries.Length - 1; i++)
-            {
-                if (entries[i] == "sync:start")
-                    entries[i + 1].Is("sync:done");
-            }
-        }
-        catch
-        {
-            this.Error("sync log is not as expected:");
-            for (var i = 0; i < entries.Length - 1; i++)
-                this.Trace(entries[i]);
-            throw;
-        }
+        this.Trace("examine event logs");
+        VerifyLog("assets", assetsLog);
+        VerifyLog("positions", positionsLog);
+        VerifyLog("orders", ordersLog);
+        VerifyLog("trades", tradesLog);
+    }
+
+    private FakeUserConnector CreateConnector(UserSettings settings, IUserProvider provider)
+    {
+        var reporter = Get<IStatusReporter>();
+        var monitor = Get<IStatusMonitor>();
+
+        return new FakeUserConnector(settings, provider, reporter, monitor, Logger);
     }
 
     private void Emit<T>(IReadOnlyList<T> data, Action<T> emit)
     {
-        Run(async () =>
-        {
-            await Task.Delay(10);
-            foreach (var x in data)
-            {
-                await Task.Delay(1);
-                emit(x);
-            }
-        });
+        Task.Run(
+                async () =>
+                {
+                    await Task.Delay(10);
+                    foreach (var x in data)
+                    {
+                        await Task.Delay(1);
+                        emit(x);
+                    }
+                },
+                TestContext.Current.CancellationToken
+            )
+            .GetAwaiter();
     }
 
-    private Action<T> HandleEvent<T>(TestLog<string> log, Func<T, string> getEntry) =>
-        e =>
-        {
-            var entry = getEntry(e);
-            log.Add(entry);
-            // this.Trace(entry);
-        };
-
-    private void Run(Func<ValueTask> handle)
+    private void VerifyLog(string type, TestLog<int> log)
     {
-        Task.Run(async () => await handle(), TestContext.Current.CancellationToken).GetAwaiter();
+        this.Trace<string>("verify {type} log", type);
+        var entries = log.ToArray();
+        try
+        {
+            for (var i = 1; i < entries.Length - 1; i++)
+                entries[i].Is(entries[i - 1] + 1);
+        }
+        catch
+        {
+            this.Error<string>("{type} log is not as expected:", type);
+            for (var i = 0; i < entries.Length - 1; i++)
+                this.Trace("{entry}", entries[i]);
+            throw;
+        }
     }
 
     private class FakeUserConnector : UserConnectorBase
@@ -183,10 +174,11 @@ public class UserConnectorBaseTests : ProvidersTestBase
         public FakeUserConnector(
             UserSettings settings,
             IUserProvider userProvider,
+            IStatusReporter reporter,
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, userProvider, monitor, logger) { }
+            : base(settings, userProvider, reporter, monitor, logger) { }
 
         public void Asset(AssetModel x)
         {

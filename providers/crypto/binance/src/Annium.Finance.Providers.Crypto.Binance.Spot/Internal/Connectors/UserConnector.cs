@@ -16,10 +16,11 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     public UserConnector(
         UserConfig config,
         [FromKeyedServices(Constants.Provider)] IUserProvider userProvider,
+        IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), userProvider, monitor, logger)
+        : base(config.GetSettings(), userProvider, reporter, monitor, logger)
     {
         // init load
         // schedule sync on connected

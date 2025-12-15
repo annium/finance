@@ -64,10 +64,11 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         ILoaderFactory loaderFactory,
         [FromKeyedServices(Provider)] IUserProvider userProvider,
         IRateLimiter rateLimiter,
+        IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), userProvider, monitor, logger)
+        : base(config.GetSettings(), userProvider, reporter, monitor, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;
