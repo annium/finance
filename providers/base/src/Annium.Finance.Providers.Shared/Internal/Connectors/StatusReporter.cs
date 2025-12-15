@@ -19,7 +19,7 @@ internal class StatusReporter : IStatusReporter, ILogSubject
         this.Trace<string>("reports to {monitor}", monitor.GetFullId());
     }
 
-    public void Bind(object component, ConnectorStatus status = ConnectorStatus.Disconnected)
+    public void Bind<T>(T component, ConnectorStatus status = ConnectorStatus.Disconnected)
     {
         var target = component.GetFullId();
         var current = Interlocked.CompareExchange(ref _target, target, string.Empty);
