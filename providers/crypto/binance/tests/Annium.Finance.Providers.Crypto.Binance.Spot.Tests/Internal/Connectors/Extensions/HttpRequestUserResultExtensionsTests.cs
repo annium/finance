@@ -11,7 +11,7 @@ using Annium.Net.Http;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Connectors.Extensions;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors.Extensions;
 
 public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
 {

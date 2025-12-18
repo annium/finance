@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Services;
 
 public class SignatureServiceTests : ProvidersTestBase
 {
