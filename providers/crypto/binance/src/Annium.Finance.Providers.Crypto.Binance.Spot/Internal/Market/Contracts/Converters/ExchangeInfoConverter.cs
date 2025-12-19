@@ -1,0 +1,69 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts.Domain;
+
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts.Converters;
+
+internal class ExchangeInfoConverter : JsonConverter<ExchangeInfo?>
+{
+    public override ExchangeInfo? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+            throw new JsonException($"Expected {JsonTokenType.StartObject}, got {reader.TokenType}");
+
+        var currentDepth = reader.CurrentDepth;
+
+        var rateLimits = default(RateLimits?);
+        var instruments = default(IReadOnlyCollection<InstrumentModel>);
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
+            {
+                if (rateLimits is null || instruments is null)
+                {
+                    return default;
+                }
+
+                return new ExchangeInfo(rateLimits, instruments);
+            }
+
+            if (reader.TokenType == JsonTokenType.PropertyName)
+            {
+                var propertyName = reader.GetString();
+
+                reader.Read();
+
+                switch (propertyName)
+                {
+                    case "rateLimits":
+                        rateLimits = JsonSerializer.Deserialize<RateLimits?>(ref reader, options);
+                        break;
+                    case "symbols":
+                        var allInstruments = JsonSerializer.Deserialize<IReadOnlyCollection<InstrumentModel?>>(
+                            ref reader,
+                            options
+                        );
+                        instruments = allInstruments?.OfType<InstrumentModel>().ToArray();
+                        break;
+
+                    default:
+                        reader.Skip();
+                        break;
+                }
+            }
+        }
+
+        throw new JsonException("Unexpected end of json");
+    }
+
+    public override void Write(Utf8JsonWriter writer, ExchangeInfo? value, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException();
+    }
+}

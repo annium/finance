@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.HttpExtensions;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;

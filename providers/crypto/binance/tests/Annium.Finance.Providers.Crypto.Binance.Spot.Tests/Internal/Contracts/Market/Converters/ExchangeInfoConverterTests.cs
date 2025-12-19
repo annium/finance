@@ -2,7 +2,7 @@ using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Domain;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.Market.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts.Domain;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Testing;

@@ -11,16 +11,18 @@ using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.ServerTime;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Services;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared.Contracts;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
-using MarketConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.MarketConfig;
-using UserConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.UserConfig;
+using MarketConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.MarketConfig;
+using UserConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.UserConfig;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;
 
@@ -50,26 +52,26 @@ public static class ProviderRegistrationContextExtensions
 
         // serializers and http factories
         // market
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ExchangeInfoKey, Contracts.Market.ExchangeInfo);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(CandleKey, Contracts.Market.Candle);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(InstrumentTickerKey, Contracts.Market.InstrumentTicker);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ServerTimeKey, Contracts.Shared.ServerTime);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ExchangeInfoKey, MarketContracts.ExchangeInfo);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(CandleKey, MarketContracts.Candle);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(InstrumentTickerKey, MarketContracts.InstrumentTicker);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ServerTimeKey, SharedContracts.ServerTime);
 
         // user data load
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetAccountKey, Contracts.User.GetAccount);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetOrderKey, Contracts.User.GetOrder);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(GetTradeKey, Contracts.User.GetTrade);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetAccountKey, UserContracts.GetAccount);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetOrderKey, UserContracts.GetOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(GetTradeKey, UserContracts.GetTrade);
 
         // user data trade
-        ctx.AddHttpRequestFactoryWithJsonSerializer(InitOrderKey, Contracts.User.InitOrder);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ModifyOrderKey, Contracts.User.ModifyOrder);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(CancelOrderKey, Contracts.User.CancelOrder);
-        ctx.AddHttpRequestFactoryWithJsonSerializer(CancelAllOrdersKey, Contracts.User.CancelAllOrders);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(InitOrderKey, UserContracts.InitOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ModifyOrderKey, UserContracts.ModifyOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(CancelOrderKey, UserContracts.CancelOrder);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(CancelAllOrdersKey, UserContracts.CancelAllOrders);
 
         // user data updates
-        ctx.AddHttpRequestFactoryWithJsonSerializer(ListenKeyKey, Contracts.User.ListenKey);
-        ctx.AddJsonSerializer(AccountUpdateKey, Contracts.User.AccountUpdate);
-        ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
+        ctx.AddHttpRequestFactoryWithJsonSerializer(ListenKeyKey, UserContracts.ListenKey);
+        ctx.AddJsonSerializer(AccountUpdateKey, UserContracts.AccountUpdate);
+        ctx.AddJsonSerializer(OrderUpdateKey, UserContracts.OrderUpdate);
 
         // services
         ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();

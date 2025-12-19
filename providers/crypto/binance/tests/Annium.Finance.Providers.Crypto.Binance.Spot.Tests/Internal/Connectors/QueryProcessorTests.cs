@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
-using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Finance.Providers.Tests.Lib.User.Requests;
