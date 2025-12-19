@@ -28,7 +28,6 @@ public readonly struct ProviderRegistrationContext
         TMarketProvider,
         TMarketConnector,
         TUserProvider,
-        TQueryProcessor,
         TUserConnector,
         TFinanceService
     >(
@@ -40,13 +39,11 @@ public readonly struct ProviderRegistrationContext
         where TMarketConnector : IMarketConnector
         where TUserProvider : IUserProvider
         where TUserConnector : IUserConnector
-        where TQueryProcessor : IQueryProcessor
         where TFinanceService : IFinanceService
     {
         Container.Add<TMarketProvider>().AsKeyed<IMarketProvider>(provider).AsSelf().Singleton();
         Container.Add<TMarketConnector>().AsSelf().Transient();
         Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Singleton();
-        Container.Add<TQueryProcessor>().AsSelf().Singleton();
         Container.Add<TUserConnector>().AsSelf().Transient();
         Container.Add<TFinanceService>().AsSelf().Transient();
 

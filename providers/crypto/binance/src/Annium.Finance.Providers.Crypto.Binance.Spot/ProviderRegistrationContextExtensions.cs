@@ -35,7 +35,7 @@ public static class ProviderRegistrationContextExtensions
     )
     {
         // provider
-        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, QueryProcessor, UserConnector, FinanceService>(
+        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, UserConnector, FinanceService>(
             ServerTimeProviderFactory,
             Provider,
             ProviderEnvironment.Real | ProviderEnvironment.Test
@@ -70,6 +70,7 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, Contracts.User.OrderUpdate);
 
         // services
+        ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();
         ctx.Container.Add(RateLimiterFactory).AsSelf().Singleton();
         ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
