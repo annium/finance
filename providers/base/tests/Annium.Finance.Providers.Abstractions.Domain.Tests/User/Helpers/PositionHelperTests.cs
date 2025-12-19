@@ -3,7 +3,7 @@ using Xunit;
 using static Annium.Finance.Providers.Abstractions.Domain.User.Helpers.PositionHelper;
 using static Annium.Finance.Providers.Abstractions.Domain.User.PositionState;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Tools;
+namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User.Helpers;
 
 public class PositionHelperTests
 {

@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Tests.Lib.Helpers;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Extensions;
+namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 
 public class OrderExtensionsTests
 {

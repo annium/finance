@@ -8,7 +8,7 @@ using Annium.Finance.Providers.Tests.Lib.Models;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Extensions;
+namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 
 public class OrderValidationExtensionsTests
 {
