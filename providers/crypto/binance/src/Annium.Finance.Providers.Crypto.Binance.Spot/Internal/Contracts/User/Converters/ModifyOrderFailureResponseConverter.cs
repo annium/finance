@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;

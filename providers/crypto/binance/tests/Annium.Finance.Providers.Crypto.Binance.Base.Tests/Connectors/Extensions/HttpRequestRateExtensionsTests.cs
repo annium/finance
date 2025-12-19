@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;

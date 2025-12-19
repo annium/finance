@@ -5,7 +5,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core.Market;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
-using Annium.Finance.Providers.Crypto.Binance.Base.Services;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Logging;
 using Annium.Threading.Channels;
 

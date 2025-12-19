@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Market.Converters;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.Market.Converters;
 using Annium.Serialization.Json;
 

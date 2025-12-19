@@ -6,7 +6,7 @@ using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.User;
-using Annium.Finance.Providers.Crypto.Binance.Base;
+using Annium.Finance.Providers.Crypto.Binance.Base.User;
 using Annium.Logging;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.User.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Converters;
 

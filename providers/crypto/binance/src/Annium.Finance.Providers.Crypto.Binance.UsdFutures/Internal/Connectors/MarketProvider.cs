@@ -8,7 +8,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Core.Market;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
-using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.Market.Domain;
 using Annium.Logging;

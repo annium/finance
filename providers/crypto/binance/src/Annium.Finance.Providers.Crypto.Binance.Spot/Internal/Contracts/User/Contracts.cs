@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
+using Annium.Finance.Providers.Crypto.Binance.Base.User.Contracts.Converters;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Converters;
 using Annium.Serialization.Json;
 

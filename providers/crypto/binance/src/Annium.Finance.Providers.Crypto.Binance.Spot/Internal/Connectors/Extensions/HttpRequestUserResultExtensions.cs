@@ -1,11 +1,11 @@
 using System.Net;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
-using Annium.Finance.Providers.Core.User.Extensions;
-using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
+using Annium.Finance.Providers.Core.User.HttpExtensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Net.Http;
 using OneOf;
-using static Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions.HttpRequestHelper;
+using static Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions.HttpRequestHelper;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
 

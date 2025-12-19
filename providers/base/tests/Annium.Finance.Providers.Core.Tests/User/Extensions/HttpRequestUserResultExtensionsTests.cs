@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
-using Annium.Finance.Providers.Core.User.Extensions;
+using Annium.Finance.Providers.Core.User.HttpExtensions;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
