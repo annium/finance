@@ -1,8 +1,10 @@
-using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 
 namespace Annium.Finance.Providers.Core.Shared.TimeSync;
 
-public interface IServerTimeProvider : IServerTimeSource
+public interface IServerTimeProvider
 {
-    event Action<bool> OnStateChanged;
+    Task<MarketResult<long>> LoadAsync(CancellationToken ct);
 }

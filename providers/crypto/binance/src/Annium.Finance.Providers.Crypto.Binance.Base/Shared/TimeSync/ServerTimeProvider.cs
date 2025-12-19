@@ -11,27 +11,22 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
 
-public class ServerTimeProvider : ServerTimeProviderBase
+public class ServerTimeProvider : IServerTimeProvider, ILogSubject
 {
     private readonly IHttpRequestFactory _requestFactory;
     private readonly Uri _httpApi;
     private readonly string _endpoint;
+    public ILogger Logger { get; }
 
-    public ServerTimeProvider(
-        IHttpRequestFactory requestFactory,
-        Uri httpApi,
-        string endpoint,
-        ServerTimeProviderConfig providerConfig,
-        ILogger logger
-    )
-        : base(providerConfig, logger)
+    public ServerTimeProvider(IHttpRequestFactory requestFactory, Uri httpApi, string endpoint, ILogger logger)
     {
         _requestFactory = requestFactory;
         _httpApi = httpApi;
         _endpoint = endpoint;
+        Logger = logger;
     }
 
-    protected override async Task<MarketResult<long>> LoadAsync(CancellationToken ct)
+    public async Task<MarketResult<long>> LoadAsync(CancellationToken ct)
     {
         // load exchange info
         var result = await _requestFactory

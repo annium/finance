@@ -400,7 +400,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
     {
         try
         {
-            return new SignatureService(settings, _sp.ResolveKeyed<IServerTimeProvider>(settings.GetProviderKey()));
+            return new SignatureService(settings, _sp.ResolveKeyed<IServerTimeSource>(settings.GetProviderKey()));
         }
         catch (ObjectDisposedException)
         {

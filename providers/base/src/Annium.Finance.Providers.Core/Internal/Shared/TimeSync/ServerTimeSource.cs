@@ -2,14 +2,15 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
+using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Logging;
 using Annium.Threading;
 using NodaTime;
 
-namespace Annium.Finance.Providers.Core.Shared.TimeSync;
+namespace Annium.Finance.Providers.Core.Internal.Shared.TimeSync;
 
-public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable, ILogSubject
+internal class ServerTimeSource : IServerTimeSource, IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     public long ServerTime
@@ -17,19 +18,30 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         get => field + _watch.ElapsedMilliseconds;
         private set;
     } = SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds();
-    public event Action<bool> OnStateChanged = delegate { };
+    private readonly IServerTimeProvider _provider;
     private readonly ServerTimeProviderConfig _config;
+    private readonly IStatusReporter _statusReporter;
     private readonly Stopwatch _watch = new();
     private readonly ISequentialTimer _timer;
     private readonly CancellationTokenSource _cts = new();
     private Mode _mode = Mode.Load;
 
-    protected ServerTimeProviderBase(ServerTimeProviderConfig config, ILogger logger)
+    public ServerTimeSource(
+        IServerTimeProvider provider,
+        ServerTimeProviderConfig config,
+        IStatusReporter statusReporter,
+        ILogger logger
+    )
     {
         Logger = logger;
+        _provider = provider;
         _config = config;
-        _watch.Start();
+        _statusReporter = statusReporter;
 
+        _statusReporter.Bind(this);
+        _statusReporter.Connecting();
+
+        _watch.Start();
         _timer = Timers.Async(RefreshAsync, 0, _config.LoadInterval, logger);
     }
 
@@ -42,23 +54,23 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         _cts.Cancel();
         _cts.Dispose();
 
+        _statusReporter.Disconnected();
+
         this.Trace("done");
     }
-
-    protected abstract Task<MarketResult<long>> LoadAsync(CancellationToken ct);
 
     private async ValueTask RefreshAsync()
     {
         this.Trace("start");
 
         this.Trace("load server time");
-        var result = await LoadAsync(_cts.Token);
+        var result = await _provider.LoadAsync(_cts.Token);
 
         if (!result.IsSuccess)
         {
             this.Trace("server time load failed ({result})", result);
 
-            OnStateChanged(false);
+            _statusReporter.Connecting();
 
             if (_mode is Mode.Confirm)
             {
@@ -76,7 +88,7 @@ public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable,
         ServerTime = result.Data;
         _watch.Restart();
 
-        OnStateChanged(true);
+        _statusReporter.Connected();
 
         if (_mode is Mode.Load)
         {

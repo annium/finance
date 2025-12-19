@@ -3,6 +3,7 @@ using System.Net.Mime;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.Temp;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
@@ -40,11 +41,12 @@ public static class ProviderRegistrationContextExtensions
     )
     {
         // provider
-        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, UserConnector, FinanceService>(
-            ServerTimeProviderFactory,
+        var baseCfg = new ProviderBaseConfiguration(
             Provider,
-            ProviderEnvironment.Real | ProviderEnvironment.Test
+            ProviderEnvironment.Real | ProviderEnvironment.Test,
+            cfg.ServerTime
         );
+        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, UserConnector, FinanceService>(baseCfg);
 
         // settings
         ctx.Container.Add(cfg).AsSelf().Singleton();
@@ -84,6 +86,12 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
         ctx.Container.Add(UserStreamFactory).AsSelf().Scoped();
 
+        foreach (var env in baseCfg.Environments.EnumerateFlags())
+        {
+            var providerKey = ProviderKey.Create(Provider, env);
+            ctx.Container.Add(ServerTimeProviderFactory).AsKeyed<IServerTimeProvider>(providerKey).Singleton();
+        }
+
         return ctx;
     }
 
@@ -93,10 +101,9 @@ public static class ProviderRegistrationContextExtensions
 
         var requestFactory = sp.ResolveHttpRequestFactory(ServerTimeKey);
         var httpApi = Endpoints.GetHttpApi(providerKey.Environment);
-        var providerConfig = sp.Resolve<ProviderConfiguration>();
         var logger = sp.Resolve<ILogger>();
 
-        return new ServerTimeProvider(requestFactory, httpApi, "/fapi/v1/time", providerConfig.ServerTime, logger);
+        return new ServerTimeProvider(requestFactory, httpApi, "/fapi/v1/time", logger);
     }
 
     private static MarketConfig MarketConfigFactory(IServiceProvider sp)
@@ -164,9 +171,10 @@ public static class ProviderRegistrationContextExtensions
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)
     {
         var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-        var serverTimeTracker = sp.Resolve<IServerTimeTracker>();
+        var providerKey = userSettings.GetProviderKey();
+        var serverTimeSource = sp.ResolveKeyed<IServerTimeSource>(providerKey);
 
-        return new SignatureService(userSettings, serverTimeTracker);
+        return new SignatureService(userSettings, serverTimeSource);
     }
 
     private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)

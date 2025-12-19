@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
@@ -27,13 +28,13 @@ public class ServerTimeProviderTests : ProvidersTestBase
     public async Task Works()
     {
         // arrange
-        var tracker = Get<IServerTimeTracker>();
+        var source = GetKeyed<IServerTimeSource>(Settings.Market.GetProviderKey());
         var monitor = Get<IStatusMonitor>();
         var status = ConnectorStatus.Disconnected;
         monitor.OnStatusChanged += s => status = s;
 
         // assert
         await Expect.ToAsync(() => status.Is(ConnectorStatus.Connected));
-        tracker.ServerTime.IsNotDefault();
+        source.ServerTime.IsNotDefault();
     }
 }
