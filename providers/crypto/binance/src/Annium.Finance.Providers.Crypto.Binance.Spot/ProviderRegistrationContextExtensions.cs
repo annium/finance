@@ -17,6 +17,7 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;

@@ -22,6 +22,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.User.Contracts.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts.Domain;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.HttpExtensions;
+using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;

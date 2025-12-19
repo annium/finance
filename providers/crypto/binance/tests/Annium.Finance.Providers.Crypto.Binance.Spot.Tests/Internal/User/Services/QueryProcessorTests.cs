@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
+using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Finance.Providers.Tests.Lib.User.Requests;
@@ -12,7 +11,7 @@ using Annium.Testing;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;
 
-namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors;
+namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Services;
 
 public class QueryProcessorTests : ProvidersTestBase
 {
@@ -25,207 +24,137 @@ public class QueryProcessorTests : ProvidersTestBase
 
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
-        ctx.WithBinanceUsdFutures();
+        ctx.WithBinanceSpot();
     }
 
-    [Theory]
-    [InlineData(9, false)]
-    [InlineData(10, true)]
-    public void InitOrder_Limit(int count, bool reduceOnly)
+    [Fact]
+    public void InitOrder_Limit()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m, 15.2m, reduceOnly);
+        var request = InitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m, 15.2m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(8);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
-        data.At("positionSide").Is("BOTH");
         data.At("type").Is("LIMIT");
         data.At("timeInForce").Is("GTC");
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("10.5");
         data.At("price").Is("15.2");
-
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
-    [Theory]
-    [InlineData(7, false)]
-    [InlineData(8, true)]
-    public void InitOrder_Market(int count, bool reduceOnly)
+    [Fact]
+    public void InitOrder_Market()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m, reduceOnly);
+        var request = InitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Buy, 10.5m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(6);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("BUY");
-        data.At("positionSide").Is("BOTH");
         data.At("type").Is("MARKET");
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("10.5");
-
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
-    [Theory]
-    [InlineData(8, 10.5, false)]
-    [InlineData(9, 10.5, true)]
-    public void InitOrder_StopLossMarket(int count, decimal quantity, bool reduceOnly)
+    [Fact]
+    public void InitOrder_StopLossMarket()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitStopLossMarketOrder(
-            _clientOrderId,
-            _range,
-            Symbol,
-            OrderSide.Sell,
-            quantity,
-            9.4m,
-            reduceOnly
-        );
+        var request = InitStopLossMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(7);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
-        data.At("positionSide").Is("BOTH");
-        data.At("type").Is("STOP_MARKET");
+        data.At("type").Is("STOP_LOSS");
         data.At("newOrderRespType").Is("RESULT");
+        data.At("quantity").Is("10.5");
         data.At("stopPrice").Is("9.4");
-
-        data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
-    [Theory]
-    [InlineData(8, 10.5, false)]
-    [InlineData(9, 10.5, true)]
-    public void InitOrder_TakeProfitMarket(int count, decimal quantity, bool reduceOnly)
+    [Fact]
+    public void InitOrder_TakeProfitMarket()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitTakeProfitMarketOrder(
-            _clientOrderId,
-            _range,
-            Symbol,
-            OrderSide.Sell,
-            quantity,
-            9.4m,
-            reduceOnly
-        );
+        var request = InitTakeProfitMarketOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(7);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
-        data.At("positionSide").Is("BOTH");
-        data.At("type").Is("TAKE_PROFIT_MARKET");
+        data.At("type").Is("TAKE_PROFIT");
         data.At("newOrderRespType").Is("RESULT");
+        data.At("quantity").Is("10.5");
         data.At("stopPrice").Is("9.4");
-
-        data.At("quantity").Is(quantity.ToString(CultureInfo.InvariantCulture));
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
-    [Theory]
-    [InlineData(10, false)]
-    [InlineData(11, true)]
-    public void InitOrder_StopLossLimit(int count, bool reduceOnly)
+    [Fact]
+    public void InitOrder_StopLossLimit()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitStopLossLimitOrder(
-            _clientOrderId,
-            _range,
-            Symbol,
-            OrderSide.Sell,
-            10.5m,
-            9.4m,
-            9.6m,
-            reduceOnly
-        );
+        var request = InitStopLossLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.6m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(9);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
-        data.At("positionSide").Is("BOTH");
-        data.At("type").Is("STOP");
+        data.At("type").Is("STOP_LOSS_LIMIT");
         data.At("timeInForce").Is("GTC");
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("10.5");
         data.At("price").Is("9.4");
         data.At("stopPrice").Is("9.6");
-
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
-    [Theory]
-    [InlineData(10, false)]
-    [InlineData(11, true)]
-    public void InitOrder_TakeProfitLimit(int count, bool reduceOnly)
+    [Fact]
+    public void InitOrder_TakeProfitLimit()
     {
         // arrange
         var processor = Get<QueryProcessor>();
-        var request = InitTakeProfitLimitOrder(
-            _clientOrderId,
-            _range,
-            Symbol,
-            OrderSide.Sell,
-            10.5m,
-            9.4m,
-            9.2m,
-            reduceOnly
-        );
+        var request = InitTakeProfitLimitOrder(_clientOrderId, _range, Symbol, OrderSide.Sell, 10.5m, 9.4m, 9.2m);
 
         // act
         var data = processor.BuildInitOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(count);
+        data.Has(9);
         data.At("newClientOrderId").Is(request.Id);
         data.At("symbol").Is(request.Symbol);
         data.At("side").Is("SELL");
-        data.At("positionSide").Is("BOTH");
-        data.At("type").Is("TAKE_PROFIT");
+        data.At("type").Is("TAKE_PROFIT_LIMIT");
         data.At("timeInForce").Is("GTC");
         data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("10.5");
         data.At("price").Is("9.4");
         data.At("stopPrice").Is("9.2");
-
-        if (reduceOnly)
-            data.At("reduceOnly").Is("true");
     }
 
     [Fact]
@@ -240,12 +169,17 @@ public class QueryProcessorTests : ProvidersTestBase
         var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
 
         // assert
-        data.Has(5);
+        data.Has(10);
         data.At("symbol").Is(request.Order.Symbol);
         data.At("side").Is("BUY");
+        data.At("type").Is("LIMIT");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
         data.At("quantity").Is("11.3");
         data.At("price").Is("12.7");
-        data.At("origClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -257,7 +191,19 @@ public class QueryProcessorTests : ProvidersTestBase
         var request = ModifyToMarketOrder(order, OrderSide.Buy, 11.3m);
 
         // act
-        processor.BuildModifyOrderQuery(request).EnsureFailed();
+        var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
+
+        // assert
+        data.Has(9);
+        data.At("symbol").Is(request.Order.Symbol);
+        data.At("side").Is("BUY");
+        data.At("type").Is("MARKET");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
+        data.At("quantity").Is("11.3");
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -269,7 +215,20 @@ public class QueryProcessorTests : ProvidersTestBase
         var request = ModifyToStopLossMarketOrder(order, OrderSide.Sell, 11.3m, 12.7m);
 
         // act
-        processor.BuildModifyOrderQuery(request).EnsureFailed();
+        var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
+
+        // assert
+        data.Has(10);
+        data.At("symbol").Is(request.Order.Symbol);
+        data.At("side").Is("SELL");
+        data.At("type").Is("STOP_LOSS");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
+        data.At("quantity").Is("11.3");
+        data.At("stopPrice").Is("12.7");
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -281,7 +240,20 @@ public class QueryProcessorTests : ProvidersTestBase
         var request = ModifyToTakeProfitMarketOrder(order, OrderSide.Sell, 11.3m, 12.7m);
 
         // act
-        processor.BuildModifyOrderQuery(request).EnsureFailed();
+        var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
+
+        // assert
+        data.Has(10);
+        data.At("symbol").Is(request.Order.Symbol);
+        data.At("side").Is("SELL");
+        data.At("type").Is("TAKE_PROFIT");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
+        data.At("quantity").Is("11.3");
+        data.At("stopPrice").Is("12.7");
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -293,7 +265,21 @@ public class QueryProcessorTests : ProvidersTestBase
         var request = ModifyToStopLossLimitOrder(order, OrderSide.Sell, 11.3m, 12.7m, 12.9m);
 
         // act
-        processor.BuildModifyOrderQuery(request).EnsureFailed();
+        var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
+
+        // assert
+        data.Has(11);
+        data.At("symbol").Is(request.Order.Symbol);
+        data.At("side").Is("SELL");
+        data.At("type").Is("STOP_LOSS_LIMIT");
+        data.At("quantity").Is("11.3");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
+        data.At("price").Is("12.7");
+        data.At("stopPrice").Is("12.9");
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
@@ -306,7 +292,21 @@ public class QueryProcessorTests : ProvidersTestBase
         var request = ModifyToTakeProfitLimitOrder(order, OrderSide.Sell, 11.3m, 12.7m, 12.5m);
 
         // act
-        processor.BuildModifyOrderQuery(request).EnsureFailed();
+        var data = processor.BuildModifyOrderQuery(request).Unwrap().As<IReadOnlyDictionary<string, string>>();
+
+        // assert
+        data.Has(11);
+        data.At("symbol").Is(request.Order.Symbol);
+        data.At("side").Is("SELL");
+        data.At("type").Is("TAKE_PROFIT_LIMIT");
+        data.At("quantity").Is("11.3");
+        data.At("cancelReplaceMode").Is("STOP_ON_FAILURE");
+        data.At("timeInForce").Is("GTC");
+        data.At("newOrderRespType").Is("RESULT");
+        data.At("price").Is("12.7");
+        data.At("stopPrice").Is("12.5");
+        data.At("cancelOrigClientOrderId").Is(request.Order.ClientOrderId);
+        data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
     [Fact]
