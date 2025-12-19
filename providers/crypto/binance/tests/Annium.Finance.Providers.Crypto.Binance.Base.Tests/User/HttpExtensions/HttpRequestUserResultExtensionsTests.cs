@@ -2,9 +2,9 @@ using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Core;
-using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Market.HttpExtensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Internal.User.HttpExtensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Finance.Providers.Tests.Lib;
@@ -14,11 +14,11 @@ using Annium.Serialization.Json;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Tests.Connectors.Extensions;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Tests.User.HttpExtensions;
 
-public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
+public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
 {
-    public HttpRequestMarketResultExtensionsTests(ITestOutputHelper outputHelper)
+    public HttpRequestUserResultExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
@@ -40,10 +40,10 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         await server.DisposeAsync();
 
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
-        result.Status.Is(MarketOperationStatus.NetworkError);
+        result.Status.Is(UserOperationStatus.NetworkError);
         result.Data.IsDefault();
         result.Message.IsNotEmpty();
     }
@@ -58,10 +58,10 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         var result = await this.CreateHttpRequest(server)
             .Get("/")
             .Timeout(TimeSpan.FromMilliseconds(10))
-            .AsMarketResultAsync<ServerTime>();
+            .AsUserResultAsync<ServerTime>();
 
         // assert
-        result.Status.Is(MarketOperationStatus.Aborted);
+        result.Status.Is(UserOperationStatus.Aborted);
         result.Data.IsDefault();
         result.Message.IsNotEmpty();
     }
@@ -75,17 +75,17 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         await using var server = this.RunHttpServerWithJsonResponse(HttpStatusCode.BadRequest, body);
 
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
-        result.Status.Is(MarketOperationStatus.ParseError);
+        result.Status.Is(UserOperationStatus.ParseError);
         result.Message.IsNotEmpty();
     }
 
     [Theory]
-    [InlineData(-1, MarketOperationStatus.BadRequest)]
-    [InlineData(10, MarketOperationStatus.UnknownError)]
-    public async Task OperationResultResponse(long code, MarketOperationStatus status)
+    [InlineData(-1, UserOperationStatus.BadRequest)]
+    [InlineData(10, UserOperationStatus.UnknownError)]
+    public async Task OperationResultResponse(long code, UserOperationStatus status)
     {
         // arrange
         await using var server = this.RunHttpServerWithJsonResponse(
@@ -94,7 +94,7 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         );
 
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
         result.Status.Is(status);
@@ -108,27 +108,27 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         await using var server = this.RunHttpServerWithJsonResponse(HttpStatusCode.OK, new { serverTime = 20 });
 
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
-        result.Status.Is(MarketOperationStatus.Ok);
+        result.Status.Is(UserOperationStatus.Ok);
         result.Data.IsNotDefault();
         result.Data.Value.Is(20);
         result.Message.IsEmpty();
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.BadRequest, MarketOperationStatus.BadRequest)]
-    [InlineData((HttpStatusCode)418, MarketOperationStatus.TooManyRequests)]
-    [InlineData(HttpStatusCode.TooManyRequests, MarketOperationStatus.TooManyRequests)]
-    [InlineData(HttpStatusCode.InternalServerError, MarketOperationStatus.UnknownError)]
-    public async Task FailedSuccessResponse(HttpStatusCode code, MarketOperationStatus status)
+    [InlineData(HttpStatusCode.BadRequest, UserOperationStatus.BadRequest)]
+    [InlineData((HttpStatusCode)418, UserOperationStatus.TooManyRequests)]
+    [InlineData(HttpStatusCode.TooManyRequests, UserOperationStatus.TooManyRequests)]
+    [InlineData(HttpStatusCode.InternalServerError, UserOperationStatus.UnknownError)]
+    public async Task FailedSuccessResponse(HttpStatusCode code, UserOperationStatus status)
     {
         // arrange
         await using var server = this.RunHttpServerWithJsonResponse(code, new { serverTime = 20 });
 
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
         result.Status.Is(status);

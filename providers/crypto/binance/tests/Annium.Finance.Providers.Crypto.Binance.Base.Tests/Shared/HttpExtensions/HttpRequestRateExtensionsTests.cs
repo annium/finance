@@ -10,7 +10,7 @@ using Annium.Net.Servers.Web;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Tests.Connectors.Extensions;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Tests.Shared.HttpExtensions;
 
 public class HttpRequestRateExtensionsTests : ProvidersTestBase
 {
