@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Tests.Lib.Models.Helpers;
+using Annium.Finance.Providers.Tests.Lib.Market;
 
-namespace Annium.Finance.Providers.Tests.Lib.Models;
+namespace Annium.Finance.Providers.Tests.Lib.User;
 
 public sealed record Position(
     Guid Id,

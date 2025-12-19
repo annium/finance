@@ -6,7 +6,7 @@ using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
 using Annium.Testing;
 using Xunit;

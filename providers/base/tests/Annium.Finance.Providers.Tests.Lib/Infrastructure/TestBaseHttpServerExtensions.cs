@@ -10,7 +10,7 @@ using Annium.Net.Http;
 using Annium.Net.Servers.Web;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+namespace Annium.Finance.Providers.Tests.Lib.Infrastructure;
 
 public static class TestBaseHttpServerExtensions
 {

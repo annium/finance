@@ -1,9 +1,8 @@
 using Annium.Data.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Tests.Lib.Models;
 
-namespace Annium.Finance.Providers.Tests.Lib.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.User;
 
 public static class OrderTestExtensions
 {

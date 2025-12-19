@@ -13,13 +13,13 @@ using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
-using Annium.Finance.Providers.Tests.Lib.Extensions;
+using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;
 
-namespace Annium.Finance.Providers.Tests.Lib.Connectors;
+namespace Annium.Finance.Providers.Tests.Lib.User;
 
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {

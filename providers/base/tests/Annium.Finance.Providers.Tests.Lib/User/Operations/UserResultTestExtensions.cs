@@ -2,7 +2,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Lib.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.User.Operations;
 
 public static class UserResultTestExtensions
 {

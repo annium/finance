@@ -1,6 +1,6 @@
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Tests.Lib.Extensions;
-using Annium.Finance.Providers.Tests.Lib.Helpers;
+using Annium.Finance.Providers.Tests.Lib.User;
+using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Testing;
 using Xunit;
 
@@ -12,7 +12,7 @@ public class OrderExtensionsTests
     public void IsActive()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Data.IsActive().IsTrue();
@@ -25,7 +25,7 @@ public class OrderExtensionsTests
     public void IsInactive()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Data.IsInactive().IsFalse();
@@ -38,7 +38,7 @@ public class OrderExtensionsTests
     public void IsImmediate()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Fill().Data.IsImmediate().IsTrue();
@@ -50,7 +50,7 @@ public class OrderExtensionsTests
     public void IsLeveled()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
@@ -62,7 +62,7 @@ public class OrderExtensionsTests
     public void IsLimit()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
@@ -74,7 +74,7 @@ public class OrderExtensionsTests
     public void IsMarket()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Fill().Data.IsMarket().IsFalse();
@@ -86,7 +86,7 @@ public class OrderExtensionsTests
     public void OpeningQty()
     {
         // arrange
-        var position = Helper.CreatePosition(1);
+        var position = PositionHelper.CreatePosition(1);
 
         // assert
         position.AddLimitBuyOrder(2, 1).Data.OpeningQty().Is(2);

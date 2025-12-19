@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
 using Annium.Net.Servers.Web;
 using Annium.Testing;

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Core.User.Extensions;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
 using Annium.Testing;
 using OneOf;

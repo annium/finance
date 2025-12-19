@@ -3,7 +3,7 @@ using System.Text;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Testing;
 using Xunit;
 

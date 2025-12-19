@@ -2,9 +2,8 @@ using System;
 using Annium.Data.Operations.Testing;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Tests.Lib.Extensions;
-using Annium.Finance.Providers.Tests.Lib.Helpers;
-using Annium.Finance.Providers.Tests.Lib.Models;
+using Annium.Finance.Providers.Tests.Lib.User;
+using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Testing;
 using Xunit;
 
@@ -12,7 +11,7 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 
 public class OrderValidationExtensionsTests
 {
-    private readonly Position _position = Helper.CreatePosition(1);
+    private readonly Position _position = PositionHelper.CreatePosition(1);
 
     [Fact]
     public void ValidateSide()

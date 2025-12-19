@@ -1,5 +1,5 @@
 using Annium.Finance.Providers.Abstractions.Domain.Market;
-using Annium.Finance.Providers.Tests.Lib.Helpers;
+using Annium.Finance.Providers.Tests.Lib.Market;
 using Annium.Testing;
 using Xunit;
 
@@ -7,16 +7,16 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Market;
 
 public class InstrumentExtensionsTests
 {
-    private readonly IInstrument _instrument = Helper.DefaultInstrument;
+    private readonly IInstrument _instrument = InstrumentHelper.DefaultInstrument;
 
     [Fact]
     public void TickPrecision()
     {
         // assert
-        Helper.CreateInstrument("x", "y", 100m, 10m).TickPrecision().Is(0);
-        Helper.CreateInstrument("x", "y", 75m, 7.50m).TickPrecision().Is(1);
-        Helper.CreateInstrument("x", "y", 7.5m, 0.75m).TickPrecision().Is(2);
-        Helper.CreateInstrument("x", "y", 1m, 0.01m).TickPrecision().Is(2);
+        InstrumentHelper.CreateInstrument("x", "y", 100m, 10m).TickPrecision().Is(0);
+        InstrumentHelper.CreateInstrument("x", "y", 75m, 7.50m).TickPrecision().Is(1);
+        InstrumentHelper.CreateInstrument("x", "y", 7.5m, 0.75m).TickPrecision().Is(2);
+        InstrumentHelper.CreateInstrument("x", "y", 1m, 0.01m).TickPrecision().Is(2);
     }
 
     [Fact]

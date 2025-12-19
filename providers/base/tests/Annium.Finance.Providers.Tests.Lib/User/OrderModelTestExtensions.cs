@@ -2,7 +2,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Lib.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.User;
 
 public static class OrderModelTestExtensions
 {

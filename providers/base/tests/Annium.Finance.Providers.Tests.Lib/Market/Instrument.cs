@@ -1,7 +1,7 @@
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 
-namespace Annium.Finance.Providers.Tests.Lib.Models;
+namespace Annium.Finance.Providers.Tests.Lib.Market;
 
 public sealed record Instrument(
     string Provider,

@@ -4,7 +4,7 @@ using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;
 
-namespace Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+namespace Annium.Finance.Providers.Tests.Lib.Infrastructure;
 
 public static class TestBaseJsonSerializerExtensions
 {

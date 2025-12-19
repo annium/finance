@@ -4,7 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.Loaders;
-using Annium.Finance.Providers.Tests.Lib.Connectors;
+using Annium.Finance.Providers.Tests.Lib.User;
 using Annium.Logging;
 using Xunit;
 using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;

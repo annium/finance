@@ -1,7 +1,7 @@
 ﻿using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 
-namespace Annium.Finance.Providers.Tests.Lib.Extensions;
+namespace Annium.Finance.Providers.Tests.Lib.User.Requests;
 
 public static class InitOrderRequestTestExtensions
 {

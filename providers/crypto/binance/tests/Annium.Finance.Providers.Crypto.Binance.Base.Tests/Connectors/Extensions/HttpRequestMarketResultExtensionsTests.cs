@@ -8,7 +8,7 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Converters;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Tests.Lib;
-using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
+using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
 using Annium.Serialization.Json;
 using Annium.Testing;
