@@ -4,7 +4,7 @@ using System.Globalization;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;
+using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User.Operations;
 using Annium.Finance.Providers.Tests.Lib.User.Requests;
