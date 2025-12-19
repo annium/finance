@@ -2,10 +2,10 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
+using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.User.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Threading;

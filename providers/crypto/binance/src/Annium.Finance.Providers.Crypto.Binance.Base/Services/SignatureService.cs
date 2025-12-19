@@ -2,7 +2,7 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Shared.ServerTime;
+using Annium.Finance.Providers.Core.Shared.ServerTime;
 using Annium.Security;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Services;

@@ -1,7 +1,7 @@
 ﻿using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
-using static Annium.Finance.Providers.Shared.Services.Validation;
+using static Annium.Finance.Providers.Core.User.Validation;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 

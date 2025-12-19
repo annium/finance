@@ -1,6 +1,6 @@
 using Annium.Core.Mapper;
 using Annium.Core.Runtime;
-using Annium.Finance.Providers.Shared;
+using Annium.Finance.Providers.Core;
 using Annium.Testing;
 using Xunit;
 

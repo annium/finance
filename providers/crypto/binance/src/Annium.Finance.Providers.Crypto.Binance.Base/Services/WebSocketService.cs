@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using Annium.Finance.Providers.Shared.Connectors;
+using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Linq;
 using Annium.Logging;
 using Annium.Net.WebSockets;

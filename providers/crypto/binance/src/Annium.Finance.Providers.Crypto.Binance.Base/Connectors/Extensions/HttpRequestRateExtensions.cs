@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
-using Annium.Finance.Providers.Shared.Services;
+using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Logging;
 using Annium.Net.Http;
 

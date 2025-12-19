@@ -1,7 +1,7 @@
 using System;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
-using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 using Annium.Net.WebSockets;
 

@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Contracts.User.Domain;
-using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;
 using Annium.Testing;

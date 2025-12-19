@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.User.Operations;

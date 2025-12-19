@@ -5,7 +5,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Annium.Finance.Providers.Shared/Annium.Finance.Providers.Shared.csproj" />
+    <ProjectReference Include="../../src/Annium.Finance.Providers.Core/Annium.Finance.Providers.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Annium.Net.Servers.Web" />
