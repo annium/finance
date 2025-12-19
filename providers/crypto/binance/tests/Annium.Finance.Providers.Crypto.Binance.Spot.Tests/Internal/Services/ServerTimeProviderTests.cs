@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.ServerTime;

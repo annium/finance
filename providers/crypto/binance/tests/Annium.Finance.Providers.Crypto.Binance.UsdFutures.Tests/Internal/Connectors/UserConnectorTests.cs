@@ -1,13 +1,13 @@
 ﻿using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Finance.Providers.Tests.Lib.Connectors;
 using Annium.Logging;
 using Xunit;
-using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
+using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors;
 

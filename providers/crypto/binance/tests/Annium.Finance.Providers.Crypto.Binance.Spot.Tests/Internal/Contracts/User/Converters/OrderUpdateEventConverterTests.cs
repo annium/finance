@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;

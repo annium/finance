@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Pooling;
-using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.User;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Logging;
 using OneOf;
 

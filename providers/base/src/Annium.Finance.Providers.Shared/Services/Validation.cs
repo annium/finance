@@ -1,5 +1,5 @@
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 
 namespace Annium.Finance.Providers.Shared.Services;
 

@@ -1,6 +1,5 @@
-﻿using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+﻿using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 
 namespace Annium.Finance.Providers.Tests.Lib.Extensions;
 

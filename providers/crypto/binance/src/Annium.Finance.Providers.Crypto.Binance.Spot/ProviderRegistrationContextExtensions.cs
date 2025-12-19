@@ -1,8 +1,9 @@
 using System;
 using System.Net.Mime;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors;
 using Annium.Finance.Providers.Crypto.Binance.Base.Services;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal;

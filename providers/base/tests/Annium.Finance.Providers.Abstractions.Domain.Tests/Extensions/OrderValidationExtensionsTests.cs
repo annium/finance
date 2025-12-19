@@ -1,7 +1,7 @@
 using System;
 using Annium.Data.Operations.Testing;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
+using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Finance.Providers.Tests.Lib.Helpers;
 using Annium.Finance.Providers.Tests.Lib.Models;

@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Logging;
 using Annium.Threading;
 using NodaTime;

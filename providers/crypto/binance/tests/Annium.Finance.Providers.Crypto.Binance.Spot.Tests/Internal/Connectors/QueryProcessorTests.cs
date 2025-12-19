@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Tools;
+using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Helpers;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Testing;
 using Xunit;
-using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
+using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Connectors;
 

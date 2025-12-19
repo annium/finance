@@ -1,6 +1,6 @@
 using System;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base;
 

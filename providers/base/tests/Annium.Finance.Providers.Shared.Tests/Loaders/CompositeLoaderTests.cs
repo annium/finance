@@ -3,15 +3,15 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Loaders;
 using Annium.Linq;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using static Annium.Finance.Providers.Abstractions.Connectors.Connectors.ConnectorStatus;
+using static Annium.Finance.Providers.Abstractions.Connectors.Shared.ConnectorStatus;
 
 namespace Annium.Finance.Providers.Shared.Tests.Loaders;
 

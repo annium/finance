@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors.Extensions;
 using Annium.Finance.Providers.Shared;
@@ -11,7 +11,7 @@ using Annium.Net.Http;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Connectors.Extensions;
+namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Connectors.Extensions;
 
 public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
 {

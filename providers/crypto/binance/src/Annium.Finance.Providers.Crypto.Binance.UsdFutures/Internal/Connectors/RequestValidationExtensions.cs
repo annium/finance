@@ -1,6 +1,6 @@
-﻿using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+﻿using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using static Annium.Finance.Providers.Shared.Services.Validation;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Connectors;

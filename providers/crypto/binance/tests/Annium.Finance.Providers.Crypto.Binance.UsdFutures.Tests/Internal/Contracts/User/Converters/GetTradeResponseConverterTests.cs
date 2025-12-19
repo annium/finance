@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.TestBaseExtensions;

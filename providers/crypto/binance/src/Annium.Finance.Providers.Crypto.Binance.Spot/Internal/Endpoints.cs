@@ -1,5 +1,5 @@
 using System;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal;
 

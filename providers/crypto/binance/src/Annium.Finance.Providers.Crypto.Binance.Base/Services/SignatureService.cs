@@ -1,7 +1,7 @@
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Shared.ServerTime;
 using Annium.Security;
 

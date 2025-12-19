@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;

@@ -1,5 +1,6 @@
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Tests.Lib;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests;

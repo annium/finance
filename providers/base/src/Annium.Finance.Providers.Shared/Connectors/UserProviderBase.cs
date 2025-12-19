@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Logging;
 using NodaTime;
 

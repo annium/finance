@@ -4,9 +4,9 @@ using System.Reactive.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Logging;
 
 namespace Annium.Finance.Providers.Shared.Connectors;

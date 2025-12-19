@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Net.Http;
 using OneOf;
 

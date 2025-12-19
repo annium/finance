@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Testing;
 
 namespace Annium.Finance.Providers.Tests.Lib.Extensions;

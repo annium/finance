@@ -1,7 +1,7 @@
 using System;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Logging;
 
 namespace Annium.Finance.Providers.Shared.Internal.Connectors;

@@ -4,8 +4,9 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Execution.Background;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Abstractions.Connectors.User;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Logging;
 using Annium.Threading.Channels;
 

@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Base.Connectors.Extensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Contracts.Shared.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Connectors.Extensions;

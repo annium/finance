@@ -1,8 +1,7 @@
 using System;
 using Annium.Data.Operations;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Tests.Lib.Models;
 

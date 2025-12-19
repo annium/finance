@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Annium.Data.Operations;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Tests.Lib.Models.Helpers;
 
 namespace Annium.Finance.Providers.Tests.Lib.Models;
@@ -194,8 +193,8 @@ public sealed record Position(
         // as far as orientation type is null - order is open, thus orientation type can be resolved
         OrientationType =
             side is OrderSide.Buy
-                ? Abstractions.Domain.Enums.OrientationType.Long
-                : Abstractions.Domain.Enums.OrientationType.Short;
+                ? Abstractions.Domain.User.OrientationType.Long
+                : Abstractions.Domain.User.OrientationType.Short;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -215,7 +214,7 @@ public sealed record Position(
         if (OrientationType is null)
             return true;
 
-        return OrientationType is Abstractions.Domain.Enums.OrientationType.Long
+        return OrientationType is Abstractions.Domain.User.OrientationType.Long
             ? side is OrderSide.Buy
             : side is OrderSide.Sell;
     }

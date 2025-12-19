@@ -1,7 +1,7 @@
 using Annium.Testing;
 using Xunit;
-using static Annium.Finance.Providers.Abstractions.Domain.Enums.PositionState;
-using static Annium.Finance.Providers.Abstractions.Domain.Tools.PositionHelper;
+using static Annium.Finance.Providers.Abstractions.Domain.User.Helpers.PositionHelper;
+using static Annium.Finance.Providers.Abstractions.Domain.User.PositionState;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Tools;
 

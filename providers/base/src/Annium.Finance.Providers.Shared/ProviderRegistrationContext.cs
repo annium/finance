@@ -1,11 +1,10 @@
 using System;
 using System.Linq;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.Market;
+using Annium.Finance.Providers.Abstractions.Connectors.User;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Finance.Providers.Shared.Internal.ServerTime;
 using Annium.Finance.Providers.Shared.ServerTime;

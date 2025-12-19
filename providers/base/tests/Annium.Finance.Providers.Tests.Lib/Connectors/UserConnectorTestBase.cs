@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 using Annium.Core.Mapper;
 using Annium.Data.Tables;
 using Annium.Extensions.Pooling;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
-using Annium.Finance.Providers.Abstractions.Domain.Models;
+using Annium.Finance.Providers.Abstractions.Connectors.Market;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
+using Annium.Finance.Providers.Abstractions.Connectors.User;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Tests.Lib.Extensions;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using static Annium.Finance.Providers.Abstractions.Domain.Tools.RequestBuilder;
+using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestBuilder;
 
 namespace Annium.Finance.Providers.Tests.Lib.Connectors;
 

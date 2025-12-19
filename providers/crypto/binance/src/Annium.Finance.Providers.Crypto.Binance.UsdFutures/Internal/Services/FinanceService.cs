@@ -1,7 +1,8 @@
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Connectors.Services;
-using Annium.Finance.Providers.Abstractions.Domain.Enums;
-using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
+using Annium.Finance.Providers.Abstractions.Connectors.User;
+using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Services;
 

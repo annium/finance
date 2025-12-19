@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Shared.Connectors;
 using Annium.Logging;
 

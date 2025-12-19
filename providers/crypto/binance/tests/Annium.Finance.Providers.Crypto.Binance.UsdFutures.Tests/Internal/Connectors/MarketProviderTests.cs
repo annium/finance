@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Annium.Finance.Providers.Abstractions.Domain.Extensions;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Shared;
 using Annium.Finance.Providers.Tests.Lib.Connectors;
 using Xunit;
