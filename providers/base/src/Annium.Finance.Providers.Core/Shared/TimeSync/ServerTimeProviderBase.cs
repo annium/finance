@@ -7,7 +7,7 @@ using Annium.Logging;
 using Annium.Threading;
 using NodaTime;
 
-namespace Annium.Finance.Providers.Core.Shared.ServerTime;
+namespace Annium.Finance.Providers.Core.Shared.TimeSync;
 
 public abstract class ServerTimeProviderBase : IServerTimeProvider, IDisposable, ILogSubject
 {

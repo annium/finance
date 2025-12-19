@@ -8,7 +8,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
-using Annium.Finance.Providers.Core.Shared.ServerTime;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Core.User;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;

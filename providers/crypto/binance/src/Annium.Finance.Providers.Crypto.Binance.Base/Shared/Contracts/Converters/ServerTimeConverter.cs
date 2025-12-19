@@ -1,16 +1,13 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
 
-public class ServerTimeConverter : JsonConverter<Domain.ServerTime?>
+public class ServerTimeConverter : JsonConverter<ServerTime?>
 {
-    public override Domain.ServerTime? Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override ServerTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException($"Expected {JsonTokenType.StartObject}, got {reader.TokenType}");
@@ -23,7 +20,7 @@ public class ServerTimeConverter : JsonConverter<Domain.ServerTime?>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                return serverTime > 0L ? new Domain.ServerTime(serverTime) : null;
+                return serverTime > 0L ? new ServerTime(serverTime) : null;
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
@@ -47,7 +44,7 @@ public class ServerTimeConverter : JsonConverter<Domain.ServerTime?>
         throw new JsonException("Unexpected end of json");
     }
 
-    public override void Write(Utf8JsonWriter writer, Domain.ServerTime? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, ServerTime? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }

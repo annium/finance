@@ -2,13 +2,14 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
-using Annium.Finance.Providers.Core.Shared.ServerTime;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base.Internal.Market.HttpExtensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Logging;
 using Annium.Net.Http;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.ServerTime;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
 
 public class ServerTimeProvider : ServerTimeProviderBase
 {
@@ -37,7 +38,7 @@ public class ServerTimeProvider : ServerTimeProviderBase
             .New(_httpApi)
             .Get(_endpoint)
             .WithLogFromWithHeaders(this, LogData.Headers | LogData.Response)
-            .AsMarketResultAsync<Contracts.Domain.ServerTime>();
+            .AsMarketResultAsync<ServerTime>();
 
         return MarketResult.From(result, result.IsSuccess ? result.Data.Value : 0L);
     }

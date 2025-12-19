@@ -1,5 +1,5 @@
 using Annium.Finance.Providers.Core.Shared.Loaders;
-using Annium.Finance.Providers.Core.Shared.ServerTime;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;

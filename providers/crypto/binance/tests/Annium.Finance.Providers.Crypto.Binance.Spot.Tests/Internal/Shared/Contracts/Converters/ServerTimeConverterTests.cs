@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Annium.Finance.Providers.Core;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Testing;
@@ -28,9 +29,7 @@ public class ServerTimeConverterTests : ProvidersTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.ServerTimeKey);
-        var deserialized = serializer
-            .Deserialize<Base.Shared.Contracts.Domain.ServerTime?>(Encoding.UTF8.GetBytes(raw))
-            .NotNull();
+        var deserialized = serializer.Deserialize<ServerTime?>(Encoding.UTF8.GetBytes(raw)).NotNull();
 
         // assert - deserialization
         deserialized.Value.Is(123);
@@ -47,9 +46,7 @@ public class ServerTimeConverterTests : ProvidersTestBase
 
         // act - deserialize
         var serializer = this.GetJsonSerializer(Constants.ServerTimeKey);
-        var deserialized = serializer.Deserialize<Base.Shared.Contracts.Domain.ServerTime?>(
-            Encoding.UTF8.GetBytes(raw)
-        );
+        var deserialized = serializer.Deserialize<ServerTime?>(Encoding.UTF8.GetBytes(raw));
 
         // assert - deserialization
         deserialized.IsDefault();

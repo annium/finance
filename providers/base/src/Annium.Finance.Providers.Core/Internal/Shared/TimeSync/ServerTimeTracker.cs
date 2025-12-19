@@ -1,9 +1,9 @@
 using System;
-using Annium.Finance.Providers.Core.Shared.ServerTime;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Logging;
 
-namespace Annium.Finance.Providers.Core.Internal.Shared.ServerTime;
+namespace Annium.Finance.Providers.Core.Internal.Shared.TimeSync;
 
 internal class ServerTimeTracker : IServerTimeTracker, IDisposable, ILogSubject
 {

@@ -5,9 +5,9 @@ using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
-using Annium.Finance.Providers.Core.Internal.Shared.ServerTime;
-using Annium.Finance.Providers.Core.Shared.ServerTime;
+using Annium.Finance.Providers.Core.Internal.Shared.TimeSync;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Logging;
 
 namespace Annium.Finance.Providers.Core;

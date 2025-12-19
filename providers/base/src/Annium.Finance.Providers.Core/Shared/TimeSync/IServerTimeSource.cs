@@ -1,4 +1,4 @@
-namespace Annium.Finance.Providers.Core.Shared.ServerTime;
+namespace Annium.Finance.Providers.Core.Shared.TimeSync;
 
 public interface IServerTimeSource
 {
