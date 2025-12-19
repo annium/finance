@@ -5,7 +5,7 @@ using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Shared.Contracts.Converters;
+namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Shared.Contracts.Converters;
 
 public class ServerTimeConverterTests : ProvidersTestBase
 {
@@ -14,7 +14,7 @@ public class ServerTimeConverterTests : ProvidersTestBase
 
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
-        ctx.WithBinanceSpot();
+        ctx.WithBinanceUsdFutures();
     }
 
     [Fact]
