@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using Annium.Finance.Providers.Abstractions.Connectors.Connectors;
 using Annium.Finance.Providers.Abstractions.Domain.Enums;
 using Annium.Finance.Providers.Abstractions.Domain.Interfaces;
 using Annium.Finance.Providers.Abstractions.Domain.Operations;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Contracts.User.Domain;
+using Annium.Finance.Providers.Shared.Connectors;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Connectors;
 
