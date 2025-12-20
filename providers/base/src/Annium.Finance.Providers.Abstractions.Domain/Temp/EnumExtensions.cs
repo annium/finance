@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Temp;
 
+// TODO: remove temp
 public static class EnumExtensions
 {
     /// <summary>

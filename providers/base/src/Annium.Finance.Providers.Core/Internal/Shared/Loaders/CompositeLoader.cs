@@ -12,9 +12,9 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
     public ILogger Logger { get; }
     public event Action<T> OnData = delegate { };
     private readonly ISnapshotLoader<T> _loader;
-    private readonly ISequentialTimer? _intervalTimer;
+    private readonly ISequentialTimer _intervalTimer;
     private readonly int _intervalPeriod;
-    private readonly IDebounceTimer? _debounceTimer;
+    private readonly IDebounceTimer _debounceTimer;
     private readonly int _debouncePeriod;
     private readonly Lock _locker = new();
     private State _state;
@@ -28,24 +28,26 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         _loader = loader;
         _loader.OnData += HandleData;
 
-        if (intervalPeriod != Timeout.Infinite)
+        if (intervalPeriod > 0)
         {
             this.Trace("create interval timer with period {0}", intervalPeriod);
             _intervalTimer = Timers.Sync(InitIntervalLoad, Timeout.Infinite, Timeout.Infinite, logger);
         }
         else
         {
-            this.Trace("no interval timer created");
+            this.Trace("create noop interval timer");
+            _intervalTimer = NoopSequentialTimer.Instance;
         }
 
-        if (debouncePeriod != Timeout.Infinite)
+        if (debouncePeriod > 0)
         {
             this.Trace("create debounce timer with period {0}", debouncePeriod);
             _debounceTimer = Timers.Debounce(InitDebounceLoadAsync, Timeout.Infinite, logger);
         }
         else
         {
-            this.Trace("no debounce timer created");
+            this.Trace("create noop debounce timer");
+            _debounceTimer = NoopDebounceTimer.Instance;
         }
     }
 
@@ -68,17 +70,11 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             _loader.OnData -= HandleData;
             _loader.Dispose();
 
-            if (_intervalTimer is not null)
-            {
-                this.Trace("dispose interval timer");
-                _intervalTimer.Dispose();
-            }
+            this.Trace("dispose interval timer");
+            _intervalTimer.Dispose();
 
-            if (_debounceTimer is not null)
-            {
-                this.Trace("dispose debounce timer");
-                _debounceTimer.Dispose();
-            }
+            this.Trace("dispose debounce timer");
+            _debounceTimer.Dispose();
         }
 
         this.Trace("done");
@@ -101,17 +97,11 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             this.Trace("start loader");
             _loader.Start(reportStatus);
 
-            if (_intervalTimer is not null)
-            {
-                this.Trace("start interval timer");
-                _intervalTimer.Change(_intervalPeriod, _intervalPeriod);
-            }
+            this.Trace("start interval timer");
+            _intervalTimer.Change(_intervalPeriod, _intervalPeriod);
 
-            if (_debounceTimer is not null)
-            {
-                this.Trace("start debounce timer");
-                _debounceTimer.Change(_debouncePeriod);
-            }
+            this.Trace("start debounce timer");
+            _debounceTimer.Change(_debouncePeriod);
         }
 
         this.Trace("done");
@@ -134,17 +124,11 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             this.Trace("stop loader");
             _loader.Stop();
 
-            if (_intervalTimer is not null)
-            {
-                this.Trace("stop interval timer");
-                _intervalTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            }
+            this.Trace("stop interval timer");
+            _intervalTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
-            if (_debounceTimer is not null)
-            {
-                this.Trace("stop debounce timer");
-                _debounceTimer.Change(Timeout.Infinite);
-            }
+            this.Trace("stop debounce timer");
+            _debounceTimer.Change(Timeout.Infinite);
         }
 
         this.Trace("done");
@@ -221,4 +205,42 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
         Stopped,
         Disposed,
     }
+}
+
+file class NoopSequentialTimer : ISequentialTimer
+{
+    public static ISequentialTimer Instance { get; } = new NoopSequentialTimer();
+
+    private NoopSequentialTimer() { }
+
+    public void Dispose() { }
+
+    public bool Change(int dueTime, int period)
+    {
+        return true;
+    }
+
+    public bool Change(TimeSpan dueTime, TimeSpan period)
+    {
+        return true;
+    }
+}
+
+file class NoopDebounceTimer : IDebounceTimer
+{
+    public static IDebounceTimer Instance { get; } = new NoopDebounceTimer();
+
+    private NoopDebounceTimer() { }
+
+    public void Dispose() { }
+
+    public ValueTask DisposeAsync()
+    {
+        // TODO: remove temp
+        return ValueTask.CompletedTask;
+    }
+
+    public void Change(int period) { }
+
+    public void Request() { }
 }
