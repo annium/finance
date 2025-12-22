@@ -9,7 +9,7 @@ using Annium.Logging;
 
 namespace Annium.Finance.Providers.Core.Internal.Shared.Status;
 
-internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
+internal class StatusMonitor : IStatusMonitor, ILogSubject
 {
     public ILogger Logger { get; }
     public ConnectorStatus Status { get; private set; }
@@ -21,12 +21,7 @@ internal class StatusMonitor : IStatusMonitor, IDisposable, ILogSubject
     public StatusMonitor(ILogger logger)
     {
         Logger = logger;
-        this.Trace("start");
-    }
-
-    public void Dispose()
-    {
-        this.Trace("start");
+        this.Trace("created");
     }
 
     public void Register(string target, ConnectorStatus status)

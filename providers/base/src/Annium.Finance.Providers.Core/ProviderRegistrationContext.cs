@@ -14,50 +14,51 @@ namespace Annium.Finance.Providers.Core;
 public readonly struct ProviderRegistrationContext
 {
     public readonly IServiceContainer Container;
-    public readonly ServiceLifetime Lifetime;
 
-    public ProviderRegistrationContext(IServiceContainer container, ServiceLifetime lifetime)
+    public ProviderRegistrationContext(IServiceContainer container)
     {
         Container = container;
-        Lifetime = lifetime;
     }
 
     public ProviderRegistrationContext AddProvider<
-        TMarketProvider,
-        TMarketConnector,
+        TMarketProviderFactory,
+        TMarketConnectorFactory,
         TUserProvider,
         TUserConnector,
         TFinanceService
     >(ProviderBaseConfiguration cfg)
-        where TMarketProvider : IMarketProvider
-        where TMarketConnector : IMarketConnector
+        where TMarketProviderFactory : IMarketProviderFactory
+        where TMarketConnectorFactory : IMarketConnectorFactory
         where TUserProvider : IUserProvider
         where TUserConnector : IUserConnector
         where TFinanceService : IFinanceService
     {
         var (provider, environments, serverTimeConfig) = cfg;
 
-        Container.Add<TMarketProvider>().AsKeyed<IMarketProvider>(provider).AsSelf().Singleton();
-        Container.Add<TMarketConnector>().AsSelf().Transient();
-        Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Singleton();
+        // market
+        Container.Add<TMarketProviderFactory>().AsKeyed<IMarketProviderFactory>(provider).Scoped();
+        Container.Add<TMarketConnectorFactory>().AsKeyed<IMarketConnectorFactory>(provider).Scoped();
+
+        // user
+        Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Scoped();
         Container.Add<TUserConnector>().AsSelf().Transient();
         Container.Add<TFinanceService>().AsSelf().Transient();
 
         foreach (var env in environments.EnumerateFlags())
         {
             var providerKey = ProviderKey.Create(provider, env);
+
+            // shared
             Container.Add(providerKey).AsSelf().Singleton();
             Container.Add(serverTimeConfig).AsKeyed<ServerTimeProviderConfig>(providerKey).Singleton();
-            Container
-                .Add<Func<IServiceProvider, TMarketConnector>>(sp => sp.Resolve<TMarketConnector>())
-                .AsKeyed<Func<IServiceProvider, IMarketConnector>>(providerKey)
-                .Singleton();
+            Container.Add(ServerTimeSourceFactory).AsKeyed<IServerTimeSource>(providerKey).Scoped();
+
+            // user
             Container
                 .Add<Func<IServiceProvider, TUserConnector>>(sp => sp.Resolve<TUserConnector>())
                 .AsKeyed<Func<IServiceProvider, IUserConnector>>(providerKey)
                 .Singleton();
             Container.Add<TFinanceService>().AsKeyed<IFinanceService>(providerKey).Singleton();
-            Container.Add(ServerTimeSourceFactory).AsKeyed<IServerTimeSource>(providerKey).Scoped();
         }
 
         return this;

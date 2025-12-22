@@ -38,8 +38,8 @@ internal abstract class ConnectorCacheProvider<TSettings, TConnector>
         this.Trace("{key} - resolve entry for {settings}", providerKey, settings);
         var entry = _scopes.GetOrAdd(settings, CreateEntry);
 
-        this.Trace("{key} - init connector for {settings}", providerKey, settings);
-        await entry.Connector.InitAsync(); // this must not be called twice by design
+        // this.Trace("{key} - init connector for {settings}", providerKey, settings);
+        // await entry.Connector.InitAsync(); // this must not be called twice by design
 
         this.Trace("{key} - created for {settings}", providerKey, settings);
 

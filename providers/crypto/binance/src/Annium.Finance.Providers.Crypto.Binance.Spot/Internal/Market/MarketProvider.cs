@@ -14,41 +14,30 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.HttpExtension
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared;
 using Annium.Logging;
 using Annium.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 
-internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
+internal class MarketProvider(
+    ProviderEnvironment env,
+    IHttpRequestFactory exchangeInfoRequestFactory,
+    IHttpRequestFactory candleRequestFactory,
+    IRateLimiter rateLimiter,
+    ILogger logger
+) : MarketProviderBase, IMarketProvider, ILogSubject
 {
-    public ILogger Logger { get; }
-    private readonly IHttpRequestFactory _exchangeInfoRequestFactory;
-    private readonly IHttpRequestFactory _candleRequestFactory;
-    private readonly IRateLimiter _rateLimiter;
+    public ILogger Logger { get; } = logger;
 
-    public MarketProvider(
-        [FromKeyedServices(Constants.ExchangeInfoKey)] IHttpRequestFactory exchangeInfoRequestFactory,
-        [FromKeyedServices(Constants.CandleKey)] IHttpRequestFactory candleRequestFactory,
-        IRateLimiter rateLimiter,
-        ILogger logger
-    )
-    {
-        Logger = logger;
-        _exchangeInfoRequestFactory = exchangeInfoRequestFactory;
-        _candleRequestFactory = candleRequestFactory;
-        _rateLimiter = rateLimiter;
-    }
-
-    public async Task<MarketResult<MarketContext?>> LoadContextAsync(ProviderEnvironment env)
+    public async Task<MarketResult<MarketContext?>> LoadContextAsync()
     {
         this.Trace("start");
 
         // load exchange info
-        var result = await _exchangeInfoRequestFactory
+        var result = await exchangeInfoRequestFactory
             .New(Endpoints.GetHttpApi(env))
             .Get("api/v3/exchangeInfo")
             .WithLogFromWithHeaders(this, LogData.Headers)
-            .WithRateDelay1M(_rateLimiter)
+            .WithRateDelay1M(rateLimiter)
             .AsMarketResultAsync<ExchangeInfo>();
 
         if (!result.IsSuccess || result.Data is null)
@@ -63,7 +52,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
         var weightLimit = result.Data.RateLimits.RequestWeightLimit;
         this.Trace("update watermark to {limit}", weightLimit);
-        _rateLimiter.UpdateLimit(weightLimit);
+        rateLimiter.UpdateLimit(weightLimit);
 
         this.Trace("done");
 
@@ -72,7 +61,6 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
 
     public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
         string instrument,
-        ProviderEnvironment env,
         Instant start,
         Instant end,
         [EnumeratorCancellation] CancellationToken ct
@@ -82,7 +70,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
             yield return candles;
 
         Task<MarketResult<List<CandleModel>?>> FetchAsync(string symbol, Instant from, int count) =>
-            _candleRequestFactory
+            candleRequestFactory
                 .New(Endpoints.GetHttpApi(env))
                 .Get("api/v3/klines")
                 .Param("symbol", instrument)
@@ -90,7 +78,7 @@ internal class MarketProvider : MarketProviderBase, IMarketProvider, ILogSubject
                 .Param("limit", count)
                 .Param("startTime", from.ToUnixTimeMilliseconds())
                 .WithLogFromWithHeaders(this, LogData.Headers)
-                .WithRateDelay1M(_rateLimiter)
+                .WithRateDelay1M(rateLimiter)
                 .AsMarketResultAsync<List<CandleModel>>();
     }
 }

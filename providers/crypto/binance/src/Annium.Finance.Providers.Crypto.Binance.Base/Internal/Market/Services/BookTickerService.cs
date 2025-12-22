@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 using Annium.Logging;
 using Annium.Serialization.Abstractions;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Market.Services;
 
-public sealed class BookTickerService : WebSocketService
+internal sealed class BookTickerService : WebSocketService, IBookTickerService
 {
     public event Action<InstrumentTicker> OnData = delegate { };
     private readonly ISerializer<ReadOnlyMemory<byte>> _serializer;

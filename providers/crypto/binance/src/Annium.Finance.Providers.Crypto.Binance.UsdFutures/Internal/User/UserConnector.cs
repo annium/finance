@@ -114,11 +114,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         Disposable += () => _tradesLoader.OnData -= HandleTrades;
     }
 
-    public ValueTask InitAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
     public async Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage)
     {
         if (Status is not ConnectorStatus.Connected)

@@ -27,11 +27,6 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         // schedule sync on connected
     }
 
-    public ValueTask InitAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
     public Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage)
     {
         throw new NotImplementedException();

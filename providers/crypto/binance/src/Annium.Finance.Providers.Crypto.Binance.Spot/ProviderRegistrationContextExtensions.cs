@@ -1,7 +1,5 @@
 using System;
-using System.Net.Mime;
 using Annium.Core.DependencyInjection;
-using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Temp;
 using Annium.Finance.Providers.Abstractions.Domain.User;
@@ -9,7 +7,7 @@ using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
-using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
+using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
@@ -21,9 +19,7 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
-using Annium.Serialization.Abstractions;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
-using MarketConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.MarketConfig;
 using UserConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.UserConfig;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;
@@ -46,11 +42,12 @@ public static class ProviderRegistrationContextExtensions
             ProviderEnvironment.Real | ProviderEnvironment.Test,
             cfg.ServerTime
         );
-        ctx.AddProvider<MarketProvider, MarketConnector, UserProvider, UserConnector, FinanceService>(baseCfg);
+        ctx.AddProvider<MarketProviderFactory, MarketConnectorFactory, UserProvider, UserConnector, FinanceService>(
+            baseCfg
+        );
 
         // settings
         ctx.Container.Add(cfg).AsSelf().Singleton();
-        ctx.Container.Add(MarketConfigFactory).AsSelf().Scoped();
         ctx.Container.Add(UserConfigFactory).AsSelf().Scoped();
 
         // serializers and http factories
@@ -77,9 +74,9 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, UserContracts.OrderUpdate);
 
         // services
+        ctx.AddBookTickerServiceFactory();
         ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();
         ctx.Container.Add(RateLimiterFactory).AsSelf().Singleton();
-        ctx.Container.Add(BookTickerServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
         ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
         ctx.Container.Add(UserStreamFactory).AsSelf().Scoped();
@@ -102,23 +99,6 @@ public static class ProviderRegistrationContextExtensions
         var logger = sp.Resolve<ILogger>();
 
         return new ServerTimeProvider(requestFactory, httpApi, "/api/v1/time", logger);
-    }
-
-    private static MarketConfig MarketConfigFactory(IServiceProvider sp)
-    {
-        var marketSettings = sp.Resolve<Injected<MarketSettings>>().Value;
-
-        var httpApi = Endpoints.GetHttpApi(marketSettings.Environment);
-        var wsApi = Endpoints.GetWsApi(marketSettings.Environment);
-
-        return new MarketConfig
-        {
-            Provider = marketSettings.Provider,
-            Environment = marketSettings.Environment,
-            HttpApi = httpApi,
-            WsApi = wsApi,
-            WsUriPath = "/stream",
-        };
     }
 
     private static UserConfig UserConfigFactory(IServiceProvider sp)
@@ -151,19 +131,6 @@ public static class ProviderRegistrationContextExtensions
         var factory = sp.Resolve<IRateLimiterFactory>();
 
         return factory.CreateRateLimiter(6000, 300, 3_000);
-    }
-
-    private static BookTickerService BookTickerServiceFactory(IServiceProvider sp)
-    {
-        var config = sp.Resolve<MarketConfig>();
-        var serializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(
-            InstrumentTickerKey,
-            MediaTypeNames.Application.Json
-        );
-        var statusReporter = sp.Resolve<IStatusReporter>();
-        var logger = sp.Resolve<ILogger>();
-
-        return new BookTickerService(config, serializer, statusReporter, logger);
     }
 
     private static SignatureService SignatureServiceFactory(IServiceProvider sp)

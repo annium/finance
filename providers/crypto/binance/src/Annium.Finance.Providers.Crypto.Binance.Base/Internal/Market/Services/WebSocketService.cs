@@ -5,13 +5,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market;
 using Annium.Linq;
 using Annium.Logging;
 using Annium.Net.WebSockets;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Market.Services;
 
-public abstract class WebSocketService : IDisposable, ILogSubject
+internal abstract class WebSocketService : IDisposable, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly IClientWebSocket _socket;

@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
@@ -27,18 +26,13 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
         this.Trace("start");
 
         // arrange - market components
-        this.Trace("get market connectors cache");
-        var marketCache = Get<IObjectCache<MarketSettings, IMarketConnector>>();
+        this.Trace("get market connector factory");
+        var factory = Get<IMarketConnectorFactory>();
 
         // arrange - resolve market ref
-        var marketConfig = new MarketSettings
-        {
-            Provider = providerKey.Provider,
-            Environment = providerKey.Environment,
-        };
-        this.Trace("get market connector for {config}", marketConfig);
-        await using var marketRef = await marketCache.GetAsync(marketConfig);
-        var market = marketRef.Value;
+        var settings = new MarketSettings { Provider = providerKey.Provider, Environment = providerKey.Environment };
+        this.Trace("get market connector for {config}", settings);
+        await using var market = factory.Create(settings);
 
         this.Trace("await market is connected");
         await market.WhenConnectedAsync();

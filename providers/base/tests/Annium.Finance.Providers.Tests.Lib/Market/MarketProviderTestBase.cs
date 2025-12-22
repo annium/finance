@@ -35,10 +35,11 @@ public abstract class MarketProviderTestBase : ProvidersTestBase
 
         // act - resolve market provider
         this.Trace("resolve market provider");
-        var provider = GetKeyed<IMarketProvider>(providerKey.Provider);
+        var providerFactory = GetKeyed<IMarketProviderFactory>(providerKey.Provider);
+        var provider = providerFactory.Create(providerKey.Environment);
 
         // act - load context
-        var context = await provider.LoadContextAsync(providerKey.Environment);
+        var context = await provider.LoadContextAsync();
 
         // assert - context
         context.Status.Is(MarketOperationStatus.Ok);
@@ -52,15 +53,7 @@ public abstract class MarketProviderTestBase : ProvidersTestBase
         var start = end - Duration.FromDays(2);
         var candles = new List<CandleModel>();
         this.Trace("load candles in for {symbol} ({key}) in {start} - {end}", _symbol, providerKey, start, end);
-        await foreach (
-            var chunkResult in provider.LoadCandlesAsync(
-                _symbol,
-                providerKey.Environment,
-                start,
-                end,
-                CancellationToken.None
-            )
-        )
+        await foreach (var chunkResult in provider.LoadCandlesAsync(_symbol, start, end, CancellationToken.None))
         {
             chunkResult.IsSuccess.IsTrue();
             candles.AddRange(chunkResult.Data.NotNull());

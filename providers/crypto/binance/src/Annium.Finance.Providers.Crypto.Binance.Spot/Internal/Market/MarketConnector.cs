@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Net.Mime;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core.Market;
@@ -7,41 +7,41 @@ using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Logging;
+using Annium.Serialization.Abstractions;
 using Annium.Threading.Channels;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 
 internal class MarketConnector : MarketConnectorBase, IMarketConnector
 {
-    private readonly BookTickerService _bookTickerService;
+    private readonly IBookTickerService _bookTickerService;
 
     public MarketConnector(
         MarketConfig config,
-        MarketProvider marketProvider,
+        IMarketProviderFactory marketProviderFactory,
         ILoaderFactory loaderFactory,
-        BookTickerService bookTickerService,
+        IBookTickerServiceFactory bookTickerServiceFactory,
         IStatusMonitor monitor,
         ILogger logger
     )
         : base(config.Provider, config.Environment, monitor, logger)
     {
+        var marketProvider = marketProviderFactory.Create(config.Environment);
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
-            async _ => await marketProvider.LoadContextAsync(config.Environment)
+            async _ => await marketProvider.LoadContextAsync()
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
         Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
         exchangeInfoLoader.Start(true);
 
-        _bookTickerService = bookTickerService;
+        Disposable += _bookTickerService = bookTickerServiceFactory.Create(
+            config,
+            SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)
+        );
         _bookTickerService.OnData += HandleTicker;
         Disposable += () => _bookTickerService.OnData -= HandleTicker;
-    }
-
-    public ValueTask InitAsync()
-    {
-        return ValueTask.CompletedTask;
     }
 
     public void SubscribeTickers(IReadOnlyCollection<string> symbols)
