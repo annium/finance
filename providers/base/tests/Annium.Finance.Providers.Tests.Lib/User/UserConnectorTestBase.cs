@@ -49,11 +49,14 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var marketConfig = Get<IMapper>().Map<MarketSettings>(_config);
-        this.Trace("get market connector for {config}", marketConfig);
-        var marketConnectorRef = await Get<IObjectCache<MarketSettings, IMarketConnector>>().GetAsync(marketConfig);
-        Disposable += marketConnectorRef;
-        var market = marketConnectorRef.Value;
+        // arrange - market components
+        this.Trace("get market connector factory");
+        var factory = Get<IMarketConnectorFactory>();
+
+        // arrange - create market connector
+        var settings = Get<IMapper>().Map<MarketSettings>(_config);
+        this.Trace("get market connector for {settings}", settings);
+        await using var market = factory.Create(settings);
 
         this.Trace("await until market connector is ready");
         await market.WhenConnectedAsync();
