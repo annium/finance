@@ -18,18 +18,22 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.HttpExten
 using Annium.Logging;
 using Annium.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
+using NodaTime;
 using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
-internal class UserProvider : UserProviderBase, IUserProvider
+internal class UserProvider : IUserProvider, ILogSubject
 {
     private const int OrderQueryLimit = 1000;
     private const int TradeQueryLimit = 1000;
     private static long OrderQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
     private static long TradeQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
 
+    public ILogger Logger { get; }
+
     private readonly IServiceProvider _sp;
+    private readonly ITimeProvider _timeProvider;
     private readonly IHttpRequestFactory _getAccountRequestFactory;
     private readonly IHttpRequestFactory _getOrderRequestFactory;
     private readonly IHttpRequestFactory _getTradeRequestFactory;
@@ -44,9 +48,11 @@ internal class UserProvider : UserProviderBase, IUserProvider
         IRateLimiter rateLimiter,
         ILogger logger
     )
-        : base(timeProvider, logger)
     {
+        Logger = logger;
+
         _sp = sp;
+        _timeProvider = timeProvider;
         _getAccountRequestFactory = getAccountRequestFactory;
         _getOrderRequestFactory = getOrderRequestFactory;
         _getTradeRequestFactory = getTradeRequestFactory;
@@ -216,7 +222,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             }
 
             this.Trace("chunk done, {count} orders loaded, merge", chunkResult.Data.Count);
-            MergeOrders(orders, chunkResult.Data);
+            UserProviderHelper.MergeOrders(orders, chunkResult.Data);
 
             if (chunkResult.Data.Count == OrderQueryLimit)
             {
@@ -254,7 +260,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             var chunkData = chunkResult.Data.Where(x => x.CreatedAt <= end).ToArray();
             this.Trace("chunk done, {count} orders loaded, merge", chunkData.Length);
-            MergeOrders(orders, chunkData);
+            UserProviderHelper.MergeOrders(orders, chunkData);
 
             if (chunkData.Length == OrderQueryLimit)
                 // update to load next chunk if limit is reached by related orders
@@ -343,7 +349,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
             }
 
             this.Trace("chunk done, {count} trades loaded, merge", chunkResult.Data.Count);
-            MergeTrades(trades, chunkResult.Data);
+            UserProviderHelper.MergeTrades(trades, chunkResult.Data);
 
             if (chunkResult.Data.Count == TradeQueryLimit)
             {
@@ -381,7 +387,7 @@ internal class UserProvider : UserProviderBase, IUserProvider
 
             var chunkData = chunkResult.Data.Where(x => x.Moment <= end).ToArray();
             this.Trace("chunk done, {count} trades loaded, merge", chunkData.Length);
-            MergeTrades(trades, chunkData);
+            UserProviderHelper.MergeTrades(trades, chunkData);
 
             if (chunkData.Length == TradeQueryLimit)
                 // update to load next chunk if limit is reached by related trades
@@ -394,6 +400,14 @@ internal class UserProvider : UserProviderBase, IUserProvider
         this.Trace("done, {count} trades loaded", trades.Count);
 
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);
+    }
+
+    private (Instant min, Instant max) ResolveHistoryBounds(long since)
+    {
+        var now = _timeProvider.Now;
+        var instant = Instant.FromUnixTimeMilliseconds(since);
+
+        return UserProviderHelper.ResolveHistoryBounds(instant, now);
     }
 
     private SignatureService? GetSignatureService(UserSettings settings)

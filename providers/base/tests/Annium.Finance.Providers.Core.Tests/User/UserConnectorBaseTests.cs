@@ -35,7 +35,7 @@ public class UserConnectorBaseTests : ProvidersTestBase
             Key = "some_key",
             Secret = "some_secret",
         };
-        var provider = new FakeUserProvider(Get<ITimeProvider>(), Logger);
+        var provider = new FakeUserProvider();
 
         // data
         this.Trace("prepare data");
@@ -202,11 +202,8 @@ public class UserConnectorBaseTests : ProvidersTestBase
         }
     }
 
-    private class FakeUserProvider : UserProviderBase, IUserProvider
+    private class FakeUserProvider : IUserProvider
     {
-        public FakeUserProvider(ITimeProvider timeProvider, ILogger logger)
-            : base(timeProvider, logger) { }
-
         public Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
         {
             throw new NotImplementedException();
