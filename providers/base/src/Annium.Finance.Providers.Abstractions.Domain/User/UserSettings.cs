@@ -9,5 +9,5 @@ public sealed record UserSettings : IConnectorSettings
     public string Key { get; init; } = string.Empty;
     public string Secret { get; init; } = string.Empty;
 
-    public override string ToString() => $"{Provider}[{Environment}] {{{Key}}}";
+    public override string ToString() => $"{Provider}[{Environment}]{Key[..7]}";
 }

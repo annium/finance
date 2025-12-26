@@ -1,14 +1,10 @@
-using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Abstractions.Connectors.User;
 
 public interface IFinanceService
 {
-    ValueTask InitAsync(ProviderEnvironment env);
-
     // calculate order result without fee
     decimal GetResult(
         IInstrument instrument,

@@ -1,19 +1,12 @@
 using System;
-using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 
 internal class FinanceService : IFinanceService
 {
-    public ValueTask InitAsync(ProviderEnvironment env)
-    {
-        throw new NotImplementedException();
-    }
-
     public decimal GetResult(
         IInstrument instrument,
         Orientation orientation,

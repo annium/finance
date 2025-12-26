@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Core.Mapper;
 using Annium.Data.Tables;
-using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
@@ -25,22 +24,22 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     protected InstrumentModel Instrument { get; private set; } = null!;
     protected string Symbol { get; }
-    protected InstrumentTicker Ticker { get; private set; } = default!;
-    private IUserConnector Connector { get; set; } = default!;
-    private AsyncDisposableBox Disposable { get; set; }
+    protected InstrumentTicker Ticker { get; private set; } = null!;
+    private IUserConnector Connector { get; set; } = null!;
     private readonly UserSettings _settings;
     private readonly ConcurrentQueue<AssetModel> _assets = new();
     private readonly ConcurrentQueue<PositionModel> _positions = new();
     private readonly ConcurrentQueue<OrderModel> _orders = new();
     private readonly ConcurrentQueue<TradeModel> _trades = new();
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
-    private AssetModel _balance = default!;
-    private PositionModel _position = default!;
+    private AssetModel _balance = null!;
+    private PositionModel _position = null!;
+    private AsyncDisposableBox _disposable;
 
     protected UserConnectorTestBase(UserSettings settings, string symbol, ITestOutputHelper output)
         : base(output)
     {
-        Disposable = Annium.Disposable.AsyncBox(Logger);
+        _disposable = Disposable.AsyncBox(Logger);
         _settings = settings;
         Symbol = symbol;
     }
@@ -55,7 +54,8 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
         var settings = Get<IMapper>().Map<MarketSettings>(_settings);
         this.Trace("get market connector for {settings}", settings);
-        await using var market = marketFactory.Create(settings);
+        var market = marketFactory.Create(settings);
+        _disposable += market;
 
         this.Trace("await until market connector is ready");
         await market.WhenConnectedAsync();
@@ -71,21 +71,22 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("found ticker for {instrument}", Instrument);
 
         // arrange - user
+        this.Trace("get user connector factory");
+        var userFactory = Get<IUserConnectorFactory>();
+
         this.Trace("get user connector for {settings}", _settings);
-        var userConnectorRef = await Get<IObjectCache<UserSettings, IUserConnector>>().GetAsync(_settings);
-        Disposable += userConnectorRef;
-        Connector = userConnectorRef.Value;
+        _disposable += Connector = userFactory.Create(_settings);
 
         this.Trace("subscribe to connector data");
-        Disposable += Connector
+        _disposable += Connector
             .Assets.Where(x => x.Type is ChangeEventType.Init)
             .SelectMany(x => x.Items)
             .Subscribe(_assets.Enqueue);
-        Disposable += Connector
+        _disposable += Connector
             .Positions.Where(x => x.Type is ChangeEventType.Init)
             .SelectMany(x => x.Items)
             .Subscribe(_positions.Enqueue);
-        Disposable += Connector.Orders.Subscribe(x =>
+        _disposable += Connector.Orders.Subscribe(x =>
         {
             if (x.Type is ChangeEventType.Init)
                 foreach (var item in x.Items)
@@ -93,7 +94,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
             else
                 _orders.Enqueue(x.Item);
         });
-        Disposable += Connector.Trades.Subscribe(_trades.Enqueue);
+        _disposable += Connector.Trades.Subscribe(_trades.Enqueue);
 
         this.Trace("subscribe to connector errors");
         Connector.OnError += _errors.Enqueue;
@@ -141,7 +142,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         EnsureNoErrors();
 
         this.Trace("dispose disposables");
-        await Disposable.DisposeAsync();
+        await _disposable.DisposeAsync();
 
         EnsureNoErrors();
 

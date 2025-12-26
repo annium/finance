@@ -26,10 +26,7 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
-using static System.Net.Mime.MediaTypeNames;
-using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
@@ -43,32 +40,32 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly IHttpRequestFactory _modifyOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelOrderRequestFactory;
     private readonly IHttpRequestFactory _cancelAllOrdersRequestFactory;
-    private readonly UserStream _userStream;
     private readonly IRateLimiter _rateLimiter;
     private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
+    private readonly UserStream _userStream;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
     public UserConnector(
-        IServiceProvider sp,
         UserConfig config,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
-        [FromKeyedServices(SetLeverageKey)] IHttpRequestFactory setLeverageRequestFactory,
-        [FromKeyedServices(InitOrderKey)] IHttpRequestFactory initOrderRequestFactory,
-        [FromKeyedServices(ModifyOrderKey)] IHttpRequestFactory modifyOrderRequestFactory,
-        [FromKeyedServices(CancelOrderKey)] IHttpRequestFactory cancelOrderRequestFactory,
-        [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
-        UserStream userStream,
-        ILoaderFactory loaderFactory,
-        [FromKeyedServices(Constants.Provider)] IUserProviderFactory providerFactory,
+        IHttpRequestFactory setLeverageRequestFactory,
+        IHttpRequestFactory initOrderRequestFactory,
+        IHttpRequestFactory modifyOrderRequestFactory,
+        IHttpRequestFactory cancelOrderRequestFactory,
+        IHttpRequestFactory cancelAllOrdersRequestFactory,
         IRateLimiter rateLimiter,
+        ILoaderFactory loaderFactory,
+        UserStream userStream,
+        ISerializer<ReadOnlyMemory<byte>> orderUpdateEventSerializer,
+        IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;
@@ -78,20 +75,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _modifyOrderRequestFactory = modifyOrderRequestFactory;
         _cancelOrderRequestFactory = cancelOrderRequestFactory;
         _cancelAllOrdersRequestFactory = cancelAllOrdersRequestFactory;
-
-        // user stream
-        _userStream = userStream;
         _rateLimiter = rateLimiter;
-        _userStream.OnConnected += HandleConnected;
-        Disposable += () => _userStream.OnConnected -= HandleConnected;
-
-        _userStream.OnDisconnected += HandleDisconnected;
-        Disposable += () => _userStream.OnConnected -= HandleDisconnected;
-
-        _userStream.OnMessage += HandleMessage;
-        Disposable += () => _userStream.OnMessage -= HandleMessage;
-
-        _orderUpdateEventSerializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(OrderUpdateKey, Application.Json);
 
         // context
         Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContextAsync);
@@ -103,7 +87,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _ordersLoader.OnData += HandleOrders;
         Disposable += () => _ordersLoader.OnData -= HandleOrders;
 
-        // deals
+        // trades
         Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
             _config.ReloadTrades,
             SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds(),
@@ -112,6 +96,19 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         );
         _tradesLoader.OnData += HandleTrades;
         Disposable += () => _tradesLoader.OnData -= HandleTrades;
+
+        // user stream
+        _userStream = userStream;
+        _userStream.OnConnected += HandleConnected;
+        Disposable += () => _userStream.OnConnected -= HandleConnected;
+
+        _userStream.OnDisconnected += HandleDisconnected;
+        Disposable += () => _userStream.OnConnected -= HandleDisconnected;
+
+        _userStream.OnMessage += HandleMessage;
+        Disposable += () => _userStream.OnMessage -= HandleMessage;
+
+        _orderUpdateEventSerializer = orderUpdateEventSerializer;
     }
 
     public async Task<UserResult> SetLeverageAsync(PositionModel position, decimal leverage)

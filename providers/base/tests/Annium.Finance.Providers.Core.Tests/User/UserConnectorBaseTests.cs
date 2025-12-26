@@ -36,7 +36,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
             Secret = "some_secret",
         };
         var provider = new FakeUserProvider();
-        var providerFactory = new FakeUserProviderFactory(provider);
 
         // data
         this.Trace("prepare data");
@@ -74,7 +73,7 @@ public class UserConnectorBaseTests : ProvidersTestBase
         // act
 
         this.Trace("create connector");
-        await using var user = CreateConnector(settings, providerFactory);
+        await using var user = CreateConnector(settings, provider);
 
         this.Trace("setup sync handler");
         user.OnSync += async (s, p) =>
@@ -128,12 +127,12 @@ public class UserConnectorBaseTests : ProvidersTestBase
         VerifyLog("trades", tradesLog);
     }
 
-    private FakeUserConnector CreateConnector(UserSettings settings, IUserProviderFactory providerFactory)
+    private FakeUserConnector CreateConnector(UserSettings settings, IUserProvider provider)
     {
         var reporter = Get<IStatusReporter>();
         var monitor = Get<IStatusMonitor>();
 
-        return new FakeUserConnector(settings, providerFactory, reporter, monitor, Logger);
+        return new FakeUserConnector(settings, provider, reporter, monitor, Logger);
     }
 
     private void Emit<T>(IReadOnlyList<T> data, Action<T> emit)
@@ -175,12 +174,12 @@ public class UserConnectorBaseTests : ProvidersTestBase
     {
         public FakeUserConnector(
             UserSettings settings,
-            IUserProviderFactory providerFactory,
+            IUserProvider provider,
             IStatusReporter reporter,
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, providerFactory, reporter, monitor, logger) { }
+            : base(settings, provider, reporter, monitor, logger) { }
 
         public void Asset(AssetModel x)
         {
@@ -223,14 +222,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
         public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(string symbol, long? since)
         {
             throw new NotImplementedException();
-        }
-    }
-
-    private class FakeUserProviderFactory(IUserProvider provider) : IUserProviderFactory
-    {
-        public IUserProvider Create(UserSettings settings)
-        {
-            return provider;
         }
     }
 }

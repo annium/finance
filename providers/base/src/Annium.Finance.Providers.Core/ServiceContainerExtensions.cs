@@ -1,14 +1,11 @@
 using Annium.Core.DependencyInjection;
-using Annium.Extensions.Pooling;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
-using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Core.Internal.Connectors;
 using Annium.Finance.Providers.Core.Internal.Market;
 using Annium.Finance.Providers.Core.Internal.Shared.Loaders;
 using Annium.Finance.Providers.Core.Internal.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Internal.Shared.Status;
+using Annium.Finance.Providers.Core.Internal.User;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.Status;
@@ -23,10 +20,9 @@ public static class ServiceContainerExtensions
 
         // market
         container.Add<IMarketConnectorFactory, MarketConnectorFactory>().Singleton();
-        // container.AddObjectCache<MarketSettings, IMarketConnector, MarketConnectorCacheProvider>(lifetime);
 
         // user
-        container.AddObjectCache<UserSettings, IUserConnector, UserConnectorCacheProvider>(ServiceLifetime.Scoped);
+        container.Add<IUserConnectorFactory, UserConnectorFactory>().Singleton();
 
         // status
         container.Add<StatusMonitor>().AsSelf().As<IStatusMonitor>().Scoped();
@@ -36,7 +32,6 @@ public static class ServiceContainerExtensions
         container.Add<ILoaderFactory, LoaderFactory>().Scoped();
 
         // services
-        container.AddObjectCache<ProviderKey, IFinanceService, FinanceServiceCacheProvider>(ServiceLifetime.Scoped);
         container.Add<IRateLimiterFactory, RateLimiterFactory>().Singleton();
 
         var ctx = new ProviderRegistrationContext(container);

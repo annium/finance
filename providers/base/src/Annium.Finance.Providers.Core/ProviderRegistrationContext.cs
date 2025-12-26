@@ -24,13 +24,13 @@ public readonly struct ProviderRegistrationContext
         TMarketProviderFactory,
         TMarketConnectorFactory,
         TUserProviderFactory,
-        TUserConnector,
+        TUserConnectorFactory,
         TFinanceService
     >(ProviderBaseConfiguration cfg)
         where TMarketProviderFactory : IMarketProviderFactory
         where TMarketConnectorFactory : IMarketConnectorFactory
         where TUserProviderFactory : IUserProviderFactory
-        where TUserConnector : IUserConnector
+        where TUserConnectorFactory : IUserConnectorFactory
         where TFinanceService : IFinanceService
     {
         var (provider, environments, serverTimeConfig) = cfg;
@@ -41,8 +41,8 @@ public readonly struct ProviderRegistrationContext
 
         // user
         Container.Add<TUserProviderFactory>().AsKeyed<IUserProviderFactory>(provider).Scoped();
-        Container.Add<TUserConnector>().AsSelf().Transient();
-        Container.Add<TFinanceService>().AsSelf().Transient();
+        Container.Add<TUserConnectorFactory>().AsKeyed<IUserConnectorFactory>(provider).Scoped();
+        Container.Add<TFinanceService>().AsKeyed<IFinanceService>(provider).Scoped();
 
         foreach (var env in environments.EnumerateFlags())
         {
@@ -52,13 +52,6 @@ public readonly struct ProviderRegistrationContext
             Container.Add(providerKey).AsSelf().Singleton();
             Container.Add(serverTimeConfig).AsKeyed<ServerTimeProviderConfig>(providerKey).Singleton();
             Container.Add(ServerTimeSourceFactory).AsKeyed<IServerTimeSource>(providerKey).Scoped();
-
-            // user
-            Container
-                .Add<Func<IServiceProvider, TUserConnector>>(sp => sp.Resolve<TUserConnector>())
-                .AsKeyed<Func<IServiceProvider, IUserConnector>>(providerKey)
-                .Singleton();
-            Container.Add<TFinanceService>().AsKeyed<IFinanceService>(providerKey).Singleton();
         }
 
         return this;

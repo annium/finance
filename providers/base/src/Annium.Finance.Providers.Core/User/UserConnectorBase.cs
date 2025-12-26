@@ -27,8 +27,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         return Task.CompletedTask;
     };
     protected readonly string Id;
-    protected readonly UserSettings Settings;
     protected readonly IUserProvider Provider;
+    private readonly UserSettings _settings;
     protected AsyncDisposableBox Disposable;
     private readonly ChannelPair<ChangeEvent<AssetModel>> _assets;
     private readonly ChannelPair<ChangeEvent<PositionModel>> _positions;
@@ -40,16 +40,16 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     protected UserConnectorBase(
         UserSettings settings,
-        IUserProviderFactory providerFactory,
+        IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
     {
         Logger = logger;
-        Id = $"{settings.Provider}[{settings.Environment}]{settings.Key[..7]}";
-        Settings = settings;
-        Provider = providerFactory.Create(settings);
+        Id = settings.ToString();
+        Provider = provider;
+        _settings = settings;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
@@ -137,7 +137,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             UnsubscribeReaders();
 
             this.Trace<string>("{id} sync start", Id);
-            await OnSync(Settings, Provider);
+            await OnSync(_settings, Provider);
             this.Trace<string>("{id} sync done", Id);
 
             this.Trace<string>("{id} subscribe readers", Id);

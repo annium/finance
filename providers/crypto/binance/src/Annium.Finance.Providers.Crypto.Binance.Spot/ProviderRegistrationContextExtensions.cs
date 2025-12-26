@@ -2,14 +2,11 @@ using System;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Temp;
-using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
-using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
-using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared;
@@ -20,7 +17,6 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
-using UserConfig = Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.UserConfig;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;
 
@@ -46,13 +42,12 @@ public static class ProviderRegistrationContextExtensions
             MarketProviderFactory,
             MarketConnectorFactory,
             UserProviderFactory,
-            UserConnector,
+            UserConnectorFactory,
             FinanceService
         >(baseCfg);
 
         // settings
         ctx.Container.Add(cfg).AsSelf().Singleton();
-        ctx.Container.Add(UserConfigFactory).AsSelf().Scoped();
 
         // serializers and http factories
         // market
@@ -80,10 +75,7 @@ public static class ProviderRegistrationContextExtensions
         // services
         ctx.AddBookTickerServiceFactory();
         ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();
-        ctx.Container.Add(RateLimiterFactory).AsSelf().Singleton();
-        ctx.Container.Add(SignatureServiceFactory).AsSelf().Scoped();
-        ctx.Container.Add(ListenKeyResolverFactory).AsSelf().Scoped();
-        ctx.Container.Add(UserStreamFactory).AsSelf().Scoped();
+        ctx.Container.Add(RateLimiterFactory).AsSelf().Scoped();
 
         foreach (var env in baseCfg.Environments.EnumerateFlags())
         {
@@ -105,72 +97,10 @@ public static class ProviderRegistrationContextExtensions
         return new ServerTimeProvider(requestFactory, httpApi, "/api/v1/time", logger);
     }
 
-    private static UserConfig UserConfigFactory(IServiceProvider sp)
-    {
-        var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-
-        var httpApi = Endpoints.GetHttpApi(userSettings.Environment);
-        var wsApi = Endpoints.GetWsApi(userSettings.Environment);
-
-        var providerConfig = sp.Resolve<ProviderConfiguration>();
-
-        return new UserConfig
-        {
-            Provider = userSettings.Provider,
-            Environment = userSettings.Environment,
-            Key = userSettings.Key,
-            Secret = userSettings.Secret,
-            HttpApi = httpApi,
-            WsApi = wsApi,
-            ListenKeyUriPath = "/ws/",
-            ListenKey = providerConfig.ListenKey,
-            ReloadContext = providerConfig.ReloadContext,
-            ReloadOrders = providerConfig.ReloadOrders,
-            ReloadTrades = providerConfig.ReloadTrades,
-        };
-    }
-
     private static IRateLimiter RateLimiterFactory(IServiceProvider sp)
     {
         var factory = sp.Resolve<IRateLimiterFactory>();
 
         return factory.CreateRateLimiter(6000, 300, 3_000);
-    }
-
-    private static SignatureService SignatureServiceFactory(IServiceProvider sp)
-    {
-        var userSettings = sp.Resolve<Injected<UserSettings>>().Value;
-        var providerKey = userSettings.GetProviderKey();
-        var serverTimeSource = sp.ResolveKeyed<IServerTimeSource>(providerKey);
-
-        return new SignatureService(userSettings, serverTimeSource);
-    }
-
-    private static ListenKeyResolver ListenKeyResolverFactory(IServiceProvider sp)
-    {
-        var config = sp.Resolve<UserConfig>();
-        var httpRequestFactory = sp.ResolveHttpRequestFactory(ListenKeyKey);
-        var signatureService = sp.Resolve<SignatureService>();
-        var statusReporter = sp.Resolve<IStatusReporter>();
-        var logger = sp.Resolve<ILogger>();
-
-        return new ListenKeyResolver(
-            config,
-            "/fapi/v1/listenKey",
-            httpRequestFactory,
-            signatureService,
-            statusReporter,
-            logger
-        );
-    }
-
-    private static UserStream UserStreamFactory(IServiceProvider sp)
-    {
-        var config = sp.Resolve<UserConfig>();
-        var listenKeyResolver = sp.Resolve<ListenKeyResolver>();
-        var statusReporter = sp.Resolve<IStatusReporter>();
-        var logger = sp.Resolve<ILogger>();
-
-        return new UserStream(config, listenKeyResolver, statusReporter, logger);
     }
 }

@@ -30,9 +30,9 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         return Task.CompletedTask;
     };
     protected readonly string Id;
-    protected readonly MarketSettings Settings;
     protected readonly IMarketProvider Provider;
     protected AsyncDisposableBox Disposable;
+    private readonly MarketSettings _settings;
     private readonly ChannelPair<InstrumentTicker> _tickers;
     private readonly IExecutor _executor;
     private readonly IStatusReporter _reporter;
@@ -47,9 +47,9 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     )
     {
         Logger = logger;
-        Id = $"{settings.Provider}[{settings.Environment}]";
-        Settings = settings;
+        Id = settings.ToString();
         Provider = provider;
+        _settings = settings;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
@@ -116,7 +116,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
             UnsubscribeReaders();
 
             this.Trace<string>("{id} sync start", Id);
-            await OnSync(Settings, Resources, Instruments);
+            await OnSync(_settings, Resources, Instruments);
             this.Trace<string>("{id} sync done", Id);
 
             this.Trace<string>("{id} subscribe readers", Id);

@@ -15,12 +15,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 {
     public UserConnector(
         UserConfig config,
-        IUserProviderFactory providerFactory,
+        IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, logger)
     {
         // init load
         // schedule sync on connected
