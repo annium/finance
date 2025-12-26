@@ -13,11 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Shar
 public class ServerTimeProviderTests : ProvidersTestBase
 {
     public ServerTimeProviderTests(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-        this.Inject(Settings.Market);
-        this.Inject(Settings.User);
-    }
+        : base(outputHelper) { }
 
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {

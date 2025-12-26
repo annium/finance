@@ -16,8 +16,6 @@ public static class ServiceContainerExtensions
 {
     public static ProviderRegistrationContext AddFinanceProviders(this IServiceContainer container)
     {
-        container.AddInjectables();
-
         // market
         container.Add<IMarketConnectorFactory, MarketConnectorFactory>().Singleton();
 
