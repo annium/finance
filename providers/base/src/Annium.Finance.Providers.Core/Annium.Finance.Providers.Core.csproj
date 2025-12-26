@@ -9,7 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Annium.Execution.Background" />
-    <PackageReference Include="Annium.Extensions.Pooling" />
     <PackageReference Include="Annium.Net.Http" />
     <PackageReference Include="Annium.Net.WebSockets" />
     <PackageReference Include="Annium.NodaTime.Extensions" />
