@@ -234,12 +234,6 @@ file class NoopDebounceTimer : IDebounceTimer
 
     public void Dispose() { }
 
-    public ValueTask DisposeAsync()
-    {
-        // TODO: remove temp
-        return ValueTask.CompletedTask;
-    }
-
     public void Change(int period) { }
 
     public void Request() { }

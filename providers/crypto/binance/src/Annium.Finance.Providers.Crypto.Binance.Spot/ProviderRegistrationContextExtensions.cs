@@ -1,7 +1,6 @@
 using System;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
-using Annium.Finance.Providers.Abstractions.Domain.Temp;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
