@@ -5,13 +5,11 @@ using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Core.Market;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market.Contracts.Domain;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market.HttpExtensions;
-using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Shared;
 using Annium.Logging;
 using Annium.Net.Http;
 using NodaTime;
@@ -19,7 +17,7 @@ using NodaTime;
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market;
 
 internal class MarketProvider(
-    ProviderEnvironment env,
+    MarketConfig config,
     IHttpRequestFactory exchangeInfoRequestFactory,
     IHttpRequestFactory candleRequestFactory,
     IRateLimiter rateLimiter,
@@ -34,7 +32,7 @@ internal class MarketProvider(
 
         // load exchange info
         var result = await exchangeInfoRequestFactory
-            .New(Endpoints.GetHttpApi(env))
+            .New(config.HttpApi)
             .Get("fapi/v1/exchangeInfo")
             .WithLogFromWithHeaders(this, LogData.Headers)
             .WithRateDelay1M(rateLimiter)
@@ -74,7 +72,7 @@ internal class MarketProvider(
 
         Task<MarketResult<List<CandleModel>?>> FetchAsync(string symbol, Instant from, int count) =>
             candleRequestFactory
-                .New(Endpoints.GetHttpApi(env))
+                .New(config.HttpApi)
                 .Get("fapi/v1/klines")
                 .Param("symbol", instrument)
                 .Param("interval", "1m")

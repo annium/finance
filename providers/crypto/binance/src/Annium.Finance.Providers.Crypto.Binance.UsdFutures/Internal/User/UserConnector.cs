@@ -62,13 +62,13 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         [FromKeyedServices(CancelAllOrdersKey)] IHttpRequestFactory cancelAllOrdersRequestFactory,
         UserStream userStream,
         ILoaderFactory loaderFactory,
-        [FromKeyedServices(Constants.Provider)] IUserProvider provider,
+        [FromKeyedServices(Constants.Provider)] IUserProviderFactory providerFactory,
         IRateLimiter rateLimiter,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), provider, reporter, monitor, logger)
+        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;
@@ -291,7 +291,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private async Task<IBaseResult<UserContext?>> LoadContextAsync(CancellationToken ct)
     {
-        var result = await Provider.LoadContextAsync(Settings);
+        var result = await Provider.LoadContextAsync();
 
         return result;
     }
@@ -304,7 +304,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(CancellationToken ct)
     {
-        var result = await Provider.LoadOpenOrdersAsync(Settings);
+        var result = await Provider.LoadOpenOrdersAsync();
 
         return result;
     }
@@ -320,7 +320,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         CancellationToken ct
     )
     {
-        var result = await Provider.LoadTradesAsync(Settings, symbol, since);
+        var result = await Provider.LoadTradesAsync(symbol, since);
 
         return result;
     }

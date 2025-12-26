@@ -9,7 +9,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 
 internal class UserProvider : IUserProvider
 {
-    public Task<UserResult<UserContext?>> LoadContextAsync(UserSettings settings)
+    public Task<UserResult<UserContext?>> LoadContextAsync()
     {
         var assets = Array.Empty<AssetModel>();
         var positions = Array.Empty<PositionModel>();
@@ -19,7 +19,7 @@ internal class UserProvider : IUserProvider
         return Task.FromResult(result);
     }
 
-    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync(UserSettings settings)
+    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync()
     {
         var orders = Array.Empty<OrderModel>();
 
@@ -28,11 +28,7 @@ internal class UserProvider : IUserProvider
         return Task.FromResult(result);
     }
 
-    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(
-        UserSettings settings,
-        string symbol,
-        long? since
-    )
+    public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(string symbol, long? since)
     {
         var orders = Array.Empty<OrderModel>();
 
@@ -41,11 +37,7 @@ internal class UserProvider : IUserProvider
         return Task.FromResult(result);
     }
 
-    public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
-        UserSettings settings,
-        string symbol,
-        long? since
-    )
+    public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(string symbol, long? since)
     {
         var trades = Array.Empty<TradeModel>();
 

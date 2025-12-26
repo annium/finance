@@ -40,7 +40,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
 
     protected MarketConnectorBase(
         MarketSettings settings,
-        IMarketProviderFactory providerFactory,
+        IMarketProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
@@ -49,7 +49,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         Logger = logger;
         Id = $"{settings.Provider}[{settings.Environment}]";
         Settings = settings;
-        Provider = providerFactory.Create(settings.Environment);
+        Provider = provider;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 

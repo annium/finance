@@ -99,11 +99,11 @@ public class MarketConnectorBaseTests : ProvidersTestBase
 
     private FakeMarketConnector CreateConnector(MarketSettings settings)
     {
-        var providerFactory = new FakeMarketProviderFactory();
+        var provider = new FakeMarketProvider();
         var reporter = Get<IStatusReporter>();
         var monitor = Get<IStatusMonitor>();
 
-        return new FakeMarketConnector(settings, providerFactory, reporter, monitor, Logger);
+        return new FakeMarketConnector(settings, provider, reporter, monitor, Logger);
     }
 
     private void Emit(IReadOnlyList<InstrumentTicker> data, Action<InstrumentTicker> emit)
@@ -145,12 +145,12 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     {
         public FakeMarketConnector(
             MarketSettings settings,
-            IMarketProviderFactory providerFactory,
+            IMarketProvider provider,
             IStatusReporter reporter,
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, providerFactory, reporter, monitor, logger) { }
+            : base(settings, provider, reporter, monitor, logger) { }
 
         public void Sync(IReadOnlyCollection<ResourceModel> resources, IReadOnlyCollection<InstrumentModel> instruments)
         {
@@ -161,11 +161,6 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         {
             Write(ticker);
         }
-    }
-
-    private class FakeMarketProviderFactory : IMarketProviderFactory
-    {
-        public IMarketProvider Create(ProviderEnvironment env) => new FakeMarketProvider();
     }
 
     private class FakeMarketProvider : IMarketProvider

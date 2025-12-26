@@ -40,7 +40,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     protected UserConnectorBase(
         UserSettings settings,
-        IUserProvider provider,
+        IUserProviderFactory providerFactory,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
@@ -49,7 +49,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Logger = logger;
         Id = $"{settings.Provider}[{settings.Environment}]{settings.Key[..7]}";
         Settings = settings;
-        Provider = provider;
+        Provider = providerFactory.Create(settings);
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 

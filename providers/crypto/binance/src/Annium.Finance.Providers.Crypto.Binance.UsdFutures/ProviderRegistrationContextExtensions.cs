@@ -42,9 +42,13 @@ public static class ProviderRegistrationContextExtensions
             ProviderEnvironment.Real | ProviderEnvironment.Test,
             cfg.ServerTime
         );
-        ctx.AddProvider<MarketProviderFactory, MarketConnectorFactory, UserProvider, UserConnector, FinanceService>(
-            baseCfg
-        );
+        ctx.AddProvider<
+            MarketProviderFactory,
+            MarketConnectorFactory,
+            UserProviderFactory,
+            UserConnector,
+            FinanceService
+        >(baseCfg);
 
         // settings
         ctx.Container.Add(cfg).AsSelf().Singleton();

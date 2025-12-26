@@ -23,13 +23,13 @@ public readonly struct ProviderRegistrationContext
     public ProviderRegistrationContext AddProvider<
         TMarketProviderFactory,
         TMarketConnectorFactory,
-        TUserProvider,
+        TUserProviderFactory,
         TUserConnector,
         TFinanceService
     >(ProviderBaseConfiguration cfg)
         where TMarketProviderFactory : IMarketProviderFactory
         where TMarketConnectorFactory : IMarketConnectorFactory
-        where TUserProvider : IUserProvider
+        where TUserProviderFactory : IUserProviderFactory
         where TUserConnector : IUserConnector
         where TFinanceService : IFinanceService
     {
@@ -40,7 +40,7 @@ public readonly struct ProviderRegistrationContext
         Container.Add<TMarketConnectorFactory>().AsKeyed<IMarketConnectorFactory>(provider).Scoped();
 
         // user
-        Container.Add<TUserProvider>().AsKeyed<IUserProvider>(provider).AsSelf().Scoped();
+        Container.Add<TUserProviderFactory>().AsKeyed<IUserProviderFactory>(provider).Scoped();
         Container.Add<TUserConnector>().AsSelf().Transient();
         Container.Add<TFinanceService>().AsSelf().Transient();
 

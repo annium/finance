@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Net.Mime;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core.Market;
@@ -8,7 +7,6 @@ using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Logging;
-using Annium.Serialization.Abstractions;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 
@@ -18,14 +16,14 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
 
     public MarketConnector(
         MarketConfig config,
-        IMarketProviderFactory providerFactory,
+        IMarketProvider provider,
         ILoaderFactory loaderFactory,
-        IBookTickerServiceFactory bookTickerServiceFactory,
+        IBookTickerService bookTickerService,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, logger)
     {
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
@@ -36,10 +34,7 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
         exchangeInfoLoader.Start(true);
 
-        Disposable += _bookTickerService = bookTickerServiceFactory.Create(
-            config,
-            SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)
-        );
+        Disposable += _bookTickerService = bookTickerService;
         _bookTickerService.OnData += Write;
         Disposable += () => _bookTickerService.OnData -= Write;
     }

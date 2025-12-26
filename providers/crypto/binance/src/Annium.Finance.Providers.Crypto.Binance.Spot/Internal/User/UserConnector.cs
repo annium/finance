@@ -8,7 +8,6 @@ using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.User;
 using Annium.Finance.Providers.Crypto.Binance.Base.User;
 using Annium.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 
@@ -16,12 +15,12 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 {
     public UserConnector(
         UserConfig config,
-        [FromKeyedServices(Constants.Provider)] IUserProvider provider,
+        IUserProviderFactory providerFactory,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.GetSettings(), provider, reporter, monitor, logger)
+        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
     {
         // init load
         // schedule sync on connected
