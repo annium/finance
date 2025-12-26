@@ -174,12 +174,12 @@ public class UserConnectorBaseTests : ProvidersTestBase
     {
         public FakeUserConnector(
             UserSettings settings,
-            IUserProvider userProvider,
+            IUserProvider provider,
             IStatusReporter reporter,
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, userProvider, reporter, monitor, logger) { }
+            : base(settings, provider, reporter, monitor, logger) { }
 
         public void Asset(AssetModel x)
         {

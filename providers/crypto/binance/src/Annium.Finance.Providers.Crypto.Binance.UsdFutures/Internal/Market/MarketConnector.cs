@@ -5,10 +5,10 @@ using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Core.Market;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Crypto.Binance.Base.Market;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market.Services;
 using Annium.Logging;
 using Annium.Serialization.Abstractions;
-using Annium.Threading.Channels;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market;
 
@@ -18,18 +18,18 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
 
     public MarketConnector(
         MarketConfig config,
-        IMarketProviderFactory marketProviderFactory,
+        IMarketProviderFactory providerFactory,
         ILoaderFactory loaderFactory,
         IBookTickerServiceFactory bookTickerServiceFactory,
+        IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
-        : base(config.Provider, config.Environment, monitor, logger)
+        : base(config.GetSettings(), providerFactory, reporter, monitor, logger)
     {
-        var marketProvider = marketProviderFactory.Create(config.Environment);
         var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
             new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
-            async _ => await marketProvider.LoadContextAsync()
+            async _ => await Provider.LoadContextAsync()
         );
         Disposable += exchangeInfoLoader;
         exchangeInfoLoader.OnData += HandleMarketContext;
@@ -40,8 +40,8 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
             config,
             SerializerKey.Create(Constants.InstrumentTickerKey, MediaTypeNames.Application.Json)
         );
-        _bookTickerService.OnData += HandleTicker;
-        Disposable += () => _bookTickerService.OnData -= HandleTicker;
+        _bookTickerService.OnData += Write;
+        Disposable += () => _bookTickerService.OnData -= Write;
     }
 
     public void SubscribeTickers(IReadOnlyCollection<string> symbols)
@@ -66,10 +66,5 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
         ScheduleSync(ctx.Resources, ctx.Instruments);
 
         this.Trace("done");
-    }
-
-    private void HandleTicker(InstrumentTicker ticker)
-    {
-        TickerWriter.Write(ticker);
     }
 }

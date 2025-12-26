@@ -28,7 +28,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     protected InstrumentTicker Ticker { get; private set; } = default!;
     private IUserConnector Connector { get; set; } = default!;
     private AsyncDisposableBox Disposable { get; set; }
-    private readonly UserSettings _config;
+    private readonly UserSettings _settings;
     private readonly ConcurrentQueue<AssetModel> _assets = new();
     private readonly ConcurrentQueue<PositionModel> _positions = new();
     private readonly ConcurrentQueue<OrderModel> _orders = new();
@@ -37,11 +37,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     private AssetModel _balance = default!;
     private PositionModel _position = default!;
 
-    protected UserConnectorTestBase(UserSettings config, string symbol, ITestOutputHelper output)
+    protected UserConnectorTestBase(UserSettings settings, string symbol, ITestOutputHelper output)
         : base(output)
     {
         Disposable = Annium.Disposable.AsyncBox(Logger);
-        _config = config;
+        _settings = settings;
         Symbol = symbol;
     }
 
@@ -49,14 +49,13 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        // arrange - market components
+        // arrange - market
         this.Trace("get market connector factory");
-        var factory = Get<IMarketConnectorFactory>();
+        var marketFactory = Get<IMarketConnectorFactory>();
 
-        // arrange - create market connector
-        var settings = Get<IMapper>().Map<MarketSettings>(_config);
+        var settings = Get<IMapper>().Map<MarketSettings>(_settings);
         this.Trace("get market connector for {settings}", settings);
-        await using var market = factory.Create(settings);
+        await using var market = marketFactory.Create(settings);
 
         this.Trace("await until market connector is ready");
         await market.WhenConnectedAsync();
@@ -71,8 +70,9 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         Ticker = await market.Tickers.FirstAsync(x => x.Symbol == Symbol);
         this.Trace("found ticker for {instrument}", Instrument);
 
-        this.Trace("get user connector for {config}", _config);
-        var userConnectorRef = await Get<IObjectCache<UserSettings, IUserConnector>>().GetAsync(_config);
+        // arrange - user
+        this.Trace("get user connector for {settings}", _settings);
+        var userConnectorRef = await Get<IObjectCache<UserSettings, IUserConnector>>().GetAsync(_settings);
         Disposable += userConnectorRef;
         Connector = userConnectorRef.Value;
 

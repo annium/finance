@@ -12,6 +12,7 @@ public interface IMarketConnector : IConnectorBase
     IReadOnlyCollection<InstrumentModel> Instruments { get; }
     IObservable<InstrumentTicker> Tickers { get; }
     event Func<MarketSettings, IReadOnlyCollection<ResourceModel>, IReadOnlyCollection<InstrumentModel>, Task> OnSync;
+    void Sync();
     void SubscribeTickers(IReadOnlyCollection<string> symbols);
     void UnsubscribeTickers(IReadOnlyCollection<string> symbols);
 }

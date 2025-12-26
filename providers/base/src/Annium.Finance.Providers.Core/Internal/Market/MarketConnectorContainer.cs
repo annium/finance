@@ -64,6 +64,11 @@ internal class MarketConnectorContainer : IMarketConnector, ILogSubject
         this.Trace("done");
     }
 
+    public void Sync()
+    {
+        _connector.Sync();
+    }
+
     public void SubscribeTickers(IReadOnlyCollection<string> symbols)
     {
         _connector.SubscribeTickers(symbols);

@@ -1,16 +1,14 @@
 using System;
-using System.Reactive.Linq;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Execution.Background;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Core.Internal.Shared.Channels;
 using Annium.Finance.Providers.Core.Market;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Logging;
-using Annium.Threading.Channels;
 
 namespace Annium.Finance.Providers.Core.User;
 
@@ -30,7 +28,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     };
     protected readonly string Id;
     protected readonly UserSettings Settings;
-    protected readonly IUserProvider UserProvider;
+    protected readonly IUserProvider Provider;
     protected AsyncDisposableBox Disposable;
     private readonly ChannelPair<ChangeEvent<AssetModel>> _assets;
     private readonly ChannelPair<ChangeEvent<PositionModel>> _positions;
@@ -42,7 +40,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
     protected UserConnectorBase(
         UserSettings settings,
-        IUserProvider userProvider,
+        IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
@@ -51,10 +49,11 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Logger = logger;
         Id = $"{settings.Provider}[{settings.Environment}]{settings.Key[..7]}";
         Settings = settings;
-        UserProvider = userProvider;
+        Provider = provider;
 
         Disposable = Annium.Disposable.AsyncBox(logger);
 
+        // monitor
         _reporter = reporter;
         _reporter.Bind(this, ConnectorStatus.Connected);
 
@@ -86,14 +85,20 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Trades = _trades.Observable;
         Disposable += Trades.Subscribe();
 
+        // executor
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
+        // source subscriptions
         Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        return Disposable.DisposeAsync();
+        this.Trace<string>("{id} start", Id);
+
+        await Disposable.DisposeAsync();
+
+        this.Trace<string>("{id} done", Id);
     }
 
     public void Sync()
@@ -132,7 +137,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
             UnsubscribeReaders();
 
             this.Trace<string>("{id} sync start", Id);
-            await OnSync(Settings, UserProvider);
+            await OnSync(Settings, Provider);
             this.Trace<string>("{id} sync done", Id);
 
             this.Trace<string>("{id} subscribe readers", Id);
@@ -171,32 +176,5 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private void UnsubscribeReaders()
     {
         _sourceSubscriptions.DisposeAndReset();
-    }
-
-    private class ChannelPair<T>
-    {
-        public IObservable<T> Observable { get; }
-
-        private readonly ChannelWriter<T> _sourceWriter;
-        private readonly ChannelReader<T> _sourceReader;
-        private readonly ChannelWriter<T> _targetWriter;
-        private readonly ILogger _logger;
-
-        public ChannelPair(ILogger logger)
-        {
-            var source = Channel.CreateUnbounded<T>();
-            _sourceWriter = source.Writer;
-            _sourceReader = source.Reader;
-
-            var target = Channel.CreateUnbounded<T>();
-            _targetWriter = target.Writer;
-            Observable = target.Reader.AsObservable().Publish().RefCount();
-
-            _logger = logger;
-        }
-
-        public void Write(T value) => _sourceWriter.Write(value);
-
-        public IDisposable Connect() => _sourceReader.Pipe(_targetWriter, _logger);
     }
 }

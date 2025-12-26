@@ -19,10 +19,19 @@ internal class MarketConnectorFactory(IServiceProvider sp) : IMarketConnectorFac
         var providerFactory = sp.ResolveKeyed<IMarketProviderFactory>(config.Provider);
         var loaderFactory = sp.Resolve<ILoaderFactory>();
         var bookTickerServiceFactory = sp.Resolve<IBookTickerServiceFactory>();
+        var reporter = sp.Resolve<IStatusReporter>();
         var monitor = sp.Resolve<IStatusMonitor>();
         var logger = sp.Resolve<ILogger>();
 
-        return new MarketConnector(config, providerFactory, loaderFactory, bookTickerServiceFactory, monitor, logger);
+        return new MarketConnector(
+            config,
+            providerFactory,
+            loaderFactory,
+            bookTickerServiceFactory,
+            reporter,
+            monitor,
+            logger
+        );
     }
 
     private static MarketConfig CreateConfig(MarketSettings settings)

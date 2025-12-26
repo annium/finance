@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
+using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
-using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Core.Internal.Shared.Channels;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Logging;
 
@@ -30,22 +29,33 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     {
         return Task.CompletedTask;
     };
-    protected readonly ChannelWriter<InstrumentTicker> TickerWriter;
+    protected readonly string Id;
+    protected readonly MarketSettings Settings;
+    protected readonly IMarketProvider Provider;
     protected AsyncDisposableBox Disposable;
+    private readonly ChannelPair<InstrumentTicker> _tickers;
     private readonly IExecutor _executor;
-    private readonly MarketSettings _settings;
+    private readonly IStatusReporter _reporter;
+    private DisposableBox _sourceSubscriptions;
 
     protected MarketConnectorBase(
-        string provider,
-        ProviderEnvironment environment,
+        MarketSettings settings,
+        IMarketProviderFactory providerFactory,
+        IStatusReporter reporter,
         IStatusMonitor monitor,
         ILogger logger
     )
     {
         Logger = logger;
-        _settings = new MarketSettings { Provider = provider, Environment = environment };
+        Id = $"{settings.Provider}[{settings.Environment}]";
+        Settings = settings;
+        Provider = providerFactory.Create(settings.Environment);
 
         Disposable = Annium.Disposable.AsyncBox(logger);
+
+        // monitor
+        _reporter = reporter;
+        _reporter.Bind(this, ConnectorStatus.Connected);
 
         Status = monitor.Status;
 
@@ -55,20 +65,78 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         monitor.OnError += HandleError;
         Disposable += () => monitor.OnError -= HandleError;
 
-        var tickerChannel = Channel.CreateUnbounded<InstrumentTicker>();
-        TickerWriter = tickerChannel.Writer;
-        Tickers = tickerChannel.Reader.AsObservable().Publish().RefCount();
+        // tickers
+        _tickers = new ChannelPair<InstrumentTicker>(logger);
+        Tickers = _tickers.Observable;
+        Disposable += Tickers.Subscribe();
 
+        // executor
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+
+        // source subscriptions
+        Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
     }
 
     public async ValueTask DisposeAsync()
     {
-        this.Trace("{settings} start", _settings);
+        this.Trace<string>("{id} start", Id);
 
         await Disposable.DisposeAsync();
 
-        this.Trace("{settings} done", _settings);
+        this.Trace<string>("{id} done", Id);
+    }
+
+    public void Sync()
+    {
+        this.Trace("{id} signal {state} state", Id, ConnectorStatus.Connecting);
+        _reporter.Connecting();
+
+        this.Trace("{id} signal {state} state", Id, ConnectorStatus.Connected);
+        _reporter.Connected();
+
+        this.Trace("{id} done");
+    }
+
+    protected void Write(InstrumentTicker ticker) => _tickers.Write(ticker);
+
+    private void HandleStatusChanged(ConnectorStatus status)
+    {
+        if (status is ConnectorStatus.Connected)
+            HandleSync();
+        else
+            CompleteStatusChange(status);
+    }
+
+    private void HandleSync()
+    {
+        this.Trace<string>("{id} schedule sync", Id);
+        var scheduled = _executor.Schedule(async () =>
+        {
+            this.Trace<string>("{id} unsubscribe readers", Id);
+            UnsubscribeReaders();
+
+            this.Trace<string>("{id} sync start", Id);
+            await OnSync(Settings, Resources, Instruments);
+            this.Trace<string>("{id} sync done", Id);
+
+            this.Trace<string>("{id} subscribe readers", Id);
+            SubscribeReaders();
+
+            this.Trace<string>("{id} complete status change", Id);
+            CompleteStatusChange(ConnectorStatus.Connected);
+
+            this.Trace<string>("{id} done sync", Id);
+        });
+
+        this.Trace("{id} done, scheduled: {result}", Id, scheduled);
+    }
+
+    private void CompleteStatusChange(ConnectorStatus status)
+    {
+        this.Trace("{id} notify {status} status", Id, status);
+        Status = status;
+        OnStatusChanged(status);
+        this.Trace("{id} update to {status} status", Id, status);
     }
 
     protected void ScheduleSync(
@@ -76,28 +144,27 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         IReadOnlyCollection<InstrumentModel> instruments
     )
     {
-        this.Trace("{settings} start", _settings);
+        this.Trace<string>("{id} start", Id);
+        Resources = resources;
+        Instruments = instruments;
 
-        var scheduled = _executor.Schedule(async () =>
-        {
-            this.Trace("{settings} start sync", _settings);
-            Resources = resources;
-            Instruments = instruments;
-            await OnSync(_settings, resources, instruments);
-            this.Trace("{settings} done sync", _settings);
-        });
+        Sync();
 
-        this.Trace("{settings} done, result: {result}", _settings, scheduled);
-    }
-
-    private void HandleStatusChanged(ConnectorStatus status)
-    {
-        Status = status;
-        OnStatusChanged(status);
+        this.Trace<string>("{id} done", Id);
     }
 
     private void HandleError(ConnectorError error)
     {
         OnError(error);
+    }
+
+    private void SubscribeReaders()
+    {
+        _sourceSubscriptions += _tickers.Connect();
+    }
+
+    private void UnsubscribeReaders()
+    {
+        _sourceSubscriptions.DisposeAndReset();
     }
 }
