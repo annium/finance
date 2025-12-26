@@ -179,7 +179,7 @@ public class UserConnectorBaseTests : ProvidersTestBase
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, provider, reporter, monitor, logger) { }
+            : base(settings, provider, reporter, monitor, Annium.Disposable.AsyncBox(logger), logger) { }
 
         public void Asset(AssetModel x)
         {

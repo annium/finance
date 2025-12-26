@@ -150,7 +150,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
             IStatusMonitor monitor,
             ILogger logger
         )
-            : base(settings, provider, reporter, monitor, logger) { }
+            : base(settings, provider, reporter, monitor, Annium.Disposable.AsyncBox(logger), logger) { }
 
         public void Sync(IReadOnlyCollection<ResourceModel> resources, IReadOnlyCollection<InstrumentModel> instruments)
         {

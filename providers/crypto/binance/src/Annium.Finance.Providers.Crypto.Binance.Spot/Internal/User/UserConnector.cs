@@ -18,9 +18,10 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
+        AsyncDisposableBox disposable,
         ILogger logger
     )
-        : base(config.GetSettings(), provider, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, disposable, logger)
     {
         // init load
         // schedule sync on connected

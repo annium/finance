@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
-using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
@@ -26,7 +23,6 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
-using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
@@ -49,6 +45,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 
     public UserConnector(
         UserConfig config,
+        IUserProvider provider,
         QueryProcessor queryProcessor,
         SignatureService signatureService,
         IHttpRequestFactory setLeverageRequestFactory,
@@ -57,15 +54,17 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         IHttpRequestFactory cancelOrderRequestFactory,
         IHttpRequestFactory cancelAllOrdersRequestFactory,
         IRateLimiter rateLimiter,
-        ILoaderFactory loaderFactory,
+        ICompositeLoader<UserContext> contextLoader,
+        ICompositeLoader<IReadOnlyCollection<OrderModel>> ordersLoader,
+        IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> tradesLoader,
         UserStream userStream,
         ISerializer<ReadOnlyMemory<byte>> orderUpdateEventSerializer,
-        IUserProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
+        AsyncDisposableBox disposable,
         ILogger logger
     )
-        : base(config.GetSettings(), provider, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, disposable, logger)
     {
         _config = config;
         _queryProcessor = queryProcessor;
@@ -78,22 +77,17 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         _rateLimiter = rateLimiter;
 
         // context
-        Disposable += _contextLoader = loaderFactory.CreateCompositeLoader(_config.ReloadContext, LoadContextAsync);
+        _contextLoader = contextLoader;
         _contextLoader.OnData += HandleContext;
         Disposable += () => _contextLoader.OnData -= HandleContext;
 
         // orders
-        Disposable += _ordersLoader = loaderFactory.CreateCompositeLoader(_config.ReloadOrders, LoadOrdersAsync);
+        _ordersLoader = ordersLoader;
         _ordersLoader.OnData += HandleOrders;
         Disposable += () => _ordersLoader.OnData -= HandleOrders;
 
         // trades
-        Disposable += _tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
-            _config.ReloadTrades,
-            SystemClock.Instance.GetCurrentInstant().ToUnixTimeMilliseconds(),
-            LoadTradesAsync,
-            GetTradesContext
-        );
+        _tradesLoader = tradesLoader;
         _tradesLoader.OnData += HandleTrades;
         Disposable += () => _tradesLoader.OnData -= HandleTrades;
 
@@ -286,47 +280,15 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         }
     }
 
-    private async Task<IBaseResult<UserContext?>> LoadContextAsync(CancellationToken ct)
-    {
-        var result = await Provider.LoadContextAsync();
-
-        return result;
-    }
-
     private void HandleContext(UserContext context)
     {
         Write(ChangeEvent.Init(context.Assets));
         Write(ChangeEvent.Init(context.Positions));
     }
 
-    private async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(CancellationToken ct)
-    {
-        var result = await Provider.LoadOpenOrdersAsync();
-
-        return result;
-    }
-
     private void HandleOrders(IReadOnlyCollection<OrderModel> orders)
     {
         Write(ChangeEvent.Init(orders));
-    }
-
-    private async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
-        string symbol,
-        long since,
-        CancellationToken ct
-    )
-    {
-        var result = await Provider.LoadTradesAsync(symbol, since);
-
-        return result;
-    }
-
-    private long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeModel> trades)
-    {
-        var result = trades.Select(x => x.Moment).MaxBy(x => x);
-
-        return result;
     }
 
     private void HandleTrades(string symbol, long since, IReadOnlyCollection<TradeModel> items)

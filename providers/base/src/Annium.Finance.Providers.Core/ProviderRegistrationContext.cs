@@ -28,20 +28,20 @@ public readonly struct ProviderRegistrationContext
         TFinanceService
     >(ProviderBaseConfiguration cfg)
         where TMarketProviderFactory : IMarketProviderFactory
-        where TMarketConnectorFactory : IMarketConnectorFactory
+        where TMarketConnectorFactory : IMarketConnectorInstanceFactory
         where TUserProviderFactory : IUserProviderFactory
-        where TUserConnectorFactory : IUserConnectorFactory
+        where TUserConnectorFactory : IUserConnectorInstanceFactory
         where TFinanceService : IFinanceService
     {
         var (provider, environments, serverTimeConfig) = cfg;
 
         // market
         Container.Add<TMarketProviderFactory>().AsKeyed<IMarketProviderFactory>(provider).Scoped();
-        Container.Add<TMarketConnectorFactory>().AsKeyed<IMarketConnectorFactory>(provider).Scoped();
+        Container.Add<TMarketConnectorFactory>().AsKeyed<IMarketConnectorInstanceFactory>(provider).Scoped();
 
         // user
         Container.Add<TUserProviderFactory>().AsKeyed<IUserProviderFactory>(provider).Scoped();
-        Container.Add<TUserConnectorFactory>().AsKeyed<IUserConnectorFactory>(provider).Scoped();
+        Container.Add<TUserConnectorFactory>().AsKeyed<IUserConnectorInstanceFactory>(provider).Scoped();
         Container.Add<TFinanceService>().AsKeyed<IFinanceService>(provider).Scoped();
 
         foreach (var env in environments.EnumerateFlags())

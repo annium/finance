@@ -43,6 +43,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         IMarketProvider provider,
         IStatusReporter reporter,
         IStatusMonitor monitor,
+        AsyncDisposableBox disposable,
         ILogger logger
     )
     {
@@ -51,7 +52,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         Provider = provider;
         _settings = settings;
 
-        Disposable = Annium.Disposable.AsyncBox(logger);
+        Disposable = disposable;
 
         // monitor
         _reporter = reporter;

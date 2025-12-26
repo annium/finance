@@ -16,11 +16,15 @@ internal class MarketConnectorFactory(IServiceProvider sp, ILogger logger) : IMa
     {
         var providerKey = settings.GetProviderKey();
 
+        this.Trace("{key} - create disposable box for {settings}", providerKey, settings);
+        var disposable = Disposable.AsyncBox(Logger);
+
         this.Trace("{key} - create new scope for {settings}", providerKey, settings);
         var scope = sp.CreateAsyncScope();
+        disposable += scope.CastTo<IAsyncDisposable>();
 
         this.Trace("{key} - resolve factory for {settings}", providerKey, settings);
-        var factory = scope.ServiceProvider.ResolveKeyed<IMarketConnectorFactory>(settings.Provider);
+        var factory = scope.ServiceProvider.ResolveKeyed<IMarketConnectorInstanceFactory>(settings.Provider);
 
         this.Trace<ProviderKey, MarketSettings, string>(
             "{key} - create connector for {settings} with {factory}",
@@ -28,8 +32,8 @@ internal class MarketConnectorFactory(IServiceProvider sp, ILogger logger) : IMa
             settings,
             factory.GetFullId()
         );
-        var connector = factory.Create(settings);
+        var connector = factory.Create(settings, disposable);
 
-        return new MarketConnectorContainer(scope, connector, Logger);
+        return connector;
     }
 }

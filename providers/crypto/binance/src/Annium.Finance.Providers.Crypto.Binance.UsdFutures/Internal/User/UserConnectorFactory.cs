@@ -1,13 +1,19 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mime;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
+using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Core.User;
 using Annium.Finance.Providers.Crypto.Binance.Base.User;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
 using Annium.Logging;
@@ -17,13 +23,15 @@ using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
-internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorFactory
+internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorInstanceFactory
 {
-    public IUserConnector Create(UserSettings settings)
+    public IUserConnector Create(UserSettings settings, AsyncDisposableBox disposable)
     {
         var config = sp.Resolve<IMapper>().Map<UserConfig>(settings);
         var providerKey = settings.GetProviderKey();
 
+        var timeProvider = sp.Resolve<ITimeProvider>();
+        var provider = sp.CreateUserProvider(settings);
         var queryProcessor = sp.Resolve<QueryProcessor>();
         var signatureService = sp.CreateSignatureService(settings, providerKey);
         var setLeverageRequestFactory = sp.ResolveHttpRequestFactory(SetLeverageKey);
@@ -42,9 +50,16 @@ internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorFactory
             OrderUpdateKey,
             MediaTypeNames.Application.Json
         );
+        var contextLoder = sp.CreateUserContextLoader(config.ReloadContext, provider, ref disposable);
         var loaderFactory = sp.Resolve<ILoaderFactory>();
-        var providerFactory = sp.ResolveKeyed<IUserProviderFactory>(config.Provider);
-        var provider = providerFactory.Create(settings);
+        var ordersLoader = loaderFactory.CreateCompositeLoader(config.ReloadOrders, LoadOrdersAsync);
+        var tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
+            config.ReloadTrades,
+            timeProvider.Now.ToUnixTimeMilliseconds(),
+            LoadTradesAsync,
+            GetTradesContext
+        );
+
         var rateLimiter = sp.Resolve<IRateLimiter>();
         var reporter = sp.Resolve<IStatusReporter>();
         var monitor = sp.Resolve<IStatusMonitor>();
@@ -52,6 +67,7 @@ internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorFactory
 
         return new UserConnector(
             config,
+            provider,
             queryProcessor,
             signatureService,
             setLeverageRequestFactory,
@@ -60,13 +76,39 @@ internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorFactory
             cancelOrderRequestFactory,
             cancelAllOrdersRequestFactory,
             rateLimiter,
-            loaderFactory,
+            contextLoder,
+            ordersLoader,
+            tradesLoader,
             userStream,
             orderUpdateEventSerializer,
-            provider,
             reporter,
             monitor,
+            disposable,
             logger
         );
+
+        async Task<IBaseResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(CancellationToken ct)
+        {
+            var result = await provider.LoadOpenOrdersAsync();
+
+            return result;
+        }
+        async Task<IBaseResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(
+            string symbol,
+            long since,
+            CancellationToken ct
+        )
+        {
+            var result = await provider.LoadTradesAsync(symbol, since);
+
+            return result;
+        }
+
+        long GetTradesContext(string symbol, long since, IReadOnlyCollection<TradeModel> trades)
+        {
+            var result = trades.Select(x => x.Moment).MaxBy(x => x);
+
+            return result;
+        }
     }
 }

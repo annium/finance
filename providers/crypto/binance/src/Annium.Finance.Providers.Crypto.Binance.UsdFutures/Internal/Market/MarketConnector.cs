@@ -17,24 +17,20 @@ internal class MarketConnector : MarketConnectorBase, IMarketConnector
     public MarketConnector(
         MarketConfig config,
         IMarketProvider provider,
-        ILoaderFactory loaderFactory,
+        ICompositeLoader<MarketContext> marketContextLoader,
         IBookTickerService bookTickerService,
         IStatusReporter reporter,
         IStatusMonitor monitor,
+        AsyncDisposableBox disposable,
         ILogger logger
     )
-        : base(config.GetSettings(), provider, reporter, monitor, logger)
+        : base(config.GetSettings(), provider, reporter, monitor, disposable, logger)
     {
-        var exchangeInfoLoader = loaderFactory.CreateCompositeLoader<MarketContext>(
-            new CompositeLoaderConfig(3000, 5, 10000, 600_000, 0),
-            async _ => await Provider.LoadContextAsync()
-        );
-        Disposable += exchangeInfoLoader;
-        exchangeInfoLoader.OnData += HandleMarketContext;
-        Disposable += () => exchangeInfoLoader.OnData -= HandleMarketContext;
-        exchangeInfoLoader.Start(true);
+        marketContextLoader.OnData += HandleMarketContext;
+        Disposable += () => marketContextLoader.OnData -= HandleMarketContext;
+        marketContextLoader.Start(true);
 
-        Disposable += _bookTickerService = bookTickerService;
+        _bookTickerService = bookTickerService;
         _bookTickerService.OnData += Write;
         Disposable += () => _bookTickerService.OnData -= Write;
     }
