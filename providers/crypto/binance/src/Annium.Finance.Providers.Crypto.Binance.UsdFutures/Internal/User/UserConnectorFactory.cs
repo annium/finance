@@ -10,7 +10,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.User;
-using Annium.Finance.Providers.Core.Shared.Loaders;
+using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Core.User;
@@ -51,9 +51,8 @@ internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorInstanc
             MediaTypeNames.Application.Json
         );
         var contextLoder = sp.CreateUserContextLoader(config.ReloadContext, provider, ref disposable);
-        var loaderFactory = sp.Resolve<ILoaderFactory>();
-        var ordersLoader = loaderFactory.CreateCompositeLoader(config.ReloadOrders, LoadOrdersAsync);
-        var tradesLoader = loaderFactory.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
+        var ordersLoader = sp.CreateCompositeLoader(config.ReloadOrders, LoadOrdersAsync);
+        var tradesLoader = sp.CreateKeyedLoader<string, long, IReadOnlyCollection<TradeModel>>(
             config.ReloadTrades,
             timeProvider.Now.ToUnixTimeMilliseconds(),
             LoadTradesAsync,

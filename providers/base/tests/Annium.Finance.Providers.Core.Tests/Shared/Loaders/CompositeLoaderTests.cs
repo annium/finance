@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
+using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Linq;
@@ -52,7 +53,7 @@ public class CompositeLoaderTests : TestBase
                 ? MarketResult.New(MarketOperationStatus.NotFound, 0, $"No data at {attempt}")
                 : MarketResult.Ok(attempt++);
         }
-        using var loader = Get<ILoaderFactory>().CreateCompositeLoader<int>(cfg, async _ => await Load());
+        using var loader = Provider.CreateCompositeLoader<int>(cfg, async _ => await Load());
         loader.OnData += log.Add;
 
         loader.Start(true);

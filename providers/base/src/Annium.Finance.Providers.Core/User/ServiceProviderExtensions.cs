@@ -2,6 +2,7 @@ using System;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.User;
+using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 
 namespace Annium.Finance.Providers.Core.User;
@@ -24,12 +25,7 @@ public static class ServiceProviderExtensions
         ref AsyncDisposableBox disposable
     )
     {
-        var loaderFactory = sp.Resolve<ILoaderFactory>();
-
-        var loader = loaderFactory.CreateCompositeLoader<UserContext>(
-            config,
-            async _ => await provider.LoadContextAsync()
-        );
+        var loader = sp.CreateCompositeLoader<UserContext>(config, async _ => await provider.LoadContextAsync());
         disposable += loader;
 
         return loader;
