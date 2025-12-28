@@ -5,7 +5,6 @@ using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
-using Annium.Finance.Providers.Crypto.Binance.Base;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts;
@@ -71,7 +70,6 @@ public static class ProviderRegistrationContextExtensions
         ctx.AddJsonSerializer(OrderUpdateKey, UserContracts.OrderUpdate);
 
         // services
-        ctx.AddBookTickerServiceFactory();
         ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();
         ctx.Container.Add(RateLimiterFactory).AsSelf().Scoped();
 
