@@ -53,6 +53,48 @@ public class OrderValidationExtensionsTests
     }
 
     [Fact]
+    public void ValidateIsImmediate()
+    {
+        // arrange
+        var immediateOrder = _position.AddLimitBuyOrder(2, 1);
+        var leveledOrder = _position.AddStopLossMarketBuyOrder(2, 1);
+        immediateOrder.HasNoErrors();
+        leveledOrder.HasNoErrors();
+
+        // assert
+        immediateOrder.ValidateIsImmediate().HasNoErrors();
+        leveledOrder.ValidateIsImmediate().PlainErrors.At(0).IsContaining("is not an immediate order");
+    }
+
+    [Fact]
+    public void ValidateIsLeveled()
+    {
+        // arrange
+        var leveledOrder = _position.AddStopLossMarketBuyOrder(2, 1);
+        var immediateOrder = _position.AddLimitBuyOrder(2, 1);
+        leveledOrder.HasNoErrors();
+        immediateOrder.HasNoErrors();
+
+        // assert
+        leveledOrder.ValidateIsLeveled().HasNoErrors();
+        immediateOrder.ValidateIsLeveled().PlainErrors.At(0).IsContaining("is not a leveled order");
+    }
+
+    [Fact]
+    public void ValidateIsMarket()
+    {
+        // arrange
+        var marketOrder = _position.AddMarketBuyOrder(2);
+        var limitOrder = _position.AddLimitBuyOrder(2, 1);
+        marketOrder.HasNoErrors();
+        limitOrder.HasNoErrors();
+
+        // assert
+        marketOrder.ValidateIsMarket().HasNoErrors();
+        limitOrder.ValidateIsMarket().PlainErrors.At(0).IsContaining("is not a market order");
+    }
+
+    [Fact]
     public void ValidateStatus()
     {
         // arrange
@@ -64,6 +106,22 @@ public class OrderValidationExtensionsTests
             .ValidateStatus(OrderStatus.Filled, OrderStatus.Canceled)
             .PlainErrors.At(0)
             .IsContaining($"is not {OrderStatus.Filled}, {OrderStatus.Canceled}");
+
+        var newOrder = _position.AddLimitBuyOrder(2, 1);
+        newOrder.HasNoErrors();
+        newOrder.ValidateStatus(OrderStatus.New).HasNoErrors();
+        newOrder.ValidateStatus(OrderStatus.Filled).PlainErrors.At(0).IsContaining($"is not {OrderStatus.Filled}");
+
+        var canceledOrder = _position.AddLimitBuyOrder(2, 1).Cancel();
+        canceledOrder.HasNoErrors();
+        canceledOrder.ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Canceled).HasNoErrors();
+        canceledOrder
+            .ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Filled, OrderStatus.Canceled)
+            .HasNoErrors();
+        canceledOrder
+            .ValidateStatus(OrderStatus.New, OrderStatus.PartiallyFilled, OrderStatus.Filled)
+            .PlainErrors.At(0)
+            .IsContaining($"is not {OrderStatus.New}, {OrderStatus.PartiallyFilled}, {OrderStatus.Filled}");
     }
 
     [Fact]
