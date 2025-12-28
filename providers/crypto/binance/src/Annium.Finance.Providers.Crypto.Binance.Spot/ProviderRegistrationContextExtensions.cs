@@ -5,7 +5,7 @@ using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base;
-using Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
+using Annium.Finance.Providers.Crypto.Binance.Base.Shared;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared;
@@ -88,12 +88,9 @@ public static class ProviderRegistrationContextExtensions
     private static IServerTimeProvider ServerTimeProviderFactory(IServiceProvider sp, object key)
     {
         var providerKey = key.CastTo<ProviderKey>();
-
-        var requestFactory = sp.ResolveHttpRequestFactory(ServerTimeKey);
         var httpApi = Endpoints.GetHttpApi(providerKey.Environment);
-        var logger = sp.Resolve<ILogger>();
 
-        return new ServerTimeProvider(requestFactory, httpApi, "/api/v1/time", logger);
+        return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, "/api/v1/time");
     }
 
     private static IRateLimiter RateLimiterFactory(IServiceProvider sp)

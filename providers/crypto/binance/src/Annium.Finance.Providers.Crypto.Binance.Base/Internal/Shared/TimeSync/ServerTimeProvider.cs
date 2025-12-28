@@ -9,9 +9,9 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 using Annium.Logging;
 using Annium.Net.Http;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.TimeSync;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.Shared.TimeSync;
 
-public class ServerTimeProvider : IServerTimeProvider, ILogSubject
+internal class ServerTimeProvider : IServerTimeProvider, ILogSubject
 {
     private readonly IHttpRequestFactory _requestFactory;
     private readonly Uri _httpApi;
