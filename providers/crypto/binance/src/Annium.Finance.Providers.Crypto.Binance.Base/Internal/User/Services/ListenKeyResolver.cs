@@ -5,14 +5,16 @@ using Annium.Finance.Providers.Abstractions.Domain.User.Operations;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Internal.User.HttpExtensions;
 using Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
+using Annium.Finance.Providers.Crypto.Binance.Base.User;
 using Annium.Finance.Providers.Crypto.Binance.Base.User.Contracts.Domain;
+using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Logging;
 using Annium.Net.Http;
 using Annium.Threading;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.User.Services;
 
-public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
+internal class ListenKeyResolver : IListenKeyResolver, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<string> OnListenKeyFetched = delegate { };
@@ -20,7 +22,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
     private readonly UserConfigBase _config;
     private readonly string _endpoint;
     private readonly IHttpRequestFactory _httpRequestFactory;
-    private readonly SignatureService _signatureService;
+    private readonly ISignatureService _signatureService;
     private readonly IStatusReporter _statusReporter;
     private readonly ISequentialTimer _timer;
     private readonly AsyncDisposableBox _disposable;
@@ -30,7 +32,7 @@ public sealed class ListenKeyResolver : IAsyncDisposable, ILogSubject
         UserConfigBase config,
         string endpoint,
         IHttpRequestFactory httpRequestFactory,
-        SignatureService signatureService,
+        ISignatureService signatureService,
         IStatusReporter statusReporter,
         ILogger logger
     )

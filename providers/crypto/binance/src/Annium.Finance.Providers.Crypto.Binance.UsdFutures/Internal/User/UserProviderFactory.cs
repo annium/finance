@@ -5,8 +5,7 @@ using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
-using Annium.Finance.Providers.Core.Shared.TimeSync;
-using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
+using Annium.Finance.Providers.Crypto.Binance.Base.User;
 using Annium.Logging;
 using Annium.Net.Http;
 
@@ -20,8 +19,7 @@ internal class UserProviderFactory(IServiceProvider sp) : IUserProviderFactory
         var config = sp.Resolve<IMapper>().Map<UserConfig>(settings);
 
         var timeProvider = sp.Resolve<ITimeProvider>();
-        var serverTimeSource = sp.ResolveKeyed<IServerTimeSource>(providerKey);
-        var signatureService = new SignatureService(settings, serverTimeSource);
+        var signatureService = sp.CreateSignatureService(settings, providerKey);
         var getAccountRequestFactory = sp.ResolveHttpRequestFactory(Constants.GetAccountKey);
         var getOrderRequestFactory = sp.ResolveHttpRequestFactory(Constants.GetOrderKey);
         var getTradeRequestFactory = sp.ResolveHttpRequestFactory(Constants.GetTradeKey);

@@ -20,7 +20,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 internal class UserProvider(
     UserConfig config,
     ITimeProvider timeProvider,
-    SignatureService signatureService,
+    ISignatureService signatureService,
     IHttpRequestFactory getAccountRequestFactory,
     IHttpRequestFactory getOrderRequestFactory,
     IHttpRequestFactory getTradeRequestFactory,

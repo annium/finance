@@ -30,7 +30,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
 {
     private readonly UserConfig _config;
     private readonly QueryProcessor _queryProcessor;
-    private readonly SignatureService _signatureService;
+    private readonly ISignatureService _signatureService;
     private readonly IHttpRequestFactory _setLeverageRequestFactory;
     private readonly IHttpRequestFactory _initOrderRequestFactory;
     private readonly IHttpRequestFactory _modifyOrderRequestFactory;
@@ -40,14 +40,14 @@ internal class UserConnector : UserConnectorBase, IUserConnector
     private readonly ICompositeLoader<UserContext> _contextLoader;
     private readonly ICompositeLoader<IReadOnlyCollection<OrderModel>> _ordersLoader;
     private readonly IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> _tradesLoader;
-    private readonly UserStream _userStream;
+    private readonly IUserStream _userStream;
     private readonly ISerializer<ReadOnlyMemory<byte>> _orderUpdateEventSerializer;
 
     public UserConnector(
         UserConfig config,
         IUserProvider provider,
         QueryProcessor queryProcessor,
-        SignatureService signatureService,
+        ISignatureService signatureService,
         IHttpRequestFactory setLeverageRequestFactory,
         IHttpRequestFactory initOrderRequestFactory,
         IHttpRequestFactory modifyOrderRequestFactory,
@@ -57,7 +57,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         ICompositeLoader<UserContext> contextLoader,
         ICompositeLoader<IReadOnlyCollection<OrderModel>> ordersLoader,
         IKeyedLoader<string, long, IReadOnlyCollection<TradeModel>> tradesLoader,
-        UserStream userStream,
+        IUserStream userStream,
         ISerializer<ReadOnlyMemory<byte>> orderUpdateEventSerializer,
         IStatusReporter reporter,
         IStatusMonitor monitor,

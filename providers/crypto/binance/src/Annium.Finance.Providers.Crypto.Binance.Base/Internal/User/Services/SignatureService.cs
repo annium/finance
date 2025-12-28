@@ -3,11 +3,12 @@ using System.Security.Cryptography;
 using System.Text;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
+using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Security;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.User.Services;
 
-public sealed class SignatureService
+internal class SignatureService : ISignatureService
 {
     public long ServerTime => _serverTimeSource.ServerTime;
     private readonly SecureString _key;

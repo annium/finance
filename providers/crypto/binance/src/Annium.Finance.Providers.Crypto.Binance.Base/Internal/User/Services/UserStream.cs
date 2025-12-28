@@ -1,26 +1,28 @@
 using System;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Core.Shared.Status;
+using Annium.Finance.Providers.Crypto.Binance.Base.User;
+using Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
 using Annium.Logging;
 using Annium.Net.WebSockets;
 
-namespace Annium.Finance.Providers.Crypto.Binance.Base.User.Services;
+namespace Annium.Finance.Providers.Crypto.Binance.Base.Internal.User.Services;
 
-public sealed class UserStream : IDisposable, ILogSubject
+internal class UserStream : IUserStream, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action OnConnected = delegate { };
     public event Action OnDisconnected = delegate { };
     public event Action<ReadOnlyMemory<byte>> OnMessage = delegate { };
     private readonly UserConfigBase _config;
-    private readonly ListenKeyResolver _listenKeyResolver;
+    private readonly IListenKeyResolver _listenKeyResolver;
     private readonly IStatusReporter _statusReporter;
     private readonly ClientWebSocket _ws;
     private readonly DisposableBox _disposable;
 
     public UserStream(
         UserConfigBase config,
-        ListenKeyResolver listenKeyResolver,
+        IListenKeyResolver listenKeyResolver,
         IStatusReporter statusReporter,
         ILogger logger
     )

@@ -5,14 +5,14 @@ namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 
 public static class HttpRequestSignatureExtensions
 {
-    public static IHttpRequest Sign(this IHttpRequest request, SignatureService ss) => request.Key(ss).Signature(ss);
+    public static IHttpRequest Sign(this IHttpRequest request, ISignatureService ss) => request.Key(ss).Signature(ss);
 
-    public static IHttpRequest Key(this IHttpRequest request, SignatureService ss) =>
+    public static IHttpRequest Key(this IHttpRequest request, ISignatureService ss) =>
         request.Header("x-mbx-apikey", ss.GetKey());
 
     public static IHttpRequest ReceiveWindow(this IHttpRequest request) => request.Param("recvWindow", 30_000);
 
-    private static IHttpRequest Signature(this IHttpRequest request, SignatureService ss) =>
+    private static IHttpRequest Signature(this IHttpRequest request, ISignatureService ss) =>
         request.Configure(req =>
         {
             // set timestamp
