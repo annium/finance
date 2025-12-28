@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Logging;
@@ -52,5 +53,5 @@ public class RateLimiterTests : ProvidersTestBase
         this.Trace("done");
     }
 
-    private IRateLimiter CreateLimiter() => Get<IRateLimiterFactory>().CreateRateLimiter(100, 10, 10);
+    private IRateLimiter CreateLimiter() => Provider.CreateRateLimiter(100, 10, 10);
 }

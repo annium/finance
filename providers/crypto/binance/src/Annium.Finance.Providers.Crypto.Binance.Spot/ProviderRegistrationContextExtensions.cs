@@ -2,6 +2,7 @@ using System;
 using Annium.Core.DependencyInjection;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Core;
+using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.TimeSync;
 using Annium.Finance.Providers.Crypto.Binance.Base;
@@ -13,8 +14,6 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Shared.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts;
 using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
-using Annium.Logging;
-using Annium.Net.Http;
 using static Annium.Finance.Providers.Crypto.Binance.Spot.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot;
@@ -95,8 +94,6 @@ public static class ProviderRegistrationContextExtensions
 
     private static IRateLimiter RateLimiterFactory(IServiceProvider sp)
     {
-        var factory = sp.Resolve<IRateLimiterFactory>();
-
-        return factory.CreateRateLimiter(6000, 300, 3_000);
+        return sp.CreateRateLimiter(6000, 300, 3_000);
     }
 }

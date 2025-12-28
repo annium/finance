@@ -3,11 +3,9 @@ using Annium.Finance.Providers.Abstractions.Connectors.Market;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Core.Internal.Market;
 using Annium.Finance.Providers.Core.Internal.Shared.Loaders;
-using Annium.Finance.Providers.Core.Internal.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Internal.Shared.Status;
 using Annium.Finance.Providers.Core.Internal.User;
 using Annium.Finance.Providers.Core.Shared.Loaders;
-using Annium.Finance.Providers.Core.Shared.RateLimits;
 using Annium.Finance.Providers.Core.Shared.Status;
 
 namespace Annium.Finance.Providers.Core;
@@ -28,9 +26,6 @@ public static class ServiceContainerExtensions
 
         // loaders
         container.Add<ILoaderFactory, LoaderFactory>().Scoped();
-
-        // services
-        container.Add<IRateLimiterFactory, RateLimiterFactory>().Singleton();
 
         var ctx = new ProviderRegistrationContext(container);
 
