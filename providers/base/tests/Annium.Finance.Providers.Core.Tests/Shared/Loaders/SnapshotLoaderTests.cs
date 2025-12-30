@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
@@ -53,5 +54,57 @@ public class SnapshotLoaderTests : TestBase
         await Expect.ToAsync(() => log.Has(1));
         log.At(0).Is(10);
         _statuses.IsEqual(new[] { Connecting, Connected });
+    }
+
+    [Fact]
+    public async Task StopsDuringFetch_CancelsProcessing()
+    {
+        var cfg = new SnapshotLoaderConfig(1, 2, 5);
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<MarketResult<int>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var log = Get<TestLog<int>>();
+        var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                started.TrySetResult();
+#pragma warning disable VSTHRD003
+                return await gate.Task;
+#pragma warning restore VSTHRD003
+            }
+        );
+        loader.OnData += log.Add;
+
+        loader.Start(true);
+
+        await started.Task;
+        loader.Stop();
+        gate.TrySetResult(MarketResult.Ok(1));
+
+        await Task.Delay(30, CancellationToken.None);
+
+        log.Count.Is(0);
+
+        await loader.DisposeAsync();
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
+        _statuses.ToArray().IsEqual(new[] { Connecting, Disconnected });
+    }
+
+    [Fact]
+    public async Task StartsWithoutStatusReporting()
+    {
+        var cfg = new SnapshotLoaderConfig(1, 2, 5);
+        var log = Get<TestLog<int>>();
+        var loader = Provider.CreateSnapshotLoader(cfg, _ => Task.FromResult<IBaseResult<int>>(MarketResult.Ok(7)));
+        loader.OnData += log.Add;
+
+        loader.Start(false);
+
+        await Expect.ToAsync(() => log.Has(1));
+        log.At(0).Is(7);
+
+        await loader.DisposeAsync();
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
+        _statuses.ToArray().IsEqual(new[] { Connected, Disconnected });
     }
 }

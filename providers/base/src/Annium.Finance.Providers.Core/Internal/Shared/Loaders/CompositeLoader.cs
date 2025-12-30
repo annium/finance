@@ -136,9 +136,6 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
 
     public void Request()
     {
-        if (_debounceTimer is null)
-            throw new InvalidOperationException("Debounce timer was not created (infinite period specified)");
-
         this.Trace("start");
 
         lock (_locker)

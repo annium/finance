@@ -21,7 +21,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> _getLoad;
     private readonly Func<TKey, TContext, TData, TContext> _getContext;
     private readonly ConcurrentDictionary<TKey, KeyedLoaderEntry<TKey, TContext, TData>> _entries = new();
-    private State _state;
+    private bool _isDisposed;
 
     public KeyedLoader(
         IServiceProvider sp,
@@ -44,18 +44,18 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     {
         this.Trace("start");
 
-        if (_state == State.Disposed)
+        if (_isDisposed)
         {
             this.Trace("skip, already disposed");
             return;
         }
 
-        _state = State.Disposed;
+        _isDisposed = true;
 
         foreach (var entry in _entries)
         {
             this.Trace("disconnect {key} entry", entry.Key);
-            entry.Value.Loader.Dispose();
+            entry.Value.Dispose();
         }
 
         this.Trace("clear entries");
@@ -64,52 +64,10 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         this.Trace("done");
     }
 
-    public void Start()
-    {
-        this.Trace("start");
-
-        if (_state != State.Inactive && _state != State.Stopped)
-        {
-            this.Trace("can't start from state {key}", _state);
-            return;
-        }
-
-        _state = State.Active;
-
-        foreach (var entry in _entries)
-        {
-            this.Trace("start {key} entry", entry.Key);
-            entry.Value.Loader.Start(false);
-        }
-
-        this.Trace("done");
-    }
-
-    public void Stop()
-    {
-        this.Trace("start");
-
-        if (_state != State.Active)
-        {
-            this.Trace("can't stop from state {key}", _state);
-            return;
-        }
-
-        _state = State.Stopped;
-
-        foreach (var entry in _entries)
-        {
-            this.Trace("stop {key} entry", entry.Key);
-            entry.Value.Loader.Stop();
-        }
-
-        this.Trace("done");
-    }
-
     public void Request(TKey key)
     {
         this.Trace("request {key} load", key);
-        _entries.GetOrAdd(key, CreateLoader).Loader.Request();
+        _entries.GetOrAdd(key, CreateLoader).Request();
     }
 
     private KeyedLoaderEntry<TKey, TContext, TData> CreateLoader(TKey key)
@@ -123,8 +81,7 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
             _sp.Resolve<IStatusReporter>(),
             Logger
         );
-        var loader = entry.Loader;
-        loader.OnData += data =>
+        entry.OnData += data =>
         {
             var context = _getContext(entry.Key, entry.Context, data);
             OnData(entry.Key, entry.Context, data);
@@ -132,18 +89,10 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
         };
 
         this.Trace("start {key} loader", key);
-        loader.Start(false);
+        entry.Start();
 
         this.Trace("done {key} entry", key);
 
         return entry;
-    }
-
-    private enum State
-    {
-        Inactive,
-        Active,
-        Stopped,
-        Disposed,
     }
 }

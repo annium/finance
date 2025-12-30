@@ -9,12 +9,14 @@ using Annium.Logging;
 
 namespace Annium.Finance.Providers.Core.Internal.Shared.Loaders;
 
-internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
+internal sealed class KeyedLoaderEntry<TKey, TContext, TData> : IDisposable
     where TKey : notnull
 {
     public TKey Key { get; }
     public TContext Context { get; private set; }
-    public CompositeLoader<TData> Loader { get; }
+    public event Action<TData> OnData = delegate { };
+
+    private readonly ICompositeLoader<TData> _loader;
     private readonly Func<TKey, TContext, CancellationToken, Task<IBaseResult<TData?>>> _getLoad;
 
     public KeyedLoaderEntry(
@@ -36,7 +38,24 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
             ConnectorStatus.Connected,
             logger
         );
-        Loader = new CompositeLoader<TData>(snapshotLoader, config.Interval, config.Debounce, logger);
+        _loader = new CompositeLoader<TData>(snapshotLoader, config.Interval, config.Debounce, logger);
+        _loader.OnData += HandleData;
+    }
+
+    public void Dispose()
+    {
+        _loader.OnData -= HandleData;
+        _loader.Dispose();
+    }
+
+    public void Start()
+    {
+        _loader.Start(false);
+    }
+
+    public void Request()
+    {
+        _loader.Request();
     }
 
     public void UpdateContext(TContext context)
@@ -48,4 +67,6 @@ internal sealed class KeyedLoaderEntry<TKey, TContext, TData>
     {
         return _getLoad(Key, Context, ct);
     }
+
+    private void HandleData(TData data) => OnData(data);
 }

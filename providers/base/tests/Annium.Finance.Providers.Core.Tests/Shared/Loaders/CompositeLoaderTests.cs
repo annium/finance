@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
+using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.Loaders;
 using Annium.Finance.Providers.Core.Shared.Status;
@@ -69,5 +70,60 @@ public class CompositeLoaderTests : TestBase
         log.At(0).Is(3);
         this.Trace<string>("statuses: {statuses}", statuses.Select(x => x.ToString()).Join(", "));
         statuses.ToArray().IsEqual(new[] { Connecting, Connected });
+    }
+
+    [Fact]
+    public async Task RequestIsIgnoredWhenInactive()
+    {
+        var cfg = new CompositeLoaderConfig(1, 1, 2, 50, 10);
+        var attempts = 0;
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                attempts++;
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(attempts));
+            }
+        );
+
+        loader.Request();
+
+        await Task.Delay(30, CancellationToken.None);
+        attempts.Is(0);
+
+        await loader.DisposeAsync();
+        _statuses.IsEmpty.IsTrue();
+    }
+
+    [Fact]
+    public async Task StopPreventsFurtherRequests()
+    {
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 0);
+        var attempts = 0;
+        var log = Get<TestLog<int>>();
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                attempts++;
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(attempts));
+            }
+        );
+        loader.OnData += log.Add;
+
+        loader.Start(true);
+        await Expect.ToAsync(() => log.Has(1));
+        attempts.Is(1);
+
+        loader.Stop();
+        var attemptsAfterStop = attempts;
+
+        loader.Request();
+        await Task.Delay(50, CancellationToken.None);
+        attempts.Is(attemptsAfterStop);
+
+        await loader.DisposeAsync();
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
+        _statuses.ToArray().IsEqual(new[] { Connecting, Connected, Disconnected });
     }
 }
