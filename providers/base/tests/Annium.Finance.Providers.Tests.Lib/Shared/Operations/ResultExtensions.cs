@@ -1,6 +1,6 @@
 using Annium.Data.Operations;
 
-namespace Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
+namespace Annium.Finance.Providers.Tests.Lib.Shared.Operations;
 
 public static class ResultExtensions
 {
