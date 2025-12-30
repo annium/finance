@@ -22,3 +22,20 @@ public interface IUserConnector : IConnectorBase
     Task<UserResult> CancelOrderAsync(ICancelOrderRequest request);
     Task<UserResult> CancelAllOrdersAsync(string symbol);
 }
+
+public interface IUserConnectorNew : IConnectorBase
+{
+    IObservable<AssetModel> Assets { get; }
+    IObservable<UserResult<PositionModel>> Positions { get; }
+    IObservable<UserResult<OrderModel>> Orders { get; }
+    IObservable<TradeModel> Trades { get; }
+    event Func<UserSettings, IUserProvider, Task> OnSync;
+    void Sync();
+    // leverage update is returned as UserResult<PositionModel> events
+    void SetLeverage(PositionModel position, decimal leverage);
+    // order updates are returned as UserResult<OrderModel> events
+    void InitOrder(IInitOrderRequest request);
+    void ModifyOrder(IModifyOrderRequest request);
+    void CancelOrder(ICancelOrderRequest request);
+    void CancelAllOrders(string symbol);
+}
