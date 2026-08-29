@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Tests.Lib;
@@ -14,8 +15,17 @@ public class StatusMonitorTests : ProvidersTestBase
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
     public StatusMonitorTests(ITestOutputHelper outputHelper)
-        : base(outputHelper)
+        : base(outputHelper) { }
+
+    /// <summary>
+    /// The provider is built by the base class during initialization, so anything resolved from it has to
+    /// wait for that - a constructor runs too early.
+    /// </summary>
+    /// <returns>A task representing the asynchronous initialization.</returns>
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         var monitor = Get<IStatusMonitor>();
         monitor.OnStatusChanged += _statuses.Enqueue;
     }

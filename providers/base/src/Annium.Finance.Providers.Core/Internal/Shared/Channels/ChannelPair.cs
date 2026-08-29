@@ -30,5 +30,5 @@ internal class ChannelPair<T>
 
     public void Write(T value) => _sourceWriter.Write(value);
 
-    public IDisposable Connect() => _sourceReader.Pipe(_targetWriter, _logger);
+    public IAsyncDisposable Connect() => _sourceReader.Pipe(_targetWriter, _logger);
 }

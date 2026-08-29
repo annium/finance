@@ -29,6 +29,16 @@ public class CompositeLoaderTests : TestBase
             container.AddFinanceProviders();
         });
         this.RegisterTestLogs();
+    }
+
+    /// <summary>
+    /// The provider is built by the base class during initialization, so anything resolved from it has to
+    /// wait for that - a constructor runs too early.
+    /// </summary>
+    /// <returns>A task representing the asynchronous initialization.</returns>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
 
         var monitor = Get<IStatusMonitor>();
         monitor.OnStatusChanged += _statuses.Enqueue;

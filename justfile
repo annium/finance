@@ -50,7 +50,7 @@ build:
 
 test:
     @echo "=== $0 ==="
-    dotnet test -c Release --no-build --nologo --logger "trx;LogFilePrefix=test-results.trx"
+    dotnet test -c Release --no-build --report-xunit-trx
 
 pack:
     #!/usr/bin/env bash
@@ -101,6 +101,7 @@ ci-merge-request-short:
     just ensure-no-changes
     just clean
     just build
+    just docs-lint
 
 ci-merge-request-full:
     #!/usr/bin/env bash
@@ -111,6 +112,7 @@ ci-merge-request-full:
     just ensure-no-changes
     just clean
     just build
+    just docs-lint
     just test
 
 ci-release apiKey repository githubToken:

@@ -36,7 +36,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelPair<TradeModel> _trades;
     private readonly IExecutor _executor;
     private readonly IStatusReporter _reporter;
-    private DisposableBox _sourceSubscriptions;
+    private AsyncDisposableBox _sourceSubscriptions;
 
     protected UserConnectorBase(
         UserSettings settings,
@@ -90,7 +90,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         // source subscriptions
-        Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
+        Disposable += _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
     }
 
     public async ValueTask DisposeAsync()
@@ -135,7 +135,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         var scheduled = _executor.Schedule(async () =>
         {
             this.Trace<string>("{id} unsubscribe readers", Id);
-            UnsubscribeReaders();
+            await UnsubscribeReadersAsync();
 
             this.Trace<string>("{id} sync start", Id);
             await OnSync(_settings, Provider);
@@ -174,8 +174,8 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         _sourceSubscriptions += _trades.Connect();
     }
 
-    private void UnsubscribeReaders()
+    private async ValueTask UnsubscribeReadersAsync()
     {
-        _sourceSubscriptions.DisposeAndReset();
+        await _sourceSubscriptions.DisposeAndResetAsync();
     }
 }

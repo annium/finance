@@ -34,18 +34,23 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
     private AssetModel _balance = null!;
     private PositionModel _position = null!;
-    private AsyncDisposableBox _disposable;
+    private AsyncDisposableBox _disposable = null!;
 
     protected UserConnectorTestBase(UserSettings settings, string symbol, ITestOutputHelper output)
         : base(output)
     {
-        _disposable = Disposable.AsyncBox(Logger);
         _settings = settings;
         Symbol = symbol;
     }
 
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        // the base builds the provider; everything below resolves from it - the logger included - so it
+        // has to run first. A constructor is too early for anything that comes out of the container
+        await base.InitializeAsync();
+
+        _disposable = Disposable.AsyncBox(Logger);
+
         this.Trace("start");
 
         // arrange - market
@@ -119,7 +124,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -324,7 +329,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         await WaitForMessages();
     }
 
-    protected Task AwaitForInitialPositionsAndLeverages()
+    protected ValueTask AwaitForInitialPositionsAndLeverages()
     {
         this.Trace("await for positions");
         return Expect.ToAsync(() => _positions.IsNotEmpty());
@@ -360,7 +365,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return position;
     }
 
-    protected Task EnsureBalanceIsLocked()
+    protected ValueTask EnsureBalanceIsLocked()
     {
         var originalBalance = _balance;
 
@@ -377,7 +382,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    protected Task EnsureBalanceIsReleased()
+    protected ValueTask EnsureBalanceIsReleased()
     {
         var originalBalance = _balance;
 
@@ -394,7 +399,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    protected Task EnsureBalanceIsIncreased()
+    protected ValueTask EnsureBalanceIsIncreased()
     {
         var originalBalance = _balance;
 
@@ -410,7 +415,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    protected Task EnsureBalanceIsDecreased()
+    protected ValueTask EnsureBalanceIsDecreased()
     {
         var originalBalance = _balance;
 
@@ -426,7 +431,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    protected Task EnsurePositionIsIncreased()
+    protected ValueTask EnsurePositionIsIncreased()
     {
         var originalPosition = _position;
 
@@ -442,7 +447,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    protected Task EnsurePositionIsDecreased()
+    protected ValueTask EnsurePositionIsDecreased()
     {
         var originalPosition = _position;
 
@@ -458,7 +463,7 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
-    private Task EnsureOrderReported(OrderModel order, OrderStatus status)
+    private ValueTask EnsureOrderReported(OrderModel order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
         return Expect.ToAsync(() =>

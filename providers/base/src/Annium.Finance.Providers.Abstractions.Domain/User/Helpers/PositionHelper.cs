@@ -16,7 +16,7 @@ public static class PositionHelper
         decimal closedQty
     )
     {
-        var result = Result.New(Blank);
+        var result = Result.Create(Blank);
         CheckNonNegative(subject, totalQty, result);
         CheckNonNegative(subject, openingQty, result);
         CheckNonNegative(subject, openedQty, result);
@@ -63,11 +63,11 @@ public static class PositionHelper
             state |= Closed;
 
         if (state == default)
-            return Result.New(Canceled);
+            return Result.Create(Canceled);
 
         var resultState = state == (Opened | Closed) && openedQty == closedQty ? Filled : state;
 
-        return Result.New(resultState);
+        return Result.Create(resultState);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,7 +79,7 @@ public static class PositionHelper
         decimal executedPrice
     )
     {
-        var result = Result.New(0m);
+        var result = Result.Create(0m);
         CheckNonNegative(subject, currentQty, result);
         CheckNonNegative(subject, currentPrice, result);
         CheckNonNegative(subject, executedQty, result);
@@ -94,7 +94,7 @@ public static class PositionHelper
 
         var price = (currentQty * currentPrice + executedQty * executedPrice) / totalQty;
 
-        return Result.New(price);
+        return Result.Create(price);
     }
 
     private static void CheckNonNegative<TS, TR>(

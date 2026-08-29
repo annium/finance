@@ -185,7 +185,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 {
                     this.Trace("write error");
                     if (!result.Message.IsNullOrWhiteSpace())
-                        this.Error(result.Message);
+                        this.Error<string>("snapshot load failed: {message}", result.Message);
                 }
             }
         }

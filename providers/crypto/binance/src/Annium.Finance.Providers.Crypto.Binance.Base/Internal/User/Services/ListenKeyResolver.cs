@@ -48,7 +48,10 @@ internal class ListenKeyResolver : IListenKeyResolver, ILogSubject
         _statusReporter.Connecting();
 
         _disposable = Disposable.AsyncBox(logger);
-        _disposable += _timer = Timers.Async(GetListenKeyAsync, 0, _config.ListenKey.FetchInterval, logger);
+        // a timer is both IDisposable and IAsyncDisposable now, so the box's operators are ambiguous
+        // without saying which teardown is wanted - the async one, since the box is async
+        _timer = Timers.Async(GetListenKeyAsync, 0, _config.ListenKey.FetchInterval, logger);
+        _disposable += (IAsyncDisposable)_timer;
     }
 
     public async ValueTask DisposeAsync()

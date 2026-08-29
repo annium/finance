@@ -36,7 +36,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     private readonly ChannelPair<InstrumentTicker> _tickers;
     private readonly IExecutor _executor;
     private readonly IStatusReporter _reporter;
-    private DisposableBox _sourceSubscriptions;
+    private AsyncDisposableBox _sourceSubscriptions;
 
     protected MarketConnectorBase(
         MarketSettings settings,
@@ -75,7 +75,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         // source subscriptions
-        Disposable += _sourceSubscriptions = Annium.Disposable.Box(logger);
+        Disposable += _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
     }
 
     public async ValueTask DisposeAsync()
@@ -114,7 +114,7 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         var scheduled = _executor.Schedule(async () =>
         {
             this.Trace<string>("{id} unsubscribe readers", Id);
-            UnsubscribeReaders();
+            await UnsubscribeReadersAsync();
 
             this.Trace<string>("{id} sync start", Id);
             await OnSync(_settings, Resources, Instruments);
@@ -164,8 +164,8 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         _sourceSubscriptions += _tickers.Connect();
     }
 
-    private void UnsubscribeReaders()
+    private async ValueTask UnsubscribeReadersAsync()
     {
-        _sourceSubscriptions.DisposeAndReset();
+        await _sourceSubscriptions.DisposeAndResetAsync();
     }
 }

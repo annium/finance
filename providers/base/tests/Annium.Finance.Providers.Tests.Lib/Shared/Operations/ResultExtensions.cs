@@ -6,6 +6,6 @@ public static class ResultExtensions
 {
     public static IResult<T> AsResult<T>(this T value)
     {
-        return Result.New(value);
+        return Result.Create(value);
     }
 }

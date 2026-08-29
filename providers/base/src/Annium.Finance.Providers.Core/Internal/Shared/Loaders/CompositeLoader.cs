@@ -212,6 +212,8 @@ file class NoopSequentialTimer : ISequentialTimer
 
     public void Dispose() { }
 
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
     public bool Change(int dueTime, int period)
     {
         return true;
@@ -231,7 +233,11 @@ file class NoopDebounceTimer : IDebounceTimer
 
     public void Dispose() { }
 
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
     public void Change(int period) { }
+
+    public void Change(TimeSpan period) { }
 
     public void Request() { }
 }
