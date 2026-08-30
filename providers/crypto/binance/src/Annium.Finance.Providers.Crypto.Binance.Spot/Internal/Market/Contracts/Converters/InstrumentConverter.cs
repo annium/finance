@@ -8,11 +8,23 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts.Converters;
 
+/// <summary>
+/// Deserializes a Binance exchange info <c>symbols</c> entry into an <see cref="InstrumentModel"/>, keeping only
+/// symbols that are actively tradable on spot.
+/// </summary>
 internal class InstrumentConverter : JsonConverter<InstrumentModel>
 {
+    /// <summary>The Binance <c>status</c> value a symbol must have to be considered tradable.</summary>
     private const string RequiredStatus = "TRADING";
+
+    /// <summary>The Binance trading permission a symbol must carry, either directly or via a permission set, to be considered a spot instrument.</summary>
     private const string RequiredPermission = "SPOT";
 
+    /// <summary>Reads a Binance <c>symbols</c> entry and converts it into an <see cref="InstrumentModel"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the symbol object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The converted instrument, or null if the symbol is not tradable on spot or is missing required fields.</returns>
     public override InstrumentModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -117,6 +129,10 @@ internal class InstrumentConverter : JsonConverter<InstrumentModel>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; instruments are only ever read from Binance, never written.</summary>
+    /// <param name="writer">The writer to serialize to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, InstrumentModel value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

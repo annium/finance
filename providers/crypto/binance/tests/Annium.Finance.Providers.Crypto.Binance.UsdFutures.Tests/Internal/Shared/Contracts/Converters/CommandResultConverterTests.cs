@@ -8,16 +8,32 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Shared.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>CommandResultConverter</c> reads the <c>{id, result}</c> envelope Binance wraps
+/// WebSocket API command responses in, pulling out just the correlation id, and that a payload without
+/// an <c>id</c> field deserializes to null instead of throwing.
+/// </summary>
 public class CommandResultConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandResultConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public CommandResultConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A command-result envelope with a null result is parsed for its correlation id.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -32,6 +48,9 @@ public class CommandResultConverterTests : ProvidersTestBase
         deserialized.Id.Is(1);
     }
 
+    /// <summary>
+    /// A payload without an <c>id</c> field deserializes to null instead of throwing.
+    /// </summary>
     [Fact]
     public void InvalidDataReturnsEmpty()
     {

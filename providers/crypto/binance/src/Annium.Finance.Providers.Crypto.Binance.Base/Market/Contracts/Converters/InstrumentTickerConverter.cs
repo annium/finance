@@ -6,8 +6,16 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Converters;
 
+/// <summary>
+/// Converts a Binance book ticker payload (<c>s</c>/<c>b</c>/<c>a</c> for symbol/bid price/ask price) into an <see cref="InstrumentTicker"/>.
+/// </summary>
 public class InstrumentTickerConverter : JsonConverter<InstrumentTicker>
 {
+    /// <summary>Reads a Binance book ticker object into an <see cref="InstrumentTicker"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the ticker object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The parsed ticker, or <c>null</c> if the symbol was missing or both prices were zero.</returns>
     public override InstrumentTicker? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -60,6 +68,10 @@ public class InstrumentTickerConverter : JsonConverter<InstrumentTicker>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; tickers are only ever read from Binance responses, never written.</summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The ticker to write.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, InstrumentTicker value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

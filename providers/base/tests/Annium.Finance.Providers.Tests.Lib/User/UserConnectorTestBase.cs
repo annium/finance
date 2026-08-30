@@ -20,22 +20,61 @@ using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestB
 
 namespace Annium.Finance.Providers.Tests.Lib.User;
 
+/// <summary>
+/// Base for tests that drive a provider's live user connector against a real exchange account. This is not
+/// a sandbox: derived tests place, fill, cancel and modify real orders on the account identified by the
+/// <see cref="UserSettings"/> passed to the constructor, and this base actively manages that account's state
+/// around each test - on setup it cancels every open order on <see cref="Symbol"/> and closes any active
+/// position on it, and on teardown it cancels open orders again and market-sells off any remaining position,
+/// so tests start and leave the account flat. Gate real runs behind <see cref="Exchange.IsEnabled"/>.
+/// </summary>
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
+    /// <summary>Gets the instrument metadata resolved for <see cref="Symbol"/> from the market connector.</summary>
     protected InstrumentModel Instrument { get; private set; } = null!;
+
+    /// <summary>Gets the symbol the derived test drives the connector scenario for.</summary>
     protected string Symbol { get; }
+
+    /// <summary>Gets the latest ticker resolved for <see cref="Symbol"/> from the market connector.</summary>
     protected InstrumentTicker Ticker { get; private set; } = null!;
+
+    /// <summary>Gets the live user connector under test.</summary>
     private IUserConnector Connector { get; set; } = null!;
+
+    /// <summary>The account credentials/environment the connector authenticates with.</summary>
     private readonly UserSettings _settings;
+
+    /// <summary>Every asset balance update the connector has reported so far.</summary>
     private readonly ConcurrentQueue<AssetModel> _assets = new();
+
+    /// <summary>Every position update the connector has reported so far.</summary>
     private readonly ConcurrentQueue<PositionModel> _positions = new();
+
+    /// <summary>Every order update the connector has reported so far.</summary>
     private readonly ConcurrentQueue<OrderModel> _orders = new();
+
+    /// <summary>Every trade the connector has reported so far.</summary>
     private readonly ConcurrentQueue<TradeModel> _trades = new();
+
+    /// <summary>Every error the connector has raised so far.</summary>
     private readonly ConcurrentQueue<ConnectorError> _errors = new();
+
+    /// <summary>The balance of the instrument's currency at the last <see cref="Snapshot"/>.</summary>
     private AssetModel _balance = null!;
+
+    /// <summary>The position on <see cref="Symbol"/> at the last <see cref="Snapshot"/>.</summary>
     private PositionModel _position = null!;
+
+    /// <summary>Collects the connector and its subscriptions so they can be disposed together.</summary>
     private AsyncDisposableBox _disposable = null!;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserConnectorTestBase"/> class.
+    /// </summary>
+    /// <param name="settings">The account credentials/environment the connector authenticates with.</param>
+    /// <param name="symbol">The symbol to drive the connector scenario for.</param>
+    /// <param name="output">The xUnit output helper to route trace logging to.</param>
     protected UserConnectorTestBase(UserSettings settings, string symbol, ITestOutputHelper output)
         : base(output)
     {
@@ -43,6 +82,13 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         Symbol = symbol;
     }
 
+    /// <summary>
+    /// Connects a market connector to resolve <see cref="Instrument"/> and <see cref="Ticker"/>, then connects
+    /// the user connector under test, subscribes to its data and errors, cancels any open orders on
+    /// <see cref="Symbol"/>, waits for the initial balance and position snapshot to arrive, and closes any
+    /// active position - so every test starts from a flat account with no open orders.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public override async ValueTask InitializeAsync()
     {
         // the base builds the provider; everything below resolves from it - the logger included - so it
@@ -124,6 +170,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Cancels any open orders on <see cref="Symbol"/>, market-sells off any remaining position so the
+    /// account is left flat, then disposes the connector and its subscriptions.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
@@ -154,11 +205,18 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Asserts that the connector has not raised any errors so far.
+    /// </summary>
     protected void EnsureNoErrors()
     {
         _errors.IsEmpty();
     }
 
+    /// <summary>
+    /// Records the current balance and position so a later assertion (e.g. <see cref="EnsureBalanceIsIncreased"/>)
+    /// can compare against them.
+    /// </summary>
     protected void Snapshot()
     {
         this.Trace("start");
@@ -169,6 +227,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Market-closes every active position reported so far by placing an opposite-side order for its amount
+    /// on the real account. A no-op if there are no active positions.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task CloseActivePositions()
     {
         this.Trace("start");
@@ -205,6 +268,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("close active positions - done");
     }
 
+    /// <summary>
+    /// Sends an order-init request expected to be rejected by the real exchange, and asserts that it fails
+    /// without placing an order.
+    /// </summary>
+    /// <param name="request">The order-init request expected to be rejected.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task InitInvalidOrder(IInitOrderRequest request)
     {
         this.Trace("start");
@@ -216,6 +285,13 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Places a real order on the account via the given order-init request, and asserts it comes back
+    /// matching the request and is reported with the expected status.
+    /// </summary>
+    /// <param name="request">The order-init request to place.</param>
+    /// <param name="status">The status the order is expected to be reported with.</param>
+    /// <returns>The placed order as reported by the connector.</returns>
     protected async Task<OrderModel> InitValidOrder(IInitOrderRequest request, OrderStatus status)
     {
         this.Trace("start");
@@ -240,6 +316,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return order;
     }
 
+    /// <summary>
+    /// Sends a cancel request for the given real order expected to be rejected by the exchange, and asserts
+    /// that it fails without canceling the order.
+    /// </summary>
+    /// <param name="order">The order the cancellation is expected to be rejected for.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task CancelInvalidOrder(OrderModel order)
     {
         this.Trace("start");
@@ -252,6 +334,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Cancels the given real order on the account, and asserts it comes back reported as canceled.
+    /// </summary>
+    /// <param name="order">The order to cancel.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task CancelValidOrder(OrderModel order)
     {
         this.Trace("start");
@@ -274,6 +361,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends a modify request expected to be rejected by the real exchange, and asserts that it fails
+    /// without modifying the order.
+    /// </summary>
+    /// <param name="request">The modify request expected to be rejected.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task ModifyInvalidOrder(IModifyOrderRequest request)
     {
         this.Trace("start");
@@ -285,6 +378,13 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Modifies a real order on the account via the given modify request, and asserts it comes back matching
+    /// the request and is reported with the expected status.
+    /// </summary>
+    /// <param name="request">The modify request to send.</param>
+    /// <param name="status">The status the order is expected to be reported with.</param>
+    /// <returns>The modified order as reported by the connector.</returns>
     protected async Task<OrderModel> ModifyValidOrder(IModifyOrderRequest request, OrderStatus status)
     {
         this.Trace("start");
@@ -309,6 +409,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return order;
     }
 
+    /// <summary>
+    /// Cancels every open order on <see cref="Symbol"/> on the real account.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task CancelOpenOrders()
     {
         this.Trace("cancel all orders - start");
@@ -321,6 +425,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("cancel all orders - done");
     }
 
+    /// <summary>
+    /// Waits until the connector has reported at least one asset balance, plus a fixed grace period for
+    /// further messages to settle.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task AwaitForInitialBalances()
     {
         // await until balances arrive and a second more before starting test
@@ -329,12 +438,20 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         await WaitForMessages();
     }
 
+    /// <summary>
+    /// Waits until the connector has reported at least one position update.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask AwaitForInitialPositionsAndLeverages()
     {
         this.Trace("await for positions");
         return Expect.ToAsync(() => _positions.IsNotEmpty());
     }
 
+    /// <summary>
+    /// Gets the most recently reported position amount on <see cref="Symbol"/>, rounded to the instrument's lot size.
+    /// </summary>
+    /// <returns>The position amount, rounded to the instrument's lot size.</returns>
     protected decimal GetPositionAmount()
     {
         this.Trace<string>("get size of {symbol} position", Symbol);
@@ -343,10 +460,19 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return Instrument.ToLotSize(amount);
     }
 
+    /// <summary>Generates a fresh, random client order id for a new request.</summary>
+    /// <returns>A new random client order id.</returns>
     protected string ClientOrderId() => Guid.NewGuid().ToString();
 
+    /// <summary>Gets the orientation range used for requests in this scenario.</summary>
+    /// <returns>Always <see cref="OrientationRange.Both"/>.</returns>
     protected OrientationRange Range() => OrientationRange.Both;
 
+    /// <summary>
+    /// Gets the most recently reported balance for the given asset.
+    /// </summary>
+    /// <param name="resource">The asset code to get the balance of.</param>
+    /// <returns>The most recently reported balance for the asset.</returns>
     protected AssetModel GetBalance(string resource)
     {
         this.Trace<string>("get {resource} last balance", resource);
@@ -356,6 +482,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return asset;
     }
 
+    /// <summary>
+    /// Gets the most recently reported both-orientation position on <see cref="Symbol"/>.
+    /// </summary>
+    /// <returns>The most recently reported position on <see cref="Symbol"/>.</returns>
     private PositionModel GetPosition()
     {
         this.Trace("get {instrument} position", Instrument);
@@ -365,6 +495,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         return position;
     }
 
+    /// <summary>
+    /// Asserts that the current currency balance has more locked and less free than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsureBalanceIsLocked()
     {
         var originalBalance = _balance;
@@ -382,6 +516,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Asserts that the current currency balance has more free and less locked than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsureBalanceIsReleased()
     {
         var originalBalance = _balance;
@@ -399,6 +537,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Asserts that the current currency free balance is greater than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsureBalanceIsIncreased()
     {
         var originalBalance = _balance;
@@ -415,6 +557,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Asserts that the current currency free balance is smaller than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsureBalanceIsDecreased()
     {
         var originalBalance = _balance;
@@ -431,6 +577,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Asserts that the current position amount on <see cref="Symbol"/> is greater than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsurePositionIsIncreased()
     {
         var originalPosition = _position;
@@ -447,6 +597,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Asserts that the current position amount on <see cref="Symbol"/> is smaller than at the last <see cref="Snapshot"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected ValueTask EnsurePositionIsDecreased()
     {
         var originalPosition = _position;
@@ -463,6 +617,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Waits until the connector reports an update for the given order matching it and carrying the expected status.
+    /// </summary>
+    /// <param name="order">The order expected to be reported.</param>
+    /// <param name="status">The status the order is expected to be reported with.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private ValueTask EnsureOrderReported(OrderModel order, OrderStatus status)
     {
         this.Trace("ensure order {order} is reported and has status {status}", order.Id, status);
@@ -474,6 +634,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Pauses for a fixed grace period to let in-flight connector messages settle.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private Task WaitForMessages()
     {
         this.Trace("await for messages");

@@ -8,11 +8,24 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.Shared.RateLimits;
 
+/// <summary>
+/// Pins the water-mark gating behavior of <see cref="IRateLimiter"/>: that <see cref="IRateLimiter.CanExecute"/>
+/// tracks the reported used weight relative to the configured limit, and that weight reported above the water
+/// mark decays back down over time on its own.
+/// </summary>
 public class RateLimiterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RateLimiterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public RateLimiterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that <see cref="IRateLimiter.CanExecute"/> allows requests below the water mark and denies them at
+    /// or above it, tracking each new value reported via <see cref="IRateLimiter.UsedWeight"/>.
+    /// </summary>
     [Fact]
     public void CanExecute_WaterMarkLevels_Ok()
     {
@@ -38,6 +51,11 @@ public class RateLimiterTests : ProvidersTestBase
         limiter.CanExecute().IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that used weight reported above the water mark eventually decays back below it on its own,
+    /// without any further calls, letting <see cref="IRateLimiter.CanExecute"/> allow requests again.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task UsedWeight_AboveWaterMark_LowersPeriodicallyUntilBelow()
     {
@@ -53,5 +71,7 @@ public class RateLimiterTests : ProvidersTestBase
         this.Trace("done");
     }
 
+    /// <summary>Creates a rate limiter with a limit of 100 (80 water mark), decaying used weight by 10 every 10ms once above it.</summary>
+    /// <returns>The constructed rate limiter.</returns>
     private IRateLimiter CreateLimiter() => Provider.CreateRateLimiter(100, 10, 10);
 }

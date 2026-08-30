@@ -17,11 +17,26 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.User;
 
+/// <summary>
+/// Pins the sync lifecycle of <see cref="UserConnectorBase"/>: that a sync call runs the connector's own
+/// <see cref="UserConnectorBase.OnSync"/> handler, and that assets, positions, orders and trades written while
+/// resubscription is in flight are still delivered to subscribers in order.
+/// </summary>
 public class UserConnectorBaseTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserConnectorBaseTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public UserConnectorBaseTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that triggering a sync on a connector invokes <see cref="UserConnectorBase.OnSync"/> with the
+    /// settings and provider it was constructed with, and still delivers every asset, position, order and trade
+    /// emitted during the sync to subscribers, in order.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task Sync_Works()
     {
@@ -127,6 +142,13 @@ public class UserConnectorBaseTests : ProvidersTestBase
         VerifyLog("trades", tradesLog);
     }
 
+    /// <summary>
+    /// Builds a <see cref="FakeUserConnector"/> wired to the given provider and this test's status reporter and
+    /// monitor.
+    /// </summary>
+    /// <param name="settings">The user settings to construct the connector with.</param>
+    /// <param name="provider">The user provider backing the connector.</param>
+    /// <returns>The constructed connector.</returns>
     private FakeUserConnector CreateConnector(UserSettings settings, IUserProvider provider)
     {
         var reporter = Get<IStatusReporter>();
@@ -135,6 +157,13 @@ public class UserConnectorBaseTests : ProvidersTestBase
         return new FakeUserConnector(settings, provider, reporter, monitor, Logger);
     }
 
+    /// <summary>
+    /// Schedules a background task that feeds each item in <paramref name="data"/> into <paramref name="emit"/>
+    /// with a short delay between items, so items arrive while the connector's sync is still in flight.
+    /// </summary>
+    /// <typeparam name="T">The type of item emitted.</typeparam>
+    /// <param name="data">The items to emit, in order.</param>
+    /// <param name="emit">The callback that pushes an item into the connector under test.</param>
     private void Emit<T>(IReadOnlyList<T> data, Action<T> emit)
     {
         Task.Run(
@@ -152,6 +181,12 @@ public class UserConnectorBaseTests : ProvidersTestBase
             .GetAwaiter();
     }
 
+    /// <summary>
+    /// Asserts that the recorded values in <paramref name="log"/> form a contiguous increasing sequence, proving
+    /// none were dropped or reordered; logs the captured entries and rethrows on failure.
+    /// </summary>
+    /// <param name="type">The label identifying which log is being verified, used in diagnostics.</param>
+    /// <param name="log">The log of observed values to verify.</param>
     private void VerifyLog(string type, TestLog<int> log)
     {
         this.Trace<string>("verify {type} log", type);
@@ -170,8 +205,20 @@ public class UserConnectorBaseTests : ProvidersTestBase
         }
     }
 
+    /// <summary>
+    /// Exposes <see cref="UserConnectorBase"/>'s protected write operations as public methods, so the test can
+    /// drive them directly without a real user provider.
+    /// </summary>
     private class FakeUserConnector : UserConnectorBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeUserConnector"/> class.
+        /// </summary>
+        /// <param name="settings">The user settings to construct the connector with.</param>
+        /// <param name="provider">The user provider backing the connector.</param>
+        /// <param name="reporter">The status reporter to bind to.</param>
+        /// <param name="monitor">The status monitor to observe.</param>
+        /// <param name="logger">The logger to use.</param>
         public FakeUserConnector(
             UserSettings settings,
             IUserProvider provider,
@@ -181,44 +228,68 @@ public class UserConnectorBaseTests : ProvidersTestBase
         )
             : base(settings, provider, reporter, monitor, Annium.Disposable.AsyncBox(logger), logger) { }
 
+        /// <summary>Writes an asset upsert to the connector's output, exposing the protected <see cref="UserConnectorBase.Write(ChangeEvent{AssetModel})"/> call.</summary>
+        /// <param name="x">The asset to write.</param>
         public void Asset(AssetModel x)
         {
             Write(ChangeEvent.Set(x));
         }
 
+        /// <summary>Writes a position upsert to the connector's output, exposing the protected <see cref="UserConnectorBase.Write(ChangeEvent{PositionModel})"/> call.</summary>
+        /// <param name="x">The position to write.</param>
         public void Position(PositionModel x)
         {
             Write(ChangeEvent.Set(x));
         }
 
+        /// <summary>Writes an order upsert to the connector's output, exposing the protected <see cref="UserConnectorBase.Write(ChangeEvent{OrderModel})"/> call.</summary>
+        /// <param name="x">The order to write.</param>
         public void Order(OrderModel x)
         {
             Write(ChangeEvent.Set(x));
         }
 
+        /// <summary>Writes a trade to the connector's output, exposing the protected <see cref="UserConnectorBase.Write(TradeModel)"/> call.</summary>
+        /// <param name="x">The trade to write.</param>
         public void Trade(TradeModel x)
         {
             Write(x);
         }
     }
 
+    /// <summary>
+    /// Stands in for a real <see cref="IUserProvider"/>; unlike a real provider, every member throws because the
+    /// test never calls them - only <see cref="FakeUserConnector"/>'s exposed write operations are exercised.
+    /// </summary>
     private class FakeUserProvider : IUserProvider
     {
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <returns>Never returns.</returns>
         public Task<UserResult<UserContext?>> LoadContextAsync()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <returns>Never returns.</returns>
         public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <param name="symbol">Unused.</param>
+        /// <param name="since">Unused.</param>
+        /// <returns>Never returns.</returns>
         public Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(string symbol, long? since)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <param name="symbol">Unused.</param>
+        /// <param name="since">Unused.</param>
+        /// <returns>Never returns.</returns>
         public Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(string symbol, long? since)
         {
             throw new NotImplementedException();

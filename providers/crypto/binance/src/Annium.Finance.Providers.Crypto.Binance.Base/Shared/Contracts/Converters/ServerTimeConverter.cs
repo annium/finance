@@ -5,8 +5,16 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
 
+/// <summary>
+/// Converts Binance's <c>/time</c> endpoint response (<c>{"serverTime": ...}</c>) into a <see cref="ServerTime"/>.
+/// </summary>
 public class ServerTimeConverter : JsonConverter<ServerTime?>
 {
+    /// <summary>Reads a Binance server time object into a <see cref="ServerTime"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the server time object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The parsed server time, or <c>null</c> if <c>serverTime</c> was missing or not positive.</returns>
     public override ServerTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -44,6 +52,10 @@ public class ServerTimeConverter : JsonConverter<ServerTime?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; server time is only ever read from Binance responses, never written.</summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The server time to write.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, ServerTime? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

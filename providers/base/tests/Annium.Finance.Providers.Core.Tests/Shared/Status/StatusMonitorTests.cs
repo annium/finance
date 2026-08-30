@@ -10,10 +10,21 @@ using static Annium.Finance.Providers.Abstractions.Connectors.Shared.ConnectorSt
 
 namespace Annium.Finance.Providers.Core.Tests.Shared.Status;
 
+/// <summary>
+/// Pins how <see cref="IStatusMonitor"/> aggregates the statuses reported by one or more bound
+/// <see cref="IStatusReporter"/>s: a single reporter enforces bind/unbind ordering and rejects use while
+/// unbound, and with multiple reporters bound to distinct targets the monitor reports connected only once every
+/// target is connected, and connecting again as soon as any one drops.
+/// </summary>
 public class StatusMonitorTests : ProvidersTestBase
 {
+    /// <summary>Records every overall status transition reported by the monitor, in order.</summary>
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StatusMonitorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public StatusMonitorTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -30,6 +41,11 @@ public class StatusMonitorTests : ProvidersTestBase
         monitor.OnStatusChanged += _statuses.Enqueue;
     }
 
+    /// <summary>
+    /// Verifies that a reporter throws when used before <see cref="IStatusReporter.Bind{T}"/>, that binding a
+    /// second target while already bound throws, and that once bound and later unbound the reporter both stops
+    /// forwarding statuses and refuses another <see cref="IStatusReporter.Unbind"/>.
+    /// </summary>
     [Fact]
     public void SingleReporter()
     {
@@ -56,6 +72,11 @@ public class StatusMonitorTests : ProvidersTestBase
         Wrap.It(() => reporter.Disconnected()).Throws<InvalidOperationException>().Reports("not bound");
     }
 
+    /// <summary>
+    /// Verifies that with two reporters bound to distinct targets, the monitor's overall status is connected only
+    /// once both report connected, drops back to connecting the moment either target disconnects, and treats an
+    /// unbind the same as that target going away.
+    /// </summary>
     [Fact]
     public void MultipleReporters()
     {
@@ -92,6 +113,8 @@ public class StatusMonitorTests : ProvidersTestBase
     }
 }
 
+/// <summary>Stands in for one component bound to a status reporter, distinguished from <see cref="B"/> only by its type identity.</summary>
 file record A;
 
+/// <summary>Stands in for a second, independent component bound to its own status reporter, distinguished from <see cref="A"/> only by its type identity.</summary>
 file record B;

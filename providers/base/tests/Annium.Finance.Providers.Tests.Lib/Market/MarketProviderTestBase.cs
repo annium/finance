@@ -14,16 +14,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Lib.Market;
 
+/// <summary>
+/// Base for tests that resolve a provider's market data provider (request/response, not streaming) and
+/// check that it can load context and two days of one-minute candles for a fixed symbol. Read-only.
+/// </summary>
 public abstract class MarketProviderTestBase : ProvidersTestBase
 {
+    /// <summary>The symbol the derived test loads candles for.</summary>
     private readonly string _symbol;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MarketProviderTestBase"/> class.
+    /// </summary>
+    /// <param name="symbol">The symbol to load candles for.</param>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     protected MarketProviderTestBase(string symbol, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         _symbol = symbol;
     }
 
+    /// <summary>
+    /// Resolves the market provider for the given provider/environment, loads its context and asserts it is
+    /// populated, then loads the last two days of one-minute candles for the configured symbol and asserts
+    /// the expected count and that the first/last candles carry real OHLC data.
+    /// </summary>
+    /// <param name="providerKey">The provider and environment to resolve the market provider for.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task MarketProviderBaseAsync(ProviderKey providerKey)
     {
         this.Trace("start");

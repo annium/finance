@@ -5,10 +5,19 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tests.Market;
 
+/// <summary>
+/// Pins the rounding, clamping and validity rules <see cref="InstrumentExtensions"/> derives from an
+/// <see cref="IInstrument"/>'s lot size, tick size and quantity/notional bounds.
+/// </summary>
 public class InstrumentExtensionsTests
 {
+    /// <summary>An instrument with default tick and lot sizes, used by every test that doesn't need bespoke bounds.</summary>
     private readonly IInstrument _instrument = InstrumentHelper.DefaultInstrument;
 
+    /// <summary>
+    /// Verifies that <see cref="InstrumentExtensions.TickPrecision{TInstrument}"/> counts the decimal digits of the
+    /// tick size, independent of the price's own precision.
+    /// </summary>
     [Fact]
     public void TickPrecision()
     {
@@ -19,6 +28,10 @@ public class InstrumentExtensionsTests
         InstrumentHelper.CreateInstrument("x", "y", 1m, 0.01m).TickPrecision().Is(2);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="InstrumentExtensions.ToValidQty{TInstrument}"/> rounds a quantity to the lot size
+    /// and then clamps it to the instrument's minimum and maximum quantity.
+    /// </summary>
     [Fact]
     public void ToValidQty()
     {
@@ -28,6 +41,11 @@ public class InstrumentExtensionsTests
         _instrument.ToValidQty(105m).Is(_instrument.MaxQty);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="InstrumentExtensions.IsValidQtyPrice{TInstrument}"/> rejects a quantity or price
+    /// that isn't already aligned, and a notional value under the minimum sum, while accepting values that
+    /// satisfy every constraint at once.
+    /// </summary>
     [Fact]
     public void IsValidQtyPrice()
     {
@@ -42,6 +60,7 @@ public class InstrumentExtensionsTests
         _instrument.IsValidQtyPrice(2m, 0.5m).IsTrue();
     }
 
+    /// <summary>Verifies that <see cref="InstrumentExtensions.ToTickSizeDown{TInstrument}"/> always rounds a price down to the nearest tick.</summary>
     [Fact]
     public void ToTickSizeDown()
     {
@@ -49,6 +68,7 @@ public class InstrumentExtensionsTests
         _instrument.ToTickSizeDown(0.126m).Is(0.12m);
     }
 
+    /// <summary>Verifies that <see cref="InstrumentExtensions.ToTickSizeRound{TInstrument}"/> rounds a price to the nearest tick, up or down depending on which is closer.</summary>
     [Fact]
     public void ToTickSizeRound()
     {
@@ -57,6 +77,7 @@ public class InstrumentExtensionsTests
         _instrument.ToTickSizeRound(0.126m).Is(0.13m);
     }
 
+    /// <summary>Verifies that <see cref="InstrumentExtensions.ToTickSizeUp{TInstrument}"/> always rounds a price up to the nearest tick.</summary>
     [Fact]
     public void ToTickSizeUp()
     {
@@ -64,6 +85,7 @@ public class InstrumentExtensionsTests
         _instrument.ToTickSizeUp(0.124m).Is(0.13m);
     }
 
+    /// <summary>Verifies that <see cref="InstrumentExtensions.ToLotSize{TInstrument}"/> rounds a quantity down to the nearest lot size.</summary>
     [Fact]
     public void ToLotSize()
     {

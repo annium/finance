@@ -17,13 +17,30 @@ using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures;
 
+/// <summary>
+/// Registers the Binance USD-M futures provider (market data, user connector, and all their supporting
+/// services) into a <see cref="ProviderRegistrationContext"/>.
+/// </summary>
 public static class ProviderRegistrationContextExtensions
 {
+    /// <summary>
+    /// Registers the Binance USD-M futures provider with default configuration.
+    /// </summary>
+    /// <param name="ctx">The provider registration context.</param>
+    /// <returns>The same context, for chaining.</returns>
     public static ProviderRegistrationContext WithBinanceUsdFutures(this ProviderRegistrationContext ctx)
     {
         return ctx.WithBinanceUsdFutures(new ProviderConfiguration());
     }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider: the market and user provider/connector factories, the
+    /// per-endpoint HTTP request factories and JSON serializers, the shared query processor and rate limiter,
+    /// and a keyed server time provider per supported environment.
+    /// </summary>
+    /// <param name="ctx">The provider registration context.</param>
+    /// <param name="cfg">The provider configuration.</param>
+    /// <returns>The same context, for chaining.</returns>
     public static ProviderRegistrationContext WithBinanceUsdFutures(
         this ProviderRegistrationContext ctx,
         ProviderConfiguration cfg
@@ -84,6 +101,13 @@ public static class ProviderRegistrationContextExtensions
         return ctx;
     }
 
+    /// <summary>
+    /// Creates the server time provider for a given environment's provider key, pointed at that environment's
+    /// server time endpoint.
+    /// </summary>
+    /// <param name="sp">The service provider used to resolve dependencies.</param>
+    /// <param name="key">The keyed registration's provider key, identifying the environment.</param>
+    /// <returns>A new server time provider for the environment.</returns>
     private static IServerTimeProvider ServerTimeProviderFactory(IServiceProvider sp, object key)
     {
         var providerKey = key.CastTo<ProviderKey>();
@@ -92,6 +116,12 @@ public static class ProviderRegistrationContextExtensions
         return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, "/fapi/v1/time");
     }
 
+    /// <summary>
+    /// Creates the rate limiter shared across the provider's HTTP requests: a 2400-weight limit that decays by
+    /// 300 every 3000 milliseconds, matching Binance USD-M futures' default request weight limit.
+    /// </summary>
+    /// <param name="sp">The service provider used to resolve dependencies.</param>
+    /// <returns>A new rate limiter configured for the provider's request weight limit.</returns>
     private static IRateLimiter RateLimiterFactory(IServiceProvider sp)
     {
         return sp.CreateRateLimiter(2400, 300, 3_000);

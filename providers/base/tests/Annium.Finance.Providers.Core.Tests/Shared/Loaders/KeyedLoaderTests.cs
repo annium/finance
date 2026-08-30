@@ -9,8 +9,17 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.Shared.Loaders;
 
+/// <summary>
+/// Pins that <see cref="IKeyedLoader{TKey,TContext,TData}"/> lazily creates a per-key loader on first request, and
+/// threads each key's context from one successful load into the next.
+/// </summary>
 public class KeyedLoaderTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KeyedLoaderTests"/> class, registering the finance providers
+    /// services and test log used to observe loaded data.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public KeyedLoaderTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -21,6 +30,12 @@ public class KeyedLoaderTests : TestBase
         this.RegisterTestLogs();
     }
 
+    /// <summary>
+    /// Verifies that the first <see cref="IKeyedLoader{TKey,TContext,TData}.Request"/> for a key creates and
+    /// starts its loader with the initial context, and that each subsequent successful load for that key is
+    /// invoked with the context produced by the previous load.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task RequestCreatesLoaderAndUpdatesContext()
     {

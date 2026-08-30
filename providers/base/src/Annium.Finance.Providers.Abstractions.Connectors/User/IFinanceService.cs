@@ -3,9 +3,24 @@ using Annium.Finance.Providers.Abstractions.Domain.User;
 
 namespace Annium.Finance.Providers.Abstractions.Connectors.User;
 
+/// <summary>
+/// Leverage-aware arithmetic for sizing and valuing trades on an instrument. None of these calculations take
+/// fees into account.
+/// </summary>
 public interface IFinanceService
 {
-    // calculate order result without fee
+    /// <summary>
+    /// Calculates the P&amp;L result of executing an order at the given price and quantity against a position with
+    /// the given orientation and price, without fees.
+    /// </summary>
+    /// <param name="instrument">The traded instrument.</param>
+    /// <param name="orientation">The orientation (long/short) of the position the order belongs to.</param>
+    /// <param name="leverage">The leverage applied to the position.</param>
+    /// <param name="positionPrice">The position's opened price.</param>
+    /// <param name="side">The side (buy/sell) of the order.</param>
+    /// <param name="qty">The order quantity.</param>
+    /// <param name="price">The order execution price.</param>
+    /// <returns>The order's result, excluding fees.</returns>
     decimal GetResult(
         IInstrument instrument,
         Orientation orientation,
@@ -16,21 +31,51 @@ public interface IFinanceService
         decimal price
     );
 
-    // calculate cost of purchasing instrument qty at price
-    // note: this won't take fees into account!
+    /// <summary>
+    /// Calculates the cost of purchasing the given quantity of an instrument at the given price and leverage,
+    /// without fees.
+    /// </summary>
+    /// <param name="instrument">The traded instrument.</param>
+    /// <param name="leverage">The leverage applied to the purchase.</param>
+    /// <param name="side">The side (buy/sell) of the order.</param>
+    /// <param name="qty">The quantity to purchase.</param>
+    /// <param name="price">The execution price.</param>
+    /// <returns>The purchase cost, excluding fees.</returns>
     decimal GetCost(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
-    // calculate sum, that will be borrowed from provider, when purchasing instrument qty at price
-    // note: this won't take fees into account!
+    /// <summary>
+    /// Calculates the sum that would be borrowed from the provider when purchasing the given quantity of an
+    /// instrument at the given price and leverage, without fees.
+    /// </summary>
+    /// <param name="instrument">The traded instrument.</param>
+    /// <param name="leverage">The leverage applied to the purchase.</param>
+    /// <param name="side">The side (buy/sell) of the order.</param>
+    /// <param name="qty">The quantity to purchase.</param>
+    /// <param name="price">The execution price.</param>
+    /// <returns>The borrowed sum, excluding fees.</returns>
     decimal GetBorrowedSum(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
-    // calculate value of instrument qty at price
-    // note: this won't take fees into account!
+    /// <summary>
+    /// Calculates the value of the given quantity of an instrument at the given price and leverage, without fees.
+    /// </summary>
+    /// <param name="instrument">The traded instrument.</param>
+    /// <param name="leverage">The leverage applied to the position.</param>
+    /// <param name="side">The side (buy/sell) of the order.</param>
+    /// <param name="qty">The quantity to value.</param>
+    /// <param name="price">The execution price.</param>
+    /// <returns>The value, excluding fees.</returns>
     decimal GetValue(IInstrument instrument, decimal leverage, OrderSide side, decimal qty, decimal price);
 
-    // calculate order qty by (side, cost, price, leverage) this won't take fees into account!
-    // calculate purchasable qty with sum of instrument at price
-    // note: this won't take fees into account!
+    /// <summary>
+    /// Calculates the quantity of an instrument purchasable with the given sum at the given price and leverage,
+    /// without fees.
+    /// </summary>
+    /// <param name="instrument">The traded instrument.</param>
+    /// <param name="leverage">The leverage applied to the purchase.</param>
+    /// <param name="side">The side (buy/sell) of the order.</param>
+    /// <param name="sum">The sum available to spend.</param>
+    /// <param name="price">The execution price.</param>
+    /// <returns>The purchasable quantity, excluding fees.</returns>
     decimal GetQty(IInstrument instrument, decimal leverage, OrderSide side, decimal sum, decimal price);
 }
 

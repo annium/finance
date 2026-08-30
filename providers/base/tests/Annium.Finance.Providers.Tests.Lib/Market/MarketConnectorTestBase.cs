@@ -11,16 +11,32 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Tests.Lib.Market;
 
+/// <summary>
+/// Base for tests that connect to a provider's live market connector and check that the instrument and
+/// ticker stream it reports for a fixed symbol come through correctly. Read-only: it never places orders.
+/// </summary>
 public abstract class MarketConnectorTestBase : ProvidersTestBase
 {
+    /// <summary>The symbol the derived test drives the market connector scenario for.</summary>
     private readonly string _symbol;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MarketConnectorTestBase"/> class.
+    /// </summary>
+    /// <param name="symbol">The symbol to subscribe to and assert on.</param>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     protected MarketConnectorTestBase(string symbol, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         _symbol = symbol;
     }
 
+    /// <summary>
+    /// Connects a market connector for the given provider/environment, subscribes to the configured symbol's
+    /// ticker and asserts that the instrument metadata and the ticker stream both come through populated.
+    /// </summary>
+    /// <param name="providerKey">The provider and environment to connect to.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     protected async Task MarketConnectorBaseAsync(ProviderKey providerKey)
     {
         this.Trace("start");

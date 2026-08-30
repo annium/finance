@@ -12,8 +12,18 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.Market.Extensions;
 
+/// <summary>
+/// Pins how <see cref="HttpRequestMarketResultExtensions.AsMarketResultAsync{TData,TError}"/> maps every kind of
+/// transport and application outcome - network failure, client-side abort, success, and both parsed and unparsed
+/// error bodies - onto a <see cref="MarketResult{T}"/> status, using a real in-process HTTP server.
+/// </summary>
 public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpRequestMarketResultExtensionsTests"/> class, registering
+    /// the HTTP request factory and JSON serializer the tests need to build real requests and parse responses.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public HttpRequestMarketResultExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -21,6 +31,11 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         this.RegisterJsonSerializer();
     }
 
+    /// <summary>
+    /// Verifies that a request sent against a server that never responds (connection torn down before the
+    /// response arrives) maps to <see cref="MarketOperationStatus.NetworkError"/> with no data or message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task NetworkError()
     {
@@ -39,6 +54,11 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a request canceled by its own timeout while the server is still processing it maps to
+    /// <see cref="MarketOperationStatus.Aborted"/> with no data or message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task Abort()
     {
@@ -57,6 +77,11 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a 200 OK response with a valid JSON body maps to <see cref="MarketOperationStatus.Ok"/>,
+    /// carrying the deserialized data and an empty message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task SuccessResponse()
     {
@@ -75,6 +100,12 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         result.Message.Is(string.Empty);
     }
 
+    /// <summary>
+    /// Verifies that a 400 Bad Request response whose body parses as a <see cref="MarketError"/> surfaces that
+    /// error's own status (here <see cref="MarketOperationStatus.TooManyRequests"/>) rather than a generic bad
+    /// request status, while dropping its message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task ParsedErrorResponse()
     {
@@ -94,6 +125,11 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a 400 Bad Request response whose body does not parse as a <see cref="MarketError"/> falls
+    /// back to <see cref="MarketOperationStatus.ParseError"/> with a non-empty diagnostic message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task UnparsedErrorResponse()
     {
@@ -110,6 +146,14 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         result.Message.IsNotEmpty();
     }
 
+    /// <summary>
+    /// Builds the <see cref="MarketError"/> passed to <see cref="HttpRequestMarketResultExtensions.AsMarketResultAsync{TData,TError}"/>
+    /// for a transport-level failure, mirroring how a real connector would report each failure reason.
+    /// </summary>
+    /// <param name="reason">The kind of transport-level failure that occurred.</param>
+    /// <param name="response">The response associated with the failure.</param>
+    /// <param name="exception">The exception that caused the failure, if any.</param>
+    /// <returns>The market error describing the failure.</returns>
     private static async Task<MarketError> GetFailure(
         HttpFailureReason reason,
         IHttpResponse response,
@@ -140,6 +184,13 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
         return error;
     }
 
+    /// <summary>
+    /// Maps a response already classified as network error, abort, business error or success into the
+    /// <see cref="MarketResult{T}"/> that <see cref="HttpRequestMarketResultExtensions.AsMarketResultAsync{TData,TError}"/>
+    /// returns, mirroring how a real connector would interpret the HTTP status code.
+    /// </summary>
+    /// <param name="response">The classified response to map.</param>
+    /// <returns>The resulting market result.</returns>
     private static MarketResult<Response?> MapResponse(IHttpResponse<OneOf<Response, MarketError>> response)
     {
         if (response.IsNetworkError)
@@ -170,7 +221,12 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
             };
     }
 
+    /// <summary>Stands in for a provider's success payload; carries a single opaque value the tests round-trip through JSON.</summary>
+    /// <param name="Value">The opaque payload value.</param>
     private record Response(string Value);
 
+    /// <summary>Stands in for a provider's business-level error payload, parsed from a non-2xx JSON response body.</summary>
+    /// <param name="Status">The market operation status the error maps to.</param>
+    /// <param name="Message">The error message.</param>
     private record MarketError(MarketOperationStatus Status, string Message);
 }

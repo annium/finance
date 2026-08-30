@@ -2,14 +2,26 @@ using System;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Market;
 
+/// <summary>
+/// Provides quantity and price rounding helpers that enforce an <see cref="IInstrument"/>'s lot size and tick size constraints.
+/// </summary>
 public static class InstrumentExtensions
 {
+    /// <summary>Gets the number of significant decimal digits in the instrument's tick size, for formatting prices.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument to inspect.</param>
+    /// <returns>The number of decimal digits in <see cref="IInstrument.TickSize"/>.</returns>
     public static int TickPrecision<TInstrument>(this TInstrument instrument)
         where TInstrument : IInstrument
     {
         return instrument.TickSize.Align().Decimals();
     }
 
+    /// <summary>Rounds a quantity down to the nearest lot size, then clamps it into the instrument's allowed quantity range.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose lot size and quantity bounds apply.</param>
+    /// <param name="qty">The quantity to normalize, in the instrument's base asset.</param>
+    /// <returns>The quantity aligned to <see cref="IInstrument.LotSize"/> and clamped between <see cref="IInstrument.MinQty"/> and <see cref="IInstrument.MaxQty"/>.</returns>
     public static decimal ToValidQty<TInstrument>(this TInstrument instrument, decimal qty)
         where TInstrument : IInstrument
     {
@@ -20,6 +32,12 @@ public static class InstrumentExtensions
             : -Math.Min(Math.Max(-q, instrument.MinQty), instrument.MaxQty);
     }
 
+    /// <summary>Determines whether a quantity and price already satisfy the instrument's lot size, tick size and notional-value constraints.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose constraints apply.</param>
+    /// <param name="qty">The order quantity to check, in the instrument's base asset.</param>
+    /// <param name="price">The order price to check.</param>
+    /// <returns>True if the quantity is already lot-aligned and bounded, the price is already tick-aligned, and the resulting notional value is within <see cref="IInstrument.MinSum"/> and <see cref="IInstrument.MaxSum"/>; false otherwise.</returns>
     public static bool IsValidQtyPrice<TInstrument>(this TInstrument instrument, decimal qty, decimal price)
         where TInstrument : IInstrument
     {
@@ -30,6 +48,11 @@ public static class InstrumentExtensions
         return sum >= instrument.MinSum && sum <= instrument.MaxSum;
     }
 
+    /// <summary>Rounds a price down to the nearest tick size.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose tick size applies.</param>
+    /// <param name="price">The price to round.</param>
+    /// <returns>The price rounded down to the nearest multiple of <see cref="IInstrument.TickSize"/>, or the price unchanged if the tick size is zero.</returns>
     public static decimal ToTickSizeDown<TInstrument>(this TInstrument instrument, decimal price)
         where TInstrument : IInstrument
     {
@@ -37,6 +60,11 @@ public static class InstrumentExtensions
         return tick > 0 ? Math.Floor(price / tick) * tick : price;
     }
 
+    /// <summary>Rounds a price to the nearest tick size.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose tick size applies.</param>
+    /// <param name="price">The price to round.</param>
+    /// <returns>The price rounded to the nearest multiple of <see cref="IInstrument.TickSize"/>, or the price unchanged if the tick size is zero.</returns>
     public static decimal ToTickSizeRound<TInstrument>(this TInstrument instrument, decimal price)
         where TInstrument : IInstrument
     {
@@ -44,6 +72,11 @@ public static class InstrumentExtensions
         return tick > 0 ? Math.Round(price / tick) * tick : price;
     }
 
+    /// <summary>Rounds a price up to the nearest tick size.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose tick size applies.</param>
+    /// <param name="price">The price to round.</param>
+    /// <returns>The price rounded up to the nearest multiple of <see cref="IInstrument.TickSize"/>, or the price unchanged if the tick size is zero.</returns>
     public static decimal ToTickSizeUp<TInstrument>(this TInstrument instrument, decimal price)
         where TInstrument : IInstrument
     {
@@ -51,6 +84,11 @@ public static class InstrumentExtensions
         return tick > 0 ? Math.Ceiling(price / tick) * tick : price;
     }
 
+    /// <summary>Rounds a quantity down to the nearest lot size.</summary>
+    /// <typeparam name="TInstrument">The instrument type.</typeparam>
+    /// <param name="instrument">The instrument whose lot size applies.</param>
+    /// <param name="qty">The quantity to round, in the instrument's base asset.</param>
+    /// <returns>The quantity rounded down to the nearest multiple of <see cref="IInstrument.LotSize"/>, or the quantity unchanged if the lot size is zero.</returns>
     public static decimal ToLotSize<TInstrument>(this TInstrument instrument, decimal qty)
         where TInstrument : IInstrument
     {

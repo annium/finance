@@ -5,8 +5,14 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 
+/// <summary>Builds an <see cref="OperationResult"/> describing a transport-level (network, abort or parse) HTTP failure.</summary>
 public static class HttpRequestHelper
 {
+    /// <summary>Builds an <see cref="OperationResult"/> for a request that failed before Binance returned a structured error body.</summary>
+    /// <param name="reason">The reason the request failed.</param>
+    /// <param name="response">The response received, if any, used for status/content details.</param>
+    /// <param name="e">The exception that caused the failure, if any.</param>
+    /// <returns>A task that resolves to the operation result describing the failure.</returns>
     public static async Task<OperationResult> GetFailureAsync(
         HttpFailureReason reason,
         IHttpResponse response,

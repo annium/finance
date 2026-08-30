@@ -6,8 +6,20 @@ using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Services;
 
+/// <summary>
+/// Builds the query parameters for the order management endpoints (place, modify, cancel, cancel-all) from the
+/// library's generic order requests, translating enums to their Binance wire values along the way.
+/// </summary>
 internal class QueryProcessor
 {
+    /// <summary>
+    /// Builds the query for placing a new order, adding the type-specific parameters (<c>timeInForce</c>,
+    /// <c>price</c>, <c>stopPrice</c>) required by each order type. <c>reduceOnly</c> is only sent in one-way
+    /// mode (<see cref="OrientationRange.Both"/>), since Binance rejects it together with an explicit
+    /// <c>positionSide</c> in hedge mode.
+    /// </summary>
+    /// <param name="request">The order placement parameters.</param>
+    /// <returns>A result carrying the query parameters, or a validation failure if the request is invalid.</returns>
     public UserResult<Dictionary<string, string>> BuildInitOrderQuery(IInitOrderRequest request)
     {
         var validationResult = request.Validate();
@@ -71,6 +83,12 @@ internal class QueryProcessor
         }
     }
 
+    /// <summary>
+    /// Builds the query for modifying an existing order. Binance's amend endpoint only supports limit orders, so
+    /// any other order type is rejected up front.
+    /// </summary>
+    /// <param name="request">The modification parameters, including the order being modified.</param>
+    /// <returns>A result carrying the query parameters, or a bad-request failure if the order is not a limit order.</returns>
     public UserResult<Dictionary<string, string>> BuildModifyOrderQuery(IModifyOrderRequest request)
     {
         var result = new Dictionary<string, string>();
@@ -89,6 +107,11 @@ internal class QueryProcessor
         return UserResult.Ok(result);
     }
 
+    /// <summary>
+    /// Builds the query for canceling an order, identifying it by exchange order id and/or client order id.
+    /// </summary>
+    /// <param name="request">Identifies the order to cancel.</param>
+    /// <returns>A result carrying the query parameters, or a bad-request failure if neither id is specified.</returns>
     public UserResult<Dictionary<string, string>> BuildCancelOrderQuery(ICancelOrderRequest request)
     {
         var result = new Dictionary<string, string>();
@@ -114,6 +137,11 @@ internal class QueryProcessor
         return UserResult.Ok(result);
     }
 
+    /// <summary>
+    /// Builds the query for canceling all open orders on a symbol.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to cancel orders for.</param>
+    /// <returns>A result carrying the query parameters.</returns>
     public UserResult<Dictionary<string, string>> BuildCancelAllOrdersQuery(string symbol)
     {
         var result = new Dictionary<string, string>();

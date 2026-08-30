@@ -9,14 +9,32 @@ using static Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions.
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.HttpExtensions;
 
+/// <summary>
+/// Sends a user data HTTP request and maps its response, including Binance's <see cref="OperationResult"/> error
+/// envelope, into a <see cref="UserResult{T}"/>.
+/// </summary>
 internal static class HttpRequestUserResultExtensions
 {
+    /// <summary>
+    /// Sends the request and maps its response into a user result, treating network/transport failures via
+    /// <see cref="Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions.HttpRequestHelper.GetFailureAsync"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the successful response payload.</typeparam>
+    /// <param name="request">The user data HTTP request.</param>
+    /// <returns>A user result carrying the response payload, or a failure status if the request did not succeed.</returns>
     public static Task<UserResult<T?>> AsUserResultAsync<T>(this IHttpRequest request)
         where T : class
     {
         return request.AsUserResultAsync<T, OperationResult>(GetFailureAsync, MapResponse);
     }
 
+    /// <summary>
+    /// Maps a completed HTTP response, which is either the expected payload or a Binance
+    /// <see cref="OperationResult"/> error envelope, into a user result.
+    /// </summary>
+    /// <typeparam name="T">The type of the successful response payload.</typeparam>
+    /// <param name="response">The HTTP response, holding either the payload or an error envelope.</param>
+    /// <returns>A user result reflecting the payload on success, or the mapped error status on failure.</returns>
     private static UserResult<T?> MapResponse<T>(IHttpResponse<OneOf<T, OperationResult>> response)
     {
         // if response mapped to success
@@ -44,6 +62,12 @@ internal static class HttpRequestUserResultExtensions
         }
     }
 
+    /// <summary>
+    /// Maps an HTTP status code to a user operation status, recognizing Binance's 418 "IP banned" status
+    /// alongside the standard 429/400/401/403/404 codes.
+    /// </summary>
+    /// <param name="code">The HTTP status code of the response.</param>
+    /// <returns>The corresponding user operation status.</returns>
     private static UserOperationStatus MapStatusCode(HttpStatusCode code) =>
         code switch
         {
@@ -54,6 +78,12 @@ internal static class HttpRequestUserResultExtensions
             _ => UserOperationStatus.UnknownError,
         };
 
+    /// <summary>
+    /// Maps a Binance <see cref="OperationResult"/> error code to a user operation status, recognizing the
+    /// balance/margin insufficiency codes specifically alongside the generic negative-code convention.
+    /// </summary>
+    /// <param name="code">The error code reported in the operation result.</param>
+    /// <returns>The corresponding user operation status.</returns>
     private static UserOperationStatus MapOperationCode(long code) =>
         code switch
         {

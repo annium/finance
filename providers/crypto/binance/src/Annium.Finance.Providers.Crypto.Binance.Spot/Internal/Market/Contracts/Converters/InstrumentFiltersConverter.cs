@@ -6,8 +6,18 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.Market.Contracts.Converters;
 
+/// <summary>
+/// Deserializes a Binance symbol's <c>filters</c> array into an <see cref="InstrumentFilters"/>. Spot symbols
+/// carry separate <c>LOT_SIZE</c> (limit order) and <c>MARKET_LOT_SIZE</c> (market order) filters, which are
+/// merged into a single, most permissive-on-both-ends lot size filter.
+/// </summary>
 internal class InstrumentFiltersConverter : JsonConverter<InstrumentFilters>
 {
+    /// <summary>Reads a Binance symbol's <c>filters</c> array and converts it into an <see cref="InstrumentFilters"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the filters array.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The converted filters, or null if any required filter is missing from the array.</returns>
     public override InstrumentFilters? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -145,6 +155,10 @@ internal class InstrumentFiltersConverter : JsonConverter<InstrumentFilters>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; instrument filters are only ever read from Binance, never written.</summary>
+    /// <param name="writer">The writer to serialize to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, InstrumentFilters value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

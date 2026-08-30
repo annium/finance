@@ -8,8 +8,20 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Reads a user data stream <c>ORDER_TRADE_UPDATE</c> event into an <see cref="OrderUpdateEvent"/>, unwrapping
+/// the nested <c>o</c> order object. Writing is not supported since this contract is read-only
+/// (server-to-client).
+/// </summary>
 internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
 {
+    /// <summary>
+    /// Reads the event, rejecting the payload unless its <c>e</c> field is <c>ORDER_TRADE_UPDATE</c>.
+    /// </summary>
+    /// <param name="reader">The UTF-8 JSON reader positioned at the start of the event object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The serializer options in effect.</param>
+    /// <returns>The parsed event, or null if the payload is not an order update event or has no order id.</returns>
     public override OrderUpdateEvent? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -182,6 +194,12 @@ internal class OrderUpdateEventConverter : JsonConverter<OrderUpdateEvent?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Not supported: order update events are only ever read from the exchange, never written.
+    /// </summary>
+    /// <param name="writer">The UTF-8 JSON writer.</param>
+    /// <param name="value">The event to write.</param>
+    /// <param name="options">The serializer options in effect.</param>
     public override void Write(Utf8JsonWriter writer, OrderUpdateEvent? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

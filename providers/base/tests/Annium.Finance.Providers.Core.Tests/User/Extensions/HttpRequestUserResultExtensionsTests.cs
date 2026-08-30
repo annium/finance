@@ -12,8 +12,18 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.User.Extensions;
 
+/// <summary>
+/// Pins how <see cref="HttpRequestUserResultExtensions.AsUserResultAsync{TData,TError}"/> maps every kind of
+/// transport and application outcome - network failure, client-side abort, success, and both parsed and unparsed
+/// error bodies - onto a <see cref="UserResult{T}"/> status, using a real in-process HTTP server.
+/// </summary>
 public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpRequestUserResultExtensionsTests"/> class, registering
+    /// the HTTP request factory and JSON serializer the tests need to build real requests and parse responses.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public HttpRequestUserResultExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -21,6 +31,11 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         this.RegisterJsonSerializer();
     }
 
+    /// <summary>
+    /// Verifies that a request sent against a server that never responds (connection torn down before the
+    /// response arrives) maps to <see cref="UserOperationStatus.NetworkError"/> with no data or message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task NetworkError()
     {
@@ -39,6 +54,11 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a request canceled by its own timeout while the server is still processing it maps to
+    /// <see cref="UserOperationStatus.Aborted"/> with no data or message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task Abort()
     {
@@ -57,6 +77,11 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a 200 OK response with a valid JSON body maps to <see cref="UserOperationStatus.Ok"/>,
+    /// carrying the deserialized data and an empty message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task SuccessResponse()
     {
@@ -75,6 +100,12 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         result.Message.Is(string.Empty);
     }
 
+    /// <summary>
+    /// Verifies that a 400 Bad Request response whose body parses as a <see cref="UserError"/> surfaces that
+    /// error's own status (here <see cref="UserOperationStatus.TooManyRequests"/>) rather than a generic bad
+    /// request status, while dropping its message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task ParsedErrorResponse()
     {
@@ -94,6 +125,11 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         result.Message.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that a 400 Bad Request response whose body does not parse as a <see cref="UserError"/> falls
+    /// back to <see cref="UserOperationStatus.ParseError"/> with a non-empty diagnostic message.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task UnparsedErrorResponse()
     {
@@ -110,6 +146,14 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         result.Message.IsNotEmpty();
     }
 
+    /// <summary>
+    /// Builds the <see cref="UserError"/> passed to <see cref="HttpRequestUserResultExtensions.AsUserResultAsync{TData,TError}"/>
+    /// for a transport-level failure, mirroring how a real connector would report each failure reason.
+    /// </summary>
+    /// <param name="reason">The kind of transport-level failure that occurred.</param>
+    /// <param name="response">The response associated with the failure.</param>
+    /// <param name="exception">The exception that caused the failure, if any.</param>
+    /// <returns>The user error describing the failure.</returns>
     private static async Task<UserError> GetFailure(
         HttpFailureReason reason,
         IHttpResponse response,
@@ -140,6 +184,13 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
         return error;
     }
 
+    /// <summary>
+    /// Maps a response already classified as network error, abort, business error or success into the
+    /// <see cref="UserResult{T}"/> that <see cref="HttpRequestUserResultExtensions.AsUserResultAsync{TData,TError}"/>
+    /// returns, mirroring how a real connector would interpret the HTTP status code.
+    /// </summary>
+    /// <param name="response">The classified response to map.</param>
+    /// <returns>The resulting user result.</returns>
     private static UserResult<Response?> MapResponse(IHttpResponse<OneOf<Response, UserError>> response)
     {
         if (response.IsNetworkError)
@@ -170,7 +221,12 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
             };
     }
 
+    /// <summary>Stands in for a provider's success payload; carries a single opaque value the tests round-trip through JSON.</summary>
+    /// <param name="Value">The opaque payload value.</param>
     private record Response(string Value);
 
+    /// <summary>Stands in for a provider's business-level error payload, parsed from a non-2xx JSON response body.</summary>
+    /// <param name="Status">The user operation status the error maps to.</param>
+    /// <param name="Message">The error message.</param>
     private record UserError(UserOperationStatus Status, string Message);
 }

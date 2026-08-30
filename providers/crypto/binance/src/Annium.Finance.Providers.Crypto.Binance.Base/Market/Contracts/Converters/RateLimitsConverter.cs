@@ -7,8 +7,17 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Converters;
 
+/// <summary>
+/// Converts the <c>rateLimits</c> array of Binance's <c>exchangeInfo</c> response into <see cref="RateLimits"/>,
+/// picking out the <c>REQUEST_WEIGHT</c> entry as the request weight limit.
+/// </summary>
 public class RateLimitsConverter : JsonConverter<RateLimits?>
 {
+    /// <summary>Reads the <c>rateLimits</c> array and extracts the <c>REQUEST_WEIGHT</c> limit into a <see cref="RateLimits"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the rate limits array.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The parsed rate limits, or <c>null</c> if no <c>REQUEST_WEIGHT</c> entry was present.</returns>
     public override RateLimits? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
@@ -73,10 +82,17 @@ public class RateLimitsConverter : JsonConverter<RateLimits?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; rate limits are only ever read from Binance responses, never written.</summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The rate limits to write.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, RateLimits? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
     }
 }
 
+/// <summary>A single entry from Binance's <c>rateLimits</c> array, before it is filtered down to the <c>REQUEST_WEIGHT</c> entry.</summary>
+/// <param name="Type">The rate limit type, e.g. <c>REQUEST_WEIGHT</c> or <c>ORDERS</c>.</param>
+/// <param name="Limit">The maximum value allowed for this rate limit type within its interval.</param>
 file record RateLimit(string Type, int Limit);

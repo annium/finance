@@ -8,10 +8,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Finance.Providers.Core.Internal.User;
 
+/// <summary>
+/// Default <see cref="IUserConnectorFactory"/> implementation. Builds a standalone user connector in its own DI
+/// scope, resolving the provider-specific instance factory registered for the settings' provider key.
+/// </summary>
+/// <param name="sp">The root service provider used to create the connector's own DI scope.</param>
+/// <param name="logger">The logger instance.</param>
 internal class UserConnectorFactory(IServiceProvider sp, ILogger logger) : IUserConnectorFactory, ILogSubject
 {
+    /// <summary>Gets the logger instance.</summary>
     public ILogger Logger { get; } = logger;
 
+    /// <summary>
+    /// Creates a user connector configured with the given settings.
+    /// </summary>
+    /// <param name="settings">The user settings identifying the provider and account to connect to.</param>
+    /// <returns>A new user connector instance.</returns>
     public IUserConnector Create(UserSettings settings)
     {
         var providerKey = settings.GetProviderKey();

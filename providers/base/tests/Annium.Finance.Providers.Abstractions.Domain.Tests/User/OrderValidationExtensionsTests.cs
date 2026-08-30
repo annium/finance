@@ -9,10 +9,18 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 
+/// <summary>
+/// Pins the fluent validation checks in <see cref="OrderValidationExtensions"/>: each single-property check
+/// (side, active/inactive, immediate/leveled, limit/market, status) appends the expected error message when it
+/// fails, and <c>ValidateCanProcess</c> catches every way an order's terms and a candidate status/qty/price
+/// update can be internally inconsistent.
+/// </summary>
 public class OrderValidationExtensionsTests
 {
+    /// <summary>A fresh position with a total quantity of 1, used as the base for every order these tests validate.</summary>
     private readonly Position _position = PositionHelper.CreatePosition(1);
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateSide{TOrder}"/> passes for the order's actual side and appends an error for any other side.</summary>
     [Fact]
     public void ValidateSide()
     {
@@ -28,6 +36,7 @@ public class OrderValidationExtensionsTests
         result.PlainErrors.At(0).IsContaining($"not a {OrderSide.Sell}");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsActive{TOrder}"/> passes for a partially filled order and appends an error for a canceled one.</summary>
     [Fact]
     public void ValidateIsActive()
     {
@@ -40,6 +49,7 @@ public class OrderValidationExtensionsTests
         inactiveResult.ValidateIsActive().PlainErrors.At(0).IsContaining("is not Active");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsInactive{TOrder}"/> passes for a canceled order and appends an error for a partially filled one.</summary>
     [Fact]
     public void ValidateIsInactive()
     {
@@ -52,6 +62,7 @@ public class OrderValidationExtensionsTests
         activeResult.ValidateIsInactive().PlainErrors.At(0).IsContaining("is not Inactive");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsImmediate{TOrder}"/> passes for a limit order and appends an error for a leveled (stop-loss) order.</summary>
     [Fact]
     public void ValidateIsImmediate()
     {
@@ -66,6 +77,7 @@ public class OrderValidationExtensionsTests
         leveledOrder.ValidateIsImmediate().PlainErrors.At(0).IsContaining("is not an immediate order");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsLeveled{TOrder}"/> passes for a leveled (stop-loss) order and appends an error for an immediate (limit) order.</summary>
     [Fact]
     public void ValidateIsLeveled()
     {
@@ -80,6 +92,7 @@ public class OrderValidationExtensionsTests
         immediateOrder.ValidateIsLeveled().PlainErrors.At(0).IsContaining("is not a leveled order");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsMarket{TOrder}"/> passes for a market order and appends an error for a limit order.</summary>
     [Fact]
     public void ValidateIsMarket()
     {
@@ -94,6 +107,10 @@ public class OrderValidationExtensionsTests
         limitOrder.ValidateIsMarket().PlainErrors.At(0).IsContaining("is not a market order");
     }
 
+    /// <summary>
+    /// Verifies every arity of <c>ValidateStatus</c> (one through four accepted statuses): each passes when the
+    /// order's status is among the given ones, and appends an error listing all of them when it is not.
+    /// </summary>
     [Fact]
     public void ValidateStatus()
     {
@@ -124,6 +141,12 @@ public class OrderValidationExtensionsTests
             .IsContaining($"is not {OrderStatus.New}, {OrderStatus.PartiallyFilled}, {OrderStatus.Filled}");
     }
 
+    /// <summary>
+    /// Verifies every failure path of <c>ValidateCanProcess</c> and its status-aware overload: a non-positive
+    /// total quantity, a level price required or forbidden by the order's leveled/immediate kind, a target price
+    /// required by its limit/market kind, and - per candidate status (new, partially filled, filled, canceled) -
+    /// an executed quantity or price outside the range that status allows.
+    /// </summary>
     [Fact]
     public void ValidateCanProcess()
     {
@@ -313,6 +336,7 @@ public class OrderValidationExtensionsTests
         result.PlainErrors.At(0).IsContaining("executed price is invalid");
     }
 
+    /// <summary>Verifies that <see cref="OrderValidationExtensions.ValidateIsExecuted{TOrder}"/> appends an error for an order with no fills yet, and passes once it has been partially filled.</summary>
     [Fact]
     public void ValidateIsExecuted()
     {

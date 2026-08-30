@@ -6,8 +6,13 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 
+/// <summary>
+/// Pins the status and type classifications <see cref="OrderExtensions"/> derives from an <see cref="IOrder"/>,
+/// exercised across the order lifecycle produced by the <c>Tests.Lib</c> position/order fixtures.
+/// </summary>
 public class OrderExtensionsTests
 {
+    /// <summary>Verifies that <see cref="OrderExtensions.IsActive{TOrder}"/> is true for new and partially filled orders, false once filled or canceled.</summary>
     [Fact]
     public void IsActive()
     {
@@ -21,6 +26,7 @@ public class OrderExtensionsTests
         position.AddLimitBuyOrder(2, 1).Cancel().Data.IsActive().IsFalse();
     }
 
+    /// <summary>Verifies that <see cref="OrderExtensions.IsInactive{TOrder}"/> is the exact inverse of <see cref="OrderExtensions.IsActive{TOrder}"/>.</summary>
     [Fact]
     public void IsInactive()
     {
@@ -34,6 +40,7 @@ public class OrderExtensionsTests
         position.AddLimitBuyOrder(2, 1).Cancel().Data.IsInactive().IsTrue();
     }
 
+    /// <summary>Verifies that <see cref="OrderExtensions.IsImmediate{TOrder}"/> is true for a limit order but false for stop-loss and take-profit orders.</summary>
     [Fact]
     public void IsImmediate()
     {
@@ -46,6 +53,10 @@ public class OrderExtensionsTests
         position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsImmediate().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies leveled/immediate classification via <see cref="OrderExtensions.IsLimit{TOrder}"/> as a stand-in
+    /// check: a limit order is not leveled, while stop-loss and take-profit market orders are.
+    /// </summary>
     [Fact]
     public void IsLeveled()
     {
@@ -58,6 +69,7 @@ public class OrderExtensionsTests
         position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
     }
 
+    /// <summary>Verifies that <see cref="OrderExtensions.IsLimit{TOrder}"/> is true only for a limit order, false for stop-loss and take-profit market orders.</summary>
     [Fact]
     public void IsLimit()
     {
@@ -70,6 +82,7 @@ public class OrderExtensionsTests
         position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
     }
 
+    /// <summary>Verifies that <see cref="OrderExtensions.IsMarket{TOrder}"/> is false for a limit order but true for stop-loss and take-profit market orders.</summary>
     [Fact]
     public void IsMarket()
     {
@@ -82,6 +95,11 @@ public class OrderExtensionsTests
         position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsMarket().IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="OrderExtensions.OpeningQty{TOrder}"/> tracks the unfilled quantity while the order
+    /// is active, and drops to zero once the order fills or is canceled - regardless of how much was filled
+    /// before the cancel.
+    /// </summary>
     [Fact]
     public void OpeningQty()
     {

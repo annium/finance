@@ -6,8 +6,14 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts.Converters;
 
+/// <summary>Deserializes a single balance entry (<c>B</c> array element) of an <c>outboundAccountPosition</c> event into an <see cref="AccountUpdateEventBalance"/>.</summary>
 internal class AccountUpdateEventBalanceConverter : JsonConverter<AccountUpdateEventBalance>
 {
+    /// <summary>Reads a Binance balance entry and converts it into an <see cref="AccountUpdateEventBalance"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the balance object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The converted balance.</returns>
     public override AccountUpdateEventBalance Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -60,6 +66,10 @@ internal class AccountUpdateEventBalanceConverter : JsonConverter<AccountUpdateE
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; balance entries are only ever read from the Binance user data stream.</summary>
+    /// <param name="writer">The writer to serialize to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, AccountUpdateEventBalance value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();
