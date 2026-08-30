@@ -54,8 +54,10 @@ public class OrderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies leveled/immediate classification via <see cref="OrderExtensions.IsLimit{TOrder}"/> as a stand-in
-    /// check: a limit order is not leveled, while stop-loss and take-profit market orders are.
+    /// An order is leveled when it waits for a trigger price: stop-loss and take-profit orders are, a plain
+    /// limit order is not. This is not the same question as <see cref="OrderExtensions.IsLimit{TOrder}"/>
+    /// asks - the stop-loss and take-profit limit types answer yes to both - which is why this test used to
+    /// assert nothing about its own subject: it called IsLimit on all three cases instead.
     /// </summary>
     [Fact]
     public void IsLeveled()
@@ -64,9 +66,9 @@ public class OrderExtensionsTests
         var position = PositionHelper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
-        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLimit().IsFalse();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLeveled().IsFalse();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLeveled().IsTrue();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLeveled().IsTrue();
     }
 
     /// <summary>Verifies that <see cref="OrderExtensions.IsLimit{TOrder}"/> is true only for a limit order, false for stop-loss and take-profit market orders.</summary>
