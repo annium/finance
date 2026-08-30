@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.Loaders;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User;
 using Annium.Logging;
 using Xunit;
@@ -42,7 +43,7 @@ public class UserConnectorTests : UserConnectorTestBase
         );
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Limit_Invalid()
     {
         this.Trace("start");
@@ -60,7 +61,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Limit_Valid()
     {
         this.Trace("start");
@@ -85,7 +86,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Market_Invalid()
     {
         this.Trace("start");
@@ -96,7 +97,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_TakeProfit_StopLoss()
     {
         this.Trace("start");
@@ -195,7 +196,7 @@ public class UserConnectorTests : UserConnectorTestBase
         await CancelValidOrder(order);
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task ModifyOrder_Invalid()
     {
         this.Trace("start");
@@ -213,7 +214,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task ModifyOrder_Valid()
     {
         this.Trace("start");
@@ -246,7 +247,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task CancelOrder()
     {
         this.Trace("start");
@@ -275,7 +276,7 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task CancelAllOrders()
     {
         this.Trace("start");

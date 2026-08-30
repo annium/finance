@@ -52,6 +52,12 @@ test:
     @echo "=== $0 ==="
     dotnet test -c Release --no-build --report-xunit-trx
 
+# the tests that talk to a real exchange are skipped by default - they need credentials in test.env, and
+# the order ones place and cancel actual orders. This runs them, and is deliberate by construction
+test-exchange:
+    @echo "=== $0 ==="
+    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx
+
 pack:
     #!/usr/bin/env bash
     set -e

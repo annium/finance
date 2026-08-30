@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.Loaders;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User;
 using Xunit;
 
@@ -23,21 +24,21 @@ public class UserProviderTests : UserProviderTestBase
         );
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadContextAsync() => LoadContextBaseAsync();
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadOpenOrdersAsync() => LoadOpenOrdersBaseAsync();
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadLatestOrdersAsync() => LoadLatestOrdersBaseAsync();
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadHistoryOrdersAsync() => LoadHistoryOrdersBaseAsync();
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadLatestTradesAsync() => LoadLatestTradesBaseAsync();
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task LoadHistoryTradesAsync() => LoadHistoryTradesBaseAsync();
 }

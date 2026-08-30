@@ -20,7 +20,7 @@ public class ServerTimeProviderTests : ProvidersTestBase
         ctx.WithBinanceSpot();
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task Works()
     {
         // arrange

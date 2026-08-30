@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Core;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.Market;
 using Xunit;
 
@@ -16,7 +17,7 @@ public class MarketConnectorTests : MarketConnectorTestBase
         ctx.WithBinanceUsdFutures();
     }
 
-    [Fact]
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public Task MarketConnectorAsync()
     {
         return MarketConnectorBaseAsync(Settings.Market.GetProviderKey());
