@@ -1,10 +1,19 @@
-set shell := ["bash", "-cu"]
-set positional-arguments
-# lib.just is copied in by the umbrella repo's `just copy-ci`; recipes redefined below
-# override the shared ones.
-set allow-duplicate-recipes := true
-
-import 'lib.just'
+# Shared recipes for Annium .NET sub-projects.
+#
+# DO NOT EDIT IN PLACE. This file is owned by the umbrella repo at `ci/lib.just` and copied
+# into each sub-project by `just copy-ci` there. Local edits are overwritten on the next copy.
+#
+# The importing justfile must declare:
+#
+#     set shell := ["bash", "-cu"]
+#     set positional-arguments
+#     set allow-duplicate-recipes := true
+#
+#     import 'lib.just'
+#
+# `allow-duplicate-recipes` is what makes overriding work: a recipe redefined in the
+# importing justfile wins over the one here. Override rather than edit — e.g. `test` differs
+# per repo (test runner), as does `update` (whether `xs update all` takes `dotnet`).
 
 [private]
 default:
@@ -32,8 +41,9 @@ ensure-no-changes:
     echo "=== ensure-no-changes ==="
     if [[ -n "$(git status --porcelain)" ]]; then
         echo "Changes detected:"
-        git status
-        git --no-pager diff --no-color --exit-code
+        git status --short
+        git --no-pager diff --no-color HEAD
+        exit 1
     fi
 
 update:
@@ -44,7 +54,7 @@ update:
 clean:
     @echo "=== $0 ==="
     dotnet tool run xs clean -sc -ic
-    find . -type f -name '*.nupkg' | xargs -I% rm %
+    find . -type f \( -name '*.nupkg' -o -name '*.snupkg' \) -delete
 
 build:
     #!/usr/bin/env bash
@@ -57,12 +67,6 @@ test:
     @echo "=== $0 ==="
     dotnet test -c Release --no-build --report-xunit-trx
 
-# the tests that talk to a real exchange are skipped by default - they need credentials in test.env, and
-# the order ones place and cancel actual orders. This runs them, and is deliberate by construction
-test-exchange:
-    @echo "=== $0 ==="
-    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx
-
 pack:
     #!/usr/bin/env bash
     set -e
@@ -70,10 +74,10 @@ pack:
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
     dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg -p:PackageVersion=$packageVersion
 
-publish:
+publish apiKey:
     @echo "=== $0 ==="
-    dotnet nuget push "*.nupkg" --source https://dotnet.pkg.annium.com/v3/index.json --api-key $(cat .xs.credentials)
-    find . -type f -name '*.nupkg' | xargs -I% rm %
+    dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$1" --skip-duplicate
+    find . -type f \( -name '*.nupkg' -o -name '*.snupkg' \) -delete
 
 # docs
 
@@ -136,13 +140,17 @@ ci-release apiKey repository githubToken:
     just ci-set-package-version
     just clean
     just build
+    just docs-lint
+    just test
     just pack
-    just publish
+    just publish "$1"
     just ci-push-tag "$2" "$3"
     echo "Release complete"
 
 ci-set-package-version:
     @echo "=== $0 ==="
+    git config user.name "it"
+    git config user.email "it@annium.com"
     dotnet tool run versioning set-version -v $(cat version)
 
 ci-push-tag repository githubToken:
@@ -150,4 +158,9 @@ ci-push-tag repository githubToken:
     set -e
     echo "=== ci-push-tag ==="
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
+    git remote set-url origin https://x-access-token:"$2"@github.com/"$1".git
+    if git ls-remote --exit-code --tags origin "v$packageVersion" >/dev/null 2>&1; then
+        echo "tag v$packageVersion already published, skipping"
+        exit 0
+    fi
     git push origin v$packageVersion

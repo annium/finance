@@ -1,0 +1,18 @@
+name: Merge Request
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: merge-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: annium/workflows/.github/workflows/dotnet-merge-request.yml@v1
