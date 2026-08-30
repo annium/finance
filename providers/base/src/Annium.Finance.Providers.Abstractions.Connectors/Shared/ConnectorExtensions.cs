@@ -23,13 +23,20 @@ public static class ConnectorExtensions
                 return;
 
             connector.OnStatusChanged -= HandleStatusChanged;
-            tcs.SetResult();
+            tcs.TrySetResult();
         }
 
-        if (connector.Status is ConnectorStatus.Connected)
-            return Task.CompletedTask;
-
+        // subscribe first, then look: reading the status first leaves a gap between the two that the
+        // transition can fall into, seen by neither - and a caller that falls into it waits for an event
+        // that has already happened, on a connector that is connected
         connector.OnStatusChanged += HandleStatusChanged;
+
+        if (connector.Status is ConnectorStatus.Connected)
+        {
+            connector.OnStatusChanged -= HandleStatusChanged;
+
+            return Task.CompletedTask;
+        }
 
         return tcs.Task;
     }
