@@ -21,8 +21,9 @@ public interface IMarketProvider
 
     /// <summary>
     /// Loads historical candles for an instrument over the given time range, yielding successive batches of
-    /// consecutive one-minute candles as they are fetched from the provider. Every yielded result is a success;
-    /// enumeration ends silently, without yielding a failure, as soon as a fetch fails or returns no more data.
+    /// consecutive one-minute candles as they are fetched from the provider. Enumeration ends once the range
+    /// has been covered or a fetch returns no more data; a failed fetch is yielded as a final non-success
+    /// batch, so a caller can tell a truncated range from a complete one.
     /// </summary>
     /// <param name="instrument">The instrument symbol to load candles for.</param>
     /// <param name="start">The inclusive start of the time range.</param>

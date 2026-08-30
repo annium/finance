@@ -34,9 +34,12 @@ public static class TestEnv
             return;
         }
 
+        // split on the first `=` only. Splitting on every one of them, and then keeping the lines that
+        // came back in exactly two pieces, silently dropped any secret containing an `=` - base64
+        // padding above all - so the variable was simply absent and the failure surfaced far from here
         var variables = new Dictionary<string, string>();
         var raw = File.ReadAllLines(envFile)
-            .Select(x => x.Split('='))
+            .Select(x => x.Split('=', 2))
             .Where(x => x.Length == 2 && x[0].Trim().Length > 0)
             .Select(x => (x[0].Trim(), x[1].Trim()))
             .ToArray();

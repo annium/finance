@@ -40,9 +40,9 @@ public abstract class MarketProviderBase
     /// <summary>
     /// Pages through historical candles over the given time range using <paramref name="fetch"/>, yielding
     /// successive batches of consecutive one-minute candles with gaps in the provider's response filled by
-    /// flat candles carried forward from the last known close. Every yielded result is a success; enumeration
-    /// ends silently, without yielding a failure, as soon as a fetch fails or returns no more data, or the range
-    /// has been fully covered.
+    /// flat candles carried forward from the last known close. Enumeration ends once the range has been
+    /// covered or a fetch returns no more data; a failed fetch is yielded as a final non-success batch, so a
+    /// truncated range is distinguishable from a complete one.
     /// </summary>
     /// <param name="instrument">The instrument symbol to load candles for.</param>
     /// <param name="start">The inclusive start of the time range.</param>
@@ -67,8 +67,19 @@ public abstract class MarketProviderBase
         {
             var result = await LoadCandlesBaseAsync(instrument, from, end, chunkSize, fetch, last);
 
-            // if failure / no data - break
-            if (!result.IsSuccess || result.Data.Count == 0)
+            // a failed fetch ends the range the same way a covered one does, so hand the failure to the
+            // caller before stopping. Ending silently made a history truncated halfway through - by a
+            // rate limit, say - indistinguishable from a complete one, and the gap it left was not the
+            // sort a consumer rereads for: the series simply stopped early and looked finished
+            if (!result.IsSuccess)
+            {
+                yield return result;
+
+                break;
+            }
+
+            // if no data - break
+            if (result.Data.Count == 0)
                 break;
 
             // return result

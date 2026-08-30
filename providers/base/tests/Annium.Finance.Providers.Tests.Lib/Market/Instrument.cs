@@ -13,6 +13,8 @@ namespace Annium.Finance.Providers.Tests.Lib.Market;
 /// <param name="TickSize">The price step order prices must be a multiple of.</param>
 /// <param name="MinQty">The minimum order quantity, in the instrument's base asset.</param>
 /// <param name="MaxQty">The maximum order quantity, in the instrument's base asset.</param>
+/// <param name="MinPrice">The minimum allowed order price.</param>
+/// <param name="MaxPrice">The maximum allowed order price.</param>
 /// <param name="MinSum">The minimum order notional value (quantity multiplied by price).</param>
 /// <param name="MaxSum">The maximum order notional value (quantity multiplied by price).</param>
 /// <param name="MaxOrders">The maximum number of open orders allowed on the instrument.</param>
@@ -24,6 +26,8 @@ public sealed record Instrument(
     decimal TickSize,
     decimal MinQty,
     decimal MaxQty,
+    decimal MinPrice,
+    decimal MaxPrice,
     decimal MinSum,
     decimal MaxSum,
     int MaxOrders

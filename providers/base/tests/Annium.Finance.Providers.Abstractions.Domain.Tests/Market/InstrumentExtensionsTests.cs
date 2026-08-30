@@ -1,4 +1,5 @@
 using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Tests.Lib.Market;
 using Annium.Testing;
 using Xunit;
@@ -91,5 +92,66 @@ public class InstrumentExtensionsTests
     {
         // arrange
         _instrument.ToLotSize(0.12m).Is(0.1m);
+    }
+
+    /// <summary>
+    /// Verifies that a negative quantity - the way a sell or short size is expressed - is rounded towards
+    /// zero rather than down, so aligning it can only shrink the order, never grow it.
+    /// </summary>
+    [Fact]
+    public void ToLotSize_NegativeQty_RoundsTowardsZero()
+    {
+        // assert
+        _instrument.ToLotSize(-0.12m).Is(-0.1m, "aligning a sell size must not ask for more than was requested");
+        _instrument.ToLotSize(-1.56m).Is(-1.5m);
+        _instrument.ToValidQty(-105m).Is(-_instrument.MaxQty);
+    }
+
+    /// <summary>
+    /// Verifies that an instrument reporting no lot or tick step leaves quantities and prices untouched
+    /// instead of dividing by zero.
+    /// </summary>
+    [Fact]
+    public void ZeroLotAndTick_LeaveValuesUntouched()
+    {
+        // arrange
+        var instrument = InstrumentHelper.CreateInstrument("x", "y", 0m, 0m);
+
+        // assert
+        instrument.ToLotSize(0.123m).Is(0.123m);
+        instrument.ToTickSizeDown(0.123m).Is(0.123m);
+        instrument.ToTickSizeRound(0.123m).Is(0.123m);
+        instrument.ToTickSizeUp(0.123m).Is(0.123m);
+    }
+
+    /// <summary>
+    /// Verifies that a price outside the instrument's own price bounds is rejected even when it is tick
+    /// aligned and its notional value is in range - the constraint the exchange reports and would enforce.
+    /// </summary>
+    [Fact]
+    public void IsValidQtyPrice_PriceOutOfBounds_IsRejected()
+    {
+        // arrange - prices allowed in [10, 100], every value below tick aligned and comfortably inside
+        // the quantity and notional bounds, so the price bound is the only thing any case turns on
+        var instrument = new Instrument(
+            "fake",
+            ProviderEnvironment.Test,
+            "XY",
+            1m,
+            1m,
+            1m,
+            100m,
+            10m,
+            100m,
+            1m,
+            decimal.MaxValue,
+            int.MaxValue
+        );
+
+        // assert
+        instrument.IsValidQtyPrice(1m, 9m).IsFalse("a price below the instrument's minimum is not valid");
+        instrument.IsValidQtyPrice(1m, 101m).IsFalse("a price above the instrument's maximum is not valid");
+        instrument.IsValidQtyPrice(1m, 10m).IsTrue("the minimum price itself is valid");
+        instrument.IsValidQtyPrice(1m, 100m).IsTrue("the maximum price itself is valid");
     }
 }

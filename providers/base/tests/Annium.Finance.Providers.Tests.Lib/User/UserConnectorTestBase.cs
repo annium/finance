@@ -128,15 +128,27 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("get user connector for {settings}", _settings);
         _disposable += Connector = userFactory.Create(_settings);
 
+        // every queue takes the initial snapshot AND the updates that follow it. Keeping only the Init
+        // event, as assets and positions used to, froze both queues at the account's opening state:
+        // GetBalance and GetPosition then answered with the same snapshot for the rest of the test, so
+        // the Ensure*Increased/Decreased checks below were comparing a value against itself
         this.Trace("subscribe to connector data");
-        _disposable += Connector
-            .Assets.Where(x => x.Type is ChangeEventType.Init)
-            .SelectMany(x => x.Items)
-            .Subscribe(_assets.Enqueue);
-        _disposable += Connector
-            .Positions.Where(x => x.Type is ChangeEventType.Init)
-            .SelectMany(x => x.Items)
-            .Subscribe(_positions.Enqueue);
+        _disposable += Connector.Assets.Subscribe(x =>
+        {
+            if (x.Type is ChangeEventType.Init)
+                foreach (var item in x.Items)
+                    _assets.Enqueue(item);
+            else
+                _assets.Enqueue(x.Item);
+        });
+        _disposable += Connector.Positions.Subscribe(x =>
+        {
+            if (x.Type is ChangeEventType.Init)
+                foreach (var item in x.Items)
+                    _positions.Enqueue(item);
+            else
+                _positions.Enqueue(x.Item);
+        });
         _disposable += Connector.Orders.Subscribe(x =>
         {
             if (x.Type is ChangeEventType.Init)
@@ -184,15 +196,27 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
         this.Trace("try close position if any");
         var amount = GetPositionAmount();
-        if (amount > 0)
+        if (amount != 0)
         {
             this.Trace("close position amount: {amount}", amount);
+            // close in whichever direction flattens it: selling off a short would deepen it
             await InitValidOrder(
-                InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, amount),
+                InitMarketOrder(
+                    ClientOrderId(),
+                    Range(),
+                    Symbol,
+                    amount < 0 ? OrderSide.Buy : OrderSide.Sell,
+                    Math.Abs(amount)
+                ),
                 OrderStatus.Filled
             );
             await EnsureBalanceIsIncreased();
-            await EnsurePositionIsDecreased();
+            // flattening moves the amount towards zero, which is downwards for a long and upwards for
+            // a short - asserting "decreased" either way would fail on every short that ever closed
+            if (amount < 0)
+                await EnsurePositionIsIncreased();
+            else
+                await EnsurePositionIsDecreased();
         }
 
         EnsureNoErrors();
@@ -201,6 +225,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         await _disposable.DisposeAsync();
 
         EnsureNoErrors();
+
+        // the connector and its subscriptions are gone; the container that built them is the base's to
+        // release. InitializeAsync calls up to the base, and this has to match it or the provider - and
+        // every singleton in it - outlives every test class that ever ran
+        await base.DisposeAsync();
 
         this.Trace("done");
     }
@@ -236,9 +265,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
+        // a short position is a negative amount, and filtering for `> 0` skipped every one of them -
+        // which also left the `Amount < 0` branch below unreachable. A short left open here is a real
+        // open position on a real account, carried into whatever test runs next
         var activePositions = _positions
             .DistinctBy(x => new { x.Symbol, x.OrientationRange })
-            .Where(x => x.Amount > 0)
+            .Where(x => x.Amount != 0)
             .ToArray();
 
         if (activePositions.Length == 0)

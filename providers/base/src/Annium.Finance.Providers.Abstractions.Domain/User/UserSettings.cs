@@ -1,3 +1,4 @@
+using System;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 
 namespace Annium.Finance.Providers.Abstractions.Domain.User;
@@ -20,6 +21,9 @@ public sealed record UserSettings : IConnectorSettings
     public string Secret { get; init; } = string.Empty;
 
     /// <summary>Returns the provider, environment and a truncated key prefix as a string, without exposing the full key or secret.</summary>
-    /// <returns>A string in the form "Provider[Environment]" followed by the first seven characters of <see cref="Key"/>.</returns>
-    public override string ToString() => $"{Provider}[{Environment}]{Key[..7]}";
+    /// <returns>A string in the form "Provider[Environment]" followed by up to the first seven characters of <see cref="Key"/>.</returns>
+    // the prefix is taken defensively: this runs from UserConnectorBase's constructor, which builds its Id
+    // from it, so a key shorter than the prefix - an unset one above all - used to abort construction with
+    // a range error, naming neither the setting at fault nor the account it belongs to
+    public override string ToString() => $"{Provider}[{Environment}]{Key[..Math.Min(Key.Length, 7)]}";
 }

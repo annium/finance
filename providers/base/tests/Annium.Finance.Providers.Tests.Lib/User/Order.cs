@@ -80,7 +80,10 @@ public sealed record Order(
             executedQty,
             executedPrice,
             status is OrderStatus.Canceled ? TotalQty - executedQty : 0,
-            Fee,
+            // the new fee and the one being replaced, in that order. Passing the old value for both made
+            // the position's `fee - prevFee` identically zero, so its opened/closed fee totals stayed at
+            // zero however much an order was charged, and anything comparing them to a real one matched
+            fee,
             ExecutedQty,
             Fee,
             UpdatedAt,

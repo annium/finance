@@ -87,7 +87,7 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 
@@ -102,7 +102,7 @@ public static class UserResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 
@@ -113,7 +113,7 @@ public static class UserResultTestExtensions
     /// <param name="result">The user result.</param>
     public static void EnsureFailed<T>(this UserResult<T> result)
     {
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(UserOperationStatus.Ok);
     }
 

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
@@ -140,6 +142,40 @@ public class UserConnectorBaseTests : ProvidersTestBase
         VerifyLog("positions", positionsLog);
         VerifyLog("orders", ordersLog);
         VerifyLog("trades", tradesLog);
+    }
+
+    /// <summary>
+    /// Verifies that a sync handler which throws is surfaced through <see cref="Abstractions.Connectors.Shared.IConnectorBase.OnError"/>
+    /// and does not leave the connector claiming to be connected. The cycle unsubscribes its readers before
+    /// calling the handler, so a throw that goes unreported strands the connector with no subscriptions, no
+    /// status change, and nothing said to the caller.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task SyncHandlerThrows_IsReportedAndNotClaimedConnected()
+    {
+        // arrange
+        var settings = new UserSettings
+        {
+            Provider = "fake",
+            Environment = ProviderEnvironment.Test,
+            Key = "some_key",
+            Secret = "some_secret",
+        };
+        await using var user = CreateConnector(settings, new FakeUserProvider());
+        var errors = new ConcurrentQueue<ConnectorError>();
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        user.OnError += errors.Enqueue;
+        user.OnStatusChanged += statuses.Enqueue;
+
+        user.OnSync += (_, _) => throw new InvalidOperationException("sync failed");
+
+        // act
+        user.Sync();
+
+        // assert - the failure reaches the caller, and the connector does not call itself connected
+        await Expect.ToAsync(() => errors.Count.IsGreaterOrEqual(1));
+        statuses.Contains(ConnectorStatus.Connected).IsFalse("a failed sync must not report connected");
     }
 
     /// <summary>

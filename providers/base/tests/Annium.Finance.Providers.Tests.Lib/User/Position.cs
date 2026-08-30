@@ -107,8 +107,12 @@ public sealed record Position(
     /// <summary>Gets the identifiers of the orders currently tracked against this position.</summary>
     public IReadOnlyCollection<Guid> Orders => _orders;
 
-    /// <summary>The fraction of the position's opened-minus-closed quantity that is borrowed, given its leverage.</summary>
-    private readonly decimal _borrowedPart = 1m - 1m / Leverage;
+    /// <summary>
+    /// The fraction of the position's opened-minus-closed quantity that is borrowed, given its leverage.
+    /// Recomputed whenever the leverage changes - held as a field rather than derived on each read so that
+    /// an impossible leverage is rejected where it is set, not later from inside a bookkeeping update.
+    /// </summary>
+    private decimal _borrowedPart = 1m - 1m / Leverage;
 
     /// <summary>The identifiers of the orders currently tracked against this position.</summary>
     private readonly List<Guid> _orders = new();
@@ -260,7 +264,8 @@ public sealed record Position(
     }
 
     /// <summary>
-    /// Updates the position's margin type and leverage.
+    /// Updates the position's margin type and leverage, and rebalances how much of it is borrowed at the
+    /// new leverage.
     /// </summary>
     /// <param name="marginType">The new margin type (cross or isolated).</param>
     /// <param name="leverage">The new leverage multiplier.</param>
@@ -269,6 +274,12 @@ public sealed record Position(
     {
         MarginType = marginType;
         Leverage = leverage;
+
+        // the borrowed part is a function of the leverage, so it has to move with it. Left at the value
+        // it was constructed with, every later update went on borrowing at a leverage the position no
+        // longer had
+        _borrowedPart = 1m - 1m / Leverage;
+        SyncState(UpdatedAt);
 
         return this;
     }
