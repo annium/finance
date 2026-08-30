@@ -70,11 +70,6 @@ pack:
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
     dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg -p:PackageVersion=$packageVersion
 
-publish:
-    @echo "=== $0 ==="
-    dotnet nuget push "*.nupkg" --source https://dotnet.pkg.annium.com/v3/index.json --api-key $(cat .xs.credentials)
-    find . -type f -name '*.nupkg' | xargs -I% rm %
-
 # docs
 
 docs-lint:
@@ -100,54 +95,3 @@ docs-serve:
 docs-watch:
     @echo "=== $0 ==="
     dotnet tool run docfx docfx.json --serve
-
-# ci
-
-ci-merge-request-short:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-merge-request-short ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just clean
-    just build
-    just docs-lint
-
-ci-merge-request-full:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-merge-request-full ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just clean
-    just build
-    just docs-lint
-    just test
-
-ci-release apiKey repository githubToken:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-release ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just ci-set-package-version
-    just clean
-    just build
-    just pack
-    just publish
-    just ci-push-tag "$2" "$3"
-    echo "Release complete"
-
-ci-set-package-version:
-    @echo "=== $0 ==="
-    dotnet tool run versioning set-version -v $(cat version)
-
-ci-push-tag repository githubToken:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-push-tag ==="
-    packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
-    git push origin v$packageVersion
