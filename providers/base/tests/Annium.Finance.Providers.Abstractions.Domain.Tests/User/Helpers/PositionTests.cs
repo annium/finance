@@ -76,6 +76,33 @@ public class PositionTests
     }
 
     /// <summary>
+    /// Dropping an order reverses exactly what it booked, leaving the position where it started. Fills at
+    /// different prices are the case that matters: the position accumulates each at the price it happened
+    /// at, so reversing the total quantity at the last price alone takes out money that was never put in.
+    /// </summary>
+    [Fact]
+    public void RemovedOrder_ReversesWhatItActuallyBooked()
+    {
+        // arrange - a market order for three, filled twice at different prices: 1@100, then 1@120
+        var position = PositionHelper.CreatePosition(1);
+        var result = position.AddMarketBuyOrder(3m).FillPartially(1m, 100m);
+        result.HasNoErrors();
+        result.FillPartially(1m, 120m).HasNoErrors();
+
+        position.OpenedQty.Is(2m);
+        position.OpenedSum.Is(220m, "each fill is booked at the price it happened at");
+
+        // act
+        position.RemoveOrder(result.Data).HasNoErrors();
+
+        // assert - the position is back where it started, not 20 richer
+        position.Orders.IsEmpty();
+        position.OpenedQty.Is(0m);
+        position.OpenedSum.Is(0m, "removing an order must reverse exactly the sum it booked");
+        position.OpenedFee.Is(0m);
+    }
+
+    /// <summary>
     /// An order that fails validation is not booked against its position. Registering it anyway rolled its
     /// quantity into the position's totals, leaving every later comparison measured against an order the
     /// exchange would have refused.

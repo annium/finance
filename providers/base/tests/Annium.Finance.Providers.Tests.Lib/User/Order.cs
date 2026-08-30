@@ -50,6 +50,14 @@ public sealed record Order(
     /// <summary>Gets the volume-weighted average price the order has been filled at so far.</summary>
     public decimal ExecutedPrice { get; private set; } = ExecutedPrice;
 
+    /// <summary>
+    /// Gets the notional value filled so far, accumulated one fill at a time at the price each was filled
+    /// at. Kept rather than recomputed from <see cref="ExecutedQty"/> and <see cref="ExecutedPrice"/>,
+    /// because across fills at different prices those two no longer multiply out to what was actually
+    /// booked - and it is what was booked that has to be reversed if the order is dropped.
+    /// </summary>
+    public decimal ExecutedSum { get; private set; } = ExecutedQty * ExecutedPrice;
+
     /// <summary>Gets the fee charged on the order so far.</summary>
     public decimal Fee { get; private set; } = Fee;
 
@@ -92,6 +100,9 @@ public sealed record Order(
 
         if (result.HasErrors)
             return result;
+
+        // the same increment the position booked, valued at the same price
+        ExecutedSum += (executedQty - ExecutedQty) * executedPrice;
 
         Status = status;
         ExecutedQty = executedQty;

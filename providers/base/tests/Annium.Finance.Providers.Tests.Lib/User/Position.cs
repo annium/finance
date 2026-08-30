@@ -220,7 +220,7 @@ public sealed record Position(
     /// <param name="totalQty">The order's total quantity.</param>
     /// <param name="potentialQty">The quantity the order could still have filled before cancellation.</param>
     /// <param name="executedQty">The quantity the order had already filled.</param>
-    /// <param name="executedPrice">The order's volume-weighted average fill price.</param>
+    /// <param name="executedSum">The notional value the order actually booked, accumulated fill by fill.</param>
     /// <param name="fee">The fee already charged on the order.</param>
     /// <param name="updatedAt">The moment of the removal, in Unix milliseconds.</param>
     /// <param name="result">The result to report an error to if the order is not tracked.</param>
@@ -230,7 +230,7 @@ public sealed record Position(
         decimal totalQty,
         decimal potentialQty,
         decimal executedQty,
-        decimal executedPrice,
+        decimal executedSum,
         decimal fee,
         long updatedAt,
         IResult<Order> result
@@ -242,19 +242,23 @@ public sealed record Position(
             return;
         }
 
+        // reverse the sum that was booked, not one recomputed from the final price. UpdateOrder adds each
+        // fill at the price that fill happened at, so for an order filled 5@100 then 5@110 it booked
+        // 1050 - while 10 times the last price is 1100, and removing that left the position 50 richer
+        // than it ever was
         if (IsOpenOrder(side))
         {
             TotalQty -= totalQty;
             OpeningQty -= potentialQty - executedQty;
             OpenedQty -= executedQty;
-            OpenedSum -= executedQty * executedPrice;
+            OpenedSum -= executedSum;
             OpenedFee -= fee;
         }
         else
         {
             ClosingQty -= potentialQty - executedQty;
             ClosedQty -= executedQty;
-            ClosedSum -= executedQty * executedPrice;
+            ClosedSum -= executedSum;
             ClosedFee -= fee;
         }
 

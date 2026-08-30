@@ -114,11 +114,14 @@ public class KeyedLoaderTests : TestBase
         {
             loader.OnData += (key, context, data) => log.Enqueue((key, context, data));
 
+            // one request buys one load. How many further loads its debounce happens to coalesce into is
+            // not something to assert on, so ask again for the second link rather than assuming the
+            // first request produces two
             loader.Request("first");
-            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(2));
+            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(1));
 
             loader.Request("first");
-            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(3));
+            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(2));
 
             // assert the chain, not a total: the loader reloads on its own debounce, so how many events
             // have landed by the time this reads the log is a matter of timing. What must hold whatever
