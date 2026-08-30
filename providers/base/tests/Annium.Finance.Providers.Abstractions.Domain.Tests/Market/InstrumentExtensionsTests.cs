@@ -154,4 +154,33 @@ public class InstrumentExtensionsTests
         instrument.IsValidQtyPrice(1m, 10m).IsTrue("the minimum price itself is valid");
         instrument.IsValidQtyPrice(1m, 100m).IsTrue("the maximum price itself is valid");
     }
+
+    /// <summary>
+    /// Verifies that a bound the provider reports as zero is not enforced. Binance's price filter uses zero
+    /// to say it does not bound that side, exactly as its lot and tick sizes do, so reading it as a literal
+    /// limit would reject every price on such a symbol.
+    /// </summary>
+    [Fact]
+    public void IsValidQtyPrice_UnboundedPrice_IsNotEnforced()
+    {
+        // arrange - neither bound is set, as an exchange reports for a symbol it does not limit
+        var instrument = new Instrument(
+            "fake",
+            ProviderEnvironment.Test,
+            "XY",
+            1m,
+            1m,
+            1m,
+            100m,
+            0m,
+            0m,
+            1m,
+            decimal.MaxValue,
+            int.MaxValue
+        );
+
+        // assert
+        instrument.IsValidQtyPrice(1m, 1m).IsTrue("an unset minimum must not reject a low price");
+        instrument.IsValidQtyPrice(1m, 1_000_000m).IsTrue("an unset maximum must not reject a high price");
+    }
 }

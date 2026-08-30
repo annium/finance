@@ -17,10 +17,10 @@ public interface IInstrument
     /// <summary>Gets the maximum order quantity, in the instrument's base asset.</summary>
     decimal MaxQty { get; }
 
-    /// <summary>Gets the minimum allowed order price.</summary>
+    /// <summary>Gets the minimum allowed order price, or zero where the provider does not bound it.</summary>
     decimal MinPrice { get; }
 
-    /// <summary>Gets the maximum allowed order price.</summary>
+    /// <summary>Gets the maximum allowed order price, or zero where the provider does not bound it.</summary>
     decimal MaxPrice { get; }
 
     /// <summary>Gets the minimum order notional value (quantity multiplied by price).</summary>

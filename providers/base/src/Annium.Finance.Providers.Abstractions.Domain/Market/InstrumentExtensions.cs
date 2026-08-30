@@ -46,8 +46,13 @@ public static class InstrumentExtensions
 
         // the price bounds are loaded from the exchange like every other limit here; checking only the
         // tick alignment let a price the exchange will reject pass as valid, and the rejection then
-        // arrived from the exchange with nothing on this side explaining which constraint was missed
-        if (price < instrument.MinPrice || price > instrument.MaxPrice)
+        // arrived from the exchange with nothing on this side explaining which constraint was missed.
+        // Zero means the exchange does not enforce that bound - Binance's price filter says so in the
+        // same way its lot and tick sizes do, which is why those are guarded on `> 0` too
+        if (instrument.MinPrice > 0 && price < instrument.MinPrice)
+            return false;
+
+        if (instrument.MaxPrice > 0 && price > instrument.MaxPrice)
             return false;
 
         var sum = qty * price;
