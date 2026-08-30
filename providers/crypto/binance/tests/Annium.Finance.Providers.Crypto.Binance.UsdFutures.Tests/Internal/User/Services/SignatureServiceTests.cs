@@ -34,7 +34,11 @@ public class SignatureServiceTests : ProvidersTestBase
     /// Signs a fixed order query string with the credentials from <c>test.env</c> and asserts it matches the
     /// signature pinned in <see cref="Settings.ExpectedSignature"/>.
     /// </summary>
-    [Fact]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public void Signature_IsValid()
     {
         // arrange

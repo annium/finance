@@ -14,13 +14,25 @@ public static class TestEnv
     private static readonly IReadOnlyDictionary<string, string> _envVariables;
 
     /// <summary>
-    /// Reads and parses `test.env` from the current working directory.
+    /// Gets a value indicating whether credentials were found. The file is gitignored and absent on a
+    /// machine that has not been given one - CI included - so its absence is an ordinary state, not a
+    /// failure: tests that need credentials skip themselves, rather than every test in the assembly
+    /// dying in type initialization.
+    /// </summary>
+    public static bool IsAvailable => _envVariables.Count > 0;
+
+    /// <summary>
+    /// Reads and parses `test.env` from the current working directory, if there is one.
     /// </summary>
     static TestEnv()
     {
         var envFile = Path.Combine(Directory.GetCurrentDirectory(), "test.env");
         if (!File.Exists(envFile))
-            throw new FileNotFoundException("Env file test.env not found. Use test.env.example as example", envFile);
+        {
+            _envVariables = new Dictionary<string, string>();
+
+            return;
+        }
 
         var variables = new Dictionary<string, string>();
         var raw = File.ReadAllLines(envFile)
