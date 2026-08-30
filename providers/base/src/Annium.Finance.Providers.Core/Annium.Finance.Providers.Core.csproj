@@ -14,4 +14,7 @@
     <PackageReference Include="Annium.NodaTime.Extensions" />
     <PackageReference Include="Annium.Serialization.Json" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Annium.Finance.Providers.Core.Tests" />
+  </ItemGroup>
 </Project>
