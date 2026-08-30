@@ -8,16 +8,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that the converter reads Binance's <c>POST /order/cancelReplace</c> success envelope - which
+/// nests the cancel confirmation and the new order under separate keys - down to just the new order, as
+/// an <see cref="OrderModel"/>.
+/// </summary>
 public class ModifyOrderSuccessResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ModifyOrderSuccessResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public ModifyOrderSuccessResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A cancel-replace success envelope is parsed into just the <c>newOrderResponse</c> leg, discarding
+    /// the cancel confirmation alongside it.
+    /// </summary>
     [Fact]
     public void Success()
     {

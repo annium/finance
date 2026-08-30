@@ -8,16 +8,32 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>GetTradeResponseConverter</c> reads Binance's <c>GET /userTrades</c> response into a
+/// <see cref="TradeModel"/>, including a negative commission (a maker rebate) passed through unchanged.
+/// </summary>
 public class GetTradeResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetTradeResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetTradeResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured trade response with a negative (rebate) commission is parsed into its ids, price/quantity,
+    /// commission and maker flag.
+    /// </summary>
     [Fact]
     public void Works()
     {

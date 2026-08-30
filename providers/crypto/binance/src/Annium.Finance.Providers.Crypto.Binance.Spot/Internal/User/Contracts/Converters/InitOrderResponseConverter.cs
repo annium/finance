@@ -8,8 +8,17 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Deserializes a Binance new-order response into an <see cref="OrderModel"/>. Also used to deserialize the
+/// nested <c>newOrderResponse</c> payload of a successful cancel-replace (modify order) response.
+/// </summary>
 internal class InitOrderResponseConverter : JsonConverter<OrderModel?>
 {
+    /// <summary>Reads a Binance new-order response and converts it into an <see cref="OrderModel"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the response object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The converted order, or null if the order id, client order id or symbol are missing.</returns>
     public override OrderModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -119,6 +128,10 @@ internal class InitOrderResponseConverter : JsonConverter<OrderModel?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; orders are only ever read from Binance, never written.</summary>
+    /// <param name="writer">The writer to serialize to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, OrderModel? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

@@ -13,20 +13,44 @@ using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestB
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Services;
 
+/// <summary>
+/// Verifies that <c>QueryProcessor</c> turns each typed order request into the exact query-parameter set
+/// Binance's Spot REST API expects: the right field names and casing for every order type (limit, market,
+/// stop-loss/take-profit, market and limit variants), that init requests set <c>newOrderRespType=RESULT</c>,
+/// that modify requests build a cancel-replace query with <c>cancelReplaceMode=STOP_ON_FAILURE</c> and both
+/// the old and new client order ids, and that cancel requests carry just the identifying fields.
+/// </summary>
 public class QueryProcessorTests : ProvidersTestBase
 {
+    /// <summary>The symbol every request in this fixture is built for.</summary>
     private const string Symbol = "BTCUSDT";
+
+    /// <summary>The client order id shared by every request in this fixture.</summary>
     private static readonly string _clientOrderId = Guid.NewGuid().ToString();
+
+    /// <summary>The orientation range (both/long/short) every request in this fixture is built with.</summary>
     private static readonly OrientationRange _range = OrientationRange.Both;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueryProcessorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public QueryProcessorTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the query processor under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A limit order request builds a query with symbol, side, <c>LIMIT</c> type, GTC time-in-force,
+    /// quantity and price.
+    /// </summary>
     [Fact]
     public void InitOrder_Limit()
     {
@@ -49,6 +73,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("price").Is("15.2");
     }
 
+    /// <summary>
+    /// A market order request builds a query with symbol, side, <c>MARKET</c> type and quantity, and no
+    /// time-in-force or price.
+    /// </summary>
     [Fact]
     public void InitOrder_Market()
     {
@@ -69,6 +97,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("quantity").Is("10.5");
     }
 
+    /// <summary>
+    /// A stop-loss-market order request builds a query with the <c>STOP_LOSS</c> type and the trigger under
+    /// <c>stopPrice</c>, with no time-in-force since it's a market order.
+    /// </summary>
     [Fact]
     public void InitOrder_StopLossMarket()
     {
@@ -90,6 +122,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("stopPrice").Is("9.4");
     }
 
+    /// <summary>
+    /// A take-profit-market order request builds a query with the <c>TAKE_PROFIT</c> type and the trigger
+    /// under <c>stopPrice</c>, with no time-in-force since it's a market order.
+    /// </summary>
     [Fact]
     public void InitOrder_TakeProfitMarket()
     {
@@ -111,6 +147,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("stopPrice").Is("9.4");
     }
 
+    /// <summary>
+    /// A stop-loss-limit order request builds a query with the <c>STOP_LOSS_LIMIT</c> type, GTC
+    /// time-in-force, and both a limit <c>price</c> and a trigger <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void InitOrder_StopLossLimit()
     {
@@ -134,6 +174,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("stopPrice").Is("9.6");
     }
 
+    /// <summary>
+    /// A take-profit-limit order request builds a query with the <c>TAKE_PROFIT_LIMIT</c> type, GTC
+    /// time-in-force, and both a limit <c>price</c> and a trigger <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void InitOrder_TakeProfitLimit()
     {
@@ -157,6 +201,11 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("stopPrice").Is("9.2");
     }
 
+    /// <summary>
+    /// Modifying a limit order builds a cancel-replace query for the new <c>LIMIT</c> parameters, with
+    /// <c>cancelReplaceMode=STOP_ON_FAILURE</c> and both <c>cancelOrigClientOrderId</c> and
+    /// <c>newClientOrderId</c> set to the original order's client id.
+    /// </summary>
     [Fact]
     public void ModifyOrder_Limit()
     {
@@ -182,6 +231,11 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// Modifying to a market order builds a cancel-replace query for the new <c>MARKET</c> parameters
+    /// (quantity only, no price), still through the same cancel-replace/client-id mechanics as the other
+    /// modify cases.
+    /// </summary>
     [Fact]
     public void ModifyOrder_Market()
     {
@@ -206,6 +260,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// Modifying to a stop-loss-market order builds a cancel-replace query for the new <c>STOP_LOSS</c>
+    /// parameters, with the new trigger under <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void ModifyOrder_StopLossMarket()
     {
@@ -231,6 +289,10 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// Modifying to a take-profit-market order builds a cancel-replace query for the new <c>TAKE_PROFIT</c>
+    /// parameters, with the new trigger under <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void ModifyOrder_TakeProfitMarket()
     {
@@ -256,6 +318,11 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// Modifying to a stop-loss-limit order builds a cancel-replace query for the new
+    /// <c>STOP_LOSS_LIMIT</c> parameters, with both a new limit <c>price</c> and a new trigger
+    /// <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void ModifyOrder_StopLossLimit()
     {
@@ -282,6 +349,11 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// Modifying to a take-profit-limit order builds a cancel-replace query for the new
+    /// <c>TAKE_PROFIT_LIMIT</c> parameters, with both a new limit <c>price</c> and a new trigger
+    /// <c>stopPrice</c>.
+    /// </summary>
     [Fact]
     public void ModifyOrder_TakeProfitLimit()
     {
@@ -309,6 +381,11 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("newClientOrderId").Is(request.Order.ClientOrderId);
     }
 
+    /// <summary>
+    /// A cancel request builds a minimal query carrying just the symbol and the order's client id, sent
+    /// under both <c>origClientOrderId</c> (identifying the order to cancel) and <c>newClientOrderId</c>
+    /// (for the cancel confirmation).
+    /// </summary>
     [Fact]
     public void CancelOrder()
     {
@@ -328,6 +405,9 @@ public class QueryProcessorTests : ProvidersTestBase
         data.At("symbol").Is(request.Symbol);
     }
 
+    /// <summary>
+    /// A cancel-all-orders request builds a query carrying just the symbol.
+    /// </summary>
     [Fact]
     public void CancelAllOrders()
     {

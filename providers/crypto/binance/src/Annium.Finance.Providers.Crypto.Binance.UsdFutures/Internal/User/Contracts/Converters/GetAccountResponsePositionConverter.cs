@@ -8,8 +8,20 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Reads a single position entry (<c>positions</c> array item) of the <c>GET /fapi/v2/account</c> response into
+/// an <see cref="AccountResponsePosition"/>, deriving the margin type from the boolean <c>isolated</c> flag.
+/// Writing is not supported since this contract is read-only (server-to-client).
+/// </summary>
 internal class GetAccountResponsePositionConverter : JsonConverter<AccountResponsePosition>
 {
+    /// <summary>
+    /// Reads a position entry.
+    /// </summary>
+    /// <param name="reader">The UTF-8 JSON reader positioned at the start of the position object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The serializer options in effect.</param>
+    /// <returns>The parsed position.</returns>
     public override AccountResponsePosition Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -90,6 +102,12 @@ internal class GetAccountResponsePositionConverter : JsonConverter<AccountRespon
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Not supported: position entries are only ever read from the exchange, never written.
+    /// </summary>
+    /// <param name="writer">The UTF-8 JSON writer.</param>
+    /// <param name="value">The position to write.</param>
+    /// <param name="options">The serializer options in effect.</param>
     public override void Write(Utf8JsonWriter writer, AccountResponsePosition value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

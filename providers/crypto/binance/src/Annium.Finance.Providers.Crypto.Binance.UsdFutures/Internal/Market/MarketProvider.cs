@@ -16,6 +16,15 @@ using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market;
 
+/// <summary>
+/// Loads USD-M futures market data straight from the Binance REST API: exchange info (resources and instruments)
+/// and historical klines/candles.
+/// </summary>
+/// <param name="config">The resolved market configuration.</param>
+/// <param name="exchangeInfoRequestFactory">Factory for requests against the exchange info endpoint.</param>
+/// <param name="candleRequestFactory">Factory for requests against the klines/candles endpoint.</param>
+/// <param name="rateLimiter">Limits request weight against the exchange's rate limits.</param>
+/// <param name="logger">The logger.</param>
 internal class MarketProvider(
     MarketConfig config,
     IHttpRequestFactory exchangeInfoRequestFactory,
@@ -24,8 +33,14 @@ internal class MarketProvider(
     ILogger logger
 ) : MarketProviderBase, IMarketProvider, ILogSubject
 {
+    /// <summary>Gets the logger for this provider.</summary>
     public ILogger Logger { get; } = logger;
 
+    /// <summary>
+    /// Loads exchange info and derives the resource (asset) and instrument sets, updating the rate limiter's
+    /// weight limit from the reported <c>REQUEST_WEIGHT</c> rate limit.
+    /// </summary>
+    /// <returns>A result carrying the resolved market context, or a failure status if exchange info could not be loaded.</returns>
     public async Task<MarketResult<MarketContext?>> LoadContextAsync()
     {
         this.Trace("start");
@@ -60,6 +75,15 @@ internal class MarketProvider(
         return MarketResult.Ok<MarketContext?>(new MarketContext(resources.Values, result.Data.Instruments));
     }
 
+    /// <summary>
+    /// Loads 1-minute klines/candles for the given instrument and time range, paging through the exchange's
+    /// 1000-candle-per-request limit.
+    /// </summary>
+    /// <param name="instrument">The instrument symbol to load candles for.</param>
+    /// <param name="start">The inclusive start of the time range.</param>
+    /// <param name="end">The exclusive end of the time range.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>An asynchronous sequence of candle page results, in chronological order.</returns>
     public async IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
         string instrument,
         Instant start,

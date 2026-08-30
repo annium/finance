@@ -1,5 +1,10 @@
 set shell := ["bash", "-cu"]
 set positional-arguments
+# lib.just is copied in by the umbrella repo's `just copy-ci`; recipes redefined below
+# override the shared ones.
+set allow-duplicate-recipes := true
+
+import 'lib.just'
 
 [private]
 default:
@@ -50,7 +55,13 @@ build:
 
 test:
     @echo "=== $0 ==="
-    dotnet test -c Release --no-build --nologo --logger "trx;LogFilePrefix=test-results.trx"
+    dotnet test -c Release --no-build --report-xunit-trx
+
+# the tests that talk to a real exchange are skipped by default - they need credentials in test.env, and
+# the order ones place and cancel actual orders. This runs them, and is deliberate by construction
+test-exchange:
+    @echo "=== $0 ==="
+    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx
 
 pack:
     #!/usr/bin/env bash
@@ -58,11 +69,6 @@ pack:
     echo "=== pack ==="
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
     dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg -p:PackageVersion=$packageVersion
-
-publish:
-    @echo "=== $0 ==="
-    dotnet nuget push "*.nupkg" --source https://dotnet.pkg.annium.com/v3/index.json --api-key $(cat .xs.credentials)
-    find . -type f -name '*.nupkg' | xargs -I% rm %
 
 # docs
 
@@ -89,52 +95,3 @@ docs-serve:
 docs-watch:
     @echo "=== $0 ==="
     dotnet tool run docfx docfx.json --serve
-
-# ci
-
-ci-merge-request-short:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-merge-request-short ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just clean
-    just build
-
-ci-merge-request-full:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-merge-request-full ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just clean
-    just build
-    just test
-
-ci-release apiKey repository githubToken:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-release ==="
-    just setup
-    just format
-    just ensure-no-changes
-    just ci-set-package-version
-    just clean
-    just build
-    just pack
-    just publish
-    just ci-push-tag "$2" "$3"
-    echo "Release complete"
-
-ci-set-package-version:
-    @echo "=== $0 ==="
-    dotnet tool run versioning set-version -v $(cat version)
-
-ci-push-tag repository githubToken:
-    #!/usr/bin/env bash
-    set -e
-    echo "=== ci-push-tag ==="
-    packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
-    git push origin v$packageVersion

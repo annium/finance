@@ -11,8 +11,18 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
+/// <summary>
+/// Builds <see cref="UserProvider"/> instances for the USD-M futures provider, resolving configuration, request
+/// signing, and the registered account/order/trade HTTP request factories.
+/// </summary>
+/// <param name="sp">The service provider used to resolve dependencies.</param>
 internal class UserProviderFactory(IServiceProvider sp) : IUserProviderFactory
 {
+    /// <summary>
+    /// Creates a user provider for the given settings.
+    /// </summary>
+    /// <param name="settings">The user settings identifying the provider, environment and credentials.</param>
+    /// <returns>A new, ready-to-use user provider.</returns>
     public IUserProvider Create(UserSettings settings)
     {
         var providerKey = settings.GetProviderKey();

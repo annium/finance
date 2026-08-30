@@ -8,16 +8,31 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that the converter reads Binance's <c>POST /listenKey</c> response - a single <c>listenKey</c>
+/// field - into a <see cref="ListenKey"/>.
+/// </summary>
 public class ListenKeyResponseTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListenKeyResponseTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public ListenKeyResponseTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured listen-key response is parsed into its key value unchanged.
+    /// </summary>
     [Fact]
     public void Works()
     {

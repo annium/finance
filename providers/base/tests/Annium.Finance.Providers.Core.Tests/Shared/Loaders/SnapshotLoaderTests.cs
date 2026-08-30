@@ -13,10 +13,21 @@ using static Annium.Finance.Providers.Abstractions.Connectors.Shared.ConnectorSt
 
 namespace Annium.Finance.Providers.Core.Tests.Shared.Loaders;
 
+/// <summary>
+/// Pins the retry and cancellation behavior of <see cref="ISnapshotLoader{T}"/>: that it keeps retrying a failing
+/// fetch until one succeeds, that stopping it while a fetch is in flight discards that fetch's result, and that
+/// it can run without reporting a connecting status.
+/// </summary>
 public class SnapshotLoaderTests : TestBase
 {
+    /// <summary>Records every connection status transition reported by the loader's status monitor, in order.</summary>
     private readonly ConcurrentQueue<ConnectorStatus> _statuses = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SnapshotLoaderTests"/> class, registering the finance
+    /// providers services and test log used to observe loaded data.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public SnapshotLoaderTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -25,11 +36,26 @@ public class SnapshotLoaderTests : TestBase
             container.AddFinanceProviders();
         });
         this.RegisterTestLogs();
+    }
+
+    /// <summary>
+    /// The provider is built by the base class during initialization, so anything resolved from it has to
+    /// wait for that - a constructor runs too early.
+    /// </summary>
+    /// <returns>A task representing the asynchronous initialization.</returns>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
 
         var monitor = Get<IStatusMonitor>();
         monitor.OnStatusChanged += _statuses.Enqueue;
     }
 
+    /// <summary>
+    /// Verifies that a loader whose fetch delegate fails repeatedly keeps retrying, on its own, until the fetch
+    /// eventually succeeds, and reports connecting then connected on the status monitor.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task Works()
     {
@@ -56,6 +82,12 @@ public class SnapshotLoaderTests : TestBase
         _statuses.IsEqual(new[] { Connecting, Connected });
     }
 
+    /// <summary>
+    /// Verifies that calling <see cref="ISnapshotLoader{T}.Stop"/> while a fetch is in flight discards that
+    /// fetch's result once it later completes: no data is delivered, and the status monitor reports connecting
+    /// then disconnected rather than connected.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task StopsDuringFetch_CancelsProcessing()
     {
@@ -90,6 +122,11 @@ public class SnapshotLoaderTests : TestBase
         _statuses.ToArray().IsEqual(new[] { Connecting, Disconnected });
     }
 
+    /// <summary>
+    /// Verifies that starting a loader with <c>reportStatus: false</c> still delivers data on a successful fetch,
+    /// while the status monitor jumps straight to connected without ever reporting connecting.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task StartsWithoutStatusReporting()
     {

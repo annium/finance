@@ -9,16 +9,35 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>BalanceAndPositionUpdateEventConverter</c> reads Binance's <c>ACCOUNT_UPDATE</c>
+/// user-data stream event - a nested <c>a</c> object carrying separate balance (<c>B</c>) and position
+/// (<c>P</c>) arrays - into a <see cref="BalanceAndPositionUpdateEvent"/>, including all three position
+/// orientations (both/long/short) and margin types (cross/isolated), and that an event with a different
+/// <c>e</c> type deserializes to null instead of throwing.
+/// </summary>
 public class BalanceAndPositionUpdateEventConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BalanceAndPositionUpdateEventConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public BalanceAndPositionUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured <c>ACCOUNT_UPDATE</c> event carrying two balances and three positions - one flat/both-side,
+    /// one long/isolated, one short/isolated - is parsed into the matching balance and position records.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -132,6 +151,9 @@ public class BalanceAndPositionUpdateEventConverterTests : ProvidersTestBase
             );
     }
 
+    /// <summary>
+    /// An event whose <c>e</c> type tag isn't <c>ACCOUNT_UPDATE</c> deserializes to null instead of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {

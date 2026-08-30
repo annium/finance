@@ -11,8 +11,19 @@ using Annium.Logging;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market;
 
+/// <summary>
+/// Builds fully-wired <see cref="MarketConnector"/> instances for the USD-M futures provider: resolves
+/// configuration, the underlying provider, the market context loader and the book ticker service.
+/// </summary>
+/// <param name="sp">The service provider used to resolve dependencies.</param>
 internal class MarketConnectorFactory(IServiceProvider sp) : IMarketConnectorInstanceFactory
 {
+    /// <summary>
+    /// Creates a market connector for the given settings.
+    /// </summary>
+    /// <param name="settings">The market settings identifying the provider and environment.</param>
+    /// <param name="disposable">Accumulates cleanup actions for the connector's lifetime.</param>
+    /// <returns>A new, ready-to-use market connector.</returns>
     public IMarketConnector Create(MarketSettings settings, AsyncDisposableBox disposable)
     {
         var config = sp.Resolve<IMapper>().Map<MarketConfig>(settings);

@@ -6,11 +6,27 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User;
 
+/// <summary>
+/// Runs <see cref="UserProviderTestBase"/>'s context/orders/trades checks against the real Binance Spot user
+/// provider for BTCUSDT. Currently disabled outright (not gated by
+/// <see cref="Annium.Finance.Providers.Tests.Lib.Exchange.IsEnabled"/> like the USD-M futures counterpart):
+/// every case is skipped with "Not implemented".
+/// </summary>
 public class UserProviderTests : UserProviderTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserProviderTests"/> class, targeting BTCUSDT under the
+    /// configured <see cref="Settings.User"/> account.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public UserProviderTests(ITestOutputHelper outputHelper)
         : base(Settings.User, "BTCUSDT", outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider, with tight reload-loader intervals, so the user provider under
+    /// test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot(
@@ -23,21 +39,33 @@ public class UserProviderTests : UserProviderTestBase
         );
     }
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadContextAsync() => LoadContextBaseAsync();
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadOpenOrdersAsync() => LoadOpenOrdersBaseAsync();
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadLatestOrdersAsync() => LoadLatestOrdersBaseAsync();
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadHistoryOrdersAsync() => LoadHistoryOrdersBaseAsync();
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadLatestTradesAsync() => LoadLatestTradesBaseAsync();
 
+    /// <summary>Not implemented; skipped unconditionally.</summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(Skip = "Not implemented")]
     public Task LoadHistoryTradesAsync() => LoadHistoryTradesBaseAsync();
 }

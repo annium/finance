@@ -17,6 +17,18 @@ using NodaTime;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
+/// <summary>
+/// Loads USD-M futures account state, orders and trades straight from the Binance REST API, signing every
+/// request with the account's API secret.
+/// </summary>
+/// <param name="config">The resolved user connector configuration.</param>
+/// <param name="timeProvider">Supplies the current time, used to bound history queries.</param>
+/// <param name="signatureService">Signs outgoing REST requests.</param>
+/// <param name="getAccountRequestFactory">Factory for requests against the account info endpoint.</param>
+/// <param name="getOrderRequestFactory">Factory for requests against the order lookup endpoints.</param>
+/// <param name="getTradeRequestFactory">Factory for requests against the trade lookup endpoint.</param>
+/// <param name="rateLimiter">Limits request weight against the exchange's rate limits.</param>
+/// <param name="logger">The logger.</param>
 internal class UserProvider(
     UserConfig config,
     ITimeProvider timeProvider,
@@ -28,13 +40,27 @@ internal class UserProvider(
     ILogger logger
 ) : IUserProvider, ILogSubject
 {
+    /// <summary>The maximum number of orders returned by a single order history request.</summary>
     private const int OrderQueryLimit = 1000;
+
+    /// <summary>The maximum number of trades returned by a single trade history request.</summary>
     private const int TradeQueryLimit = 1000;
+
+    /// <summary>The maximum time span covered by a single order history request (7 days).</summary>
     private static long OrderQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
+
+    /// <summary>The maximum time span covered by a single trade history request (7 days).</summary>
     private static long TradeQueryWindow { get; } = TimeSpan.FromDays(7).TotalMilliseconds.FloorInt64();
 
+    /// <summary>Gets the logger for this provider.</summary>
     public ILogger Logger { get; } = logger;
 
+    /// <summary>
+    /// Loads the account's asset balances and positions and maps them into the library's generic account
+    /// context. An asset's usable balance is the free balance, and its locked balance is the sum of initial and
+    /// maintenance margin.
+    /// </summary>
+    /// <returns>A result carrying the resolved account context, or a failure status if it could not be loaded.</returns>
     public async Task<UserResult<UserContext?>> LoadContextAsync()
     {
         var result = await getAccountRequestFactory
@@ -66,6 +92,10 @@ internal class UserProvider(
         return UserResult.Ok<UserContext?>(new UserContext(assets, positions));
     }
 
+    /// <summary>
+    /// Loads all currently open orders, across all symbols.
+    /// </summary>
+    /// <returns>A result carrying the open orders, or a failure status if they could not be loaded.</returns>
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOpenOrdersAsync()
     {
         var result = await getOrderRequestFactory
@@ -91,6 +121,13 @@ internal class UserProvider(
         return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(result.Data);
     }
 
+    /// <summary>
+    /// Loads orders for a symbol: the most recent page when <paramref name="since"/> is null, or the full order
+    /// history from that moment onward otherwise.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load orders for.</param>
+    /// <param name="since">The timestamp to load orders since, in Unix milliseconds, or null for the latest page.</param>
+    /// <returns>A result carrying the orders, or a failure status if they could not be loaded.</returns>
     public async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrdersAsync(string symbol, long? since)
     {
         if (since is null)
@@ -99,6 +136,13 @@ internal class UserProvider(
         return await LoadOrderHistoryAsync(symbol, since.Value);
     }
 
+    /// <summary>
+    /// Loads trades for a symbol: the most recent page when <paramref name="since"/> is null, or the full trade
+    /// history from that moment onward otherwise.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load trades for.</param>
+    /// <param name="since">The timestamp to load trades since, in Unix milliseconds, or null for the latest page.</param>
+    /// <returns>A result carrying the trades, or a failure status if they could not be loaded.</returns>
     public async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradesAsync(string symbol, long? since)
     {
         if (since is null)
@@ -107,6 +151,11 @@ internal class UserProvider(
         return await LoadTradeHistoryAsync(symbol, since.Value);
     }
 
+    /// <summary>
+    /// Loads the most recent page of orders for a symbol, up to <see cref="OrderQueryLimit"/> orders.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load orders for.</param>
+    /// <returns>A result carrying the orders, or a failure status if they could not be loaded.</returns>
     private async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadLatestOrdersAsync(string symbol)
     {
         var result = await getOrderRequestFactory
@@ -133,6 +182,14 @@ internal class UserProvider(
         return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(result.Data);
     }
 
+    /// <summary>
+    /// Loads the full order history for a symbol from the given moment onward, paging by
+    /// <see cref="OrderQueryWindow"/>-sized time windows and, once a window returns a full
+    /// <see cref="OrderQueryLimit"/> page, switching to cursor-based paging by order id to drain the remainder.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load orders for.</param>
+    /// <param name="since">The timestamp to load orders since, in Unix milliseconds.</param>
+    /// <returns>A result carrying the orders, or a failure status if any page could not be loaded.</returns>
     private async Task<UserResult<IReadOnlyCollection<OrderModel>?>> LoadOrderHistoryAsync(string symbol, long since)
     {
         var orders = new Dictionary<string, OrderModel>();
@@ -220,6 +277,11 @@ internal class UserProvider(
         return UserResult.Ok<IReadOnlyCollection<OrderModel>?>(orders.Values);
     }
 
+    /// <summary>
+    /// Loads the most recent page of trades for a symbol, up to <see cref="TradeQueryLimit"/> trades.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load trades for.</param>
+    /// <returns>A result carrying the trades, or a failure status if they could not be loaded.</returns>
     private async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadLatestTradesAsync(string symbol)
     {
         var result = await getTradeRequestFactory
@@ -246,6 +308,14 @@ internal class UserProvider(
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(result.Data);
     }
 
+    /// <summary>
+    /// Loads the full trade history for a symbol from the given moment onward, paging by
+    /// <see cref="TradeQueryWindow"/>-sized time windows and, once a window returns a full
+    /// <see cref="TradeQueryLimit"/> page, switching to cursor-based paging by trade id to drain the remainder.
+    /// </summary>
+    /// <param name="symbol">The instrument symbol to load trades for.</param>
+    /// <param name="since">The timestamp to load trades since, in Unix milliseconds.</param>
+    /// <returns>A result carrying the trades, or a failure status if any page could not be loaded.</returns>
     private async Task<UserResult<IReadOnlyCollection<TradeModel>?>> LoadTradeHistoryAsync(string symbol, long since)
     {
         var trades = new Dictionary<string, TradeModel>();
@@ -332,6 +402,12 @@ internal class UserProvider(
         return UserResult.Ok<IReadOnlyCollection<TradeModel>?>(trades.Values);
     }
 
+    /// <summary>
+    /// Widens the requested history range into safe query bounds, padding the lower bound backwards and using
+    /// the current time as the upper bound, to tolerate clock skew between this process and the exchange.
+    /// </summary>
+    /// <param name="since">The requested history start, in Unix milliseconds.</param>
+    /// <returns>The widened start and end instants of the history range.</returns>
     private (Instant min, Instant max) ResolveHistoryBounds(long since)
     {
         var now = timeProvider.Now;

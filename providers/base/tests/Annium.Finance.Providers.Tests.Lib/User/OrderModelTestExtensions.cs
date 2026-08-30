@@ -4,8 +4,18 @@ using Annium.Testing;
 
 namespace Annium.Finance.Providers.Tests.Lib.User;
 
+/// <summary>
+/// Asserts that an <see cref="OrderModel"/> reported by a provider matches the request that created/modified
+/// it, or matches another previously reported <see cref="OrderModel"/>. Checks only the order's terms
+/// (symbol, side, type, quantity, prices) - not its lifecycle status or fill state.
+/// </summary>
 public static class OrderModelTestExtensions
 {
+    /// <summary>
+    /// Asserts that the order's terms match the request that placed it.
+    /// </summary>
+    /// <param name="order">The order reported by the provider.</param>
+    /// <param name="request">The request the order was placed from.</param>
     public static void ShouldMatch(this OrderModel order, IInitOrderRequest request)
     {
         order.ClientOrderId.IsNotDefault();
@@ -18,6 +28,11 @@ public static class OrderModelTestExtensions
         order.LevelPrice.Is(request.LevelPrice);
     }
 
+    /// <summary>
+    /// Asserts that the order's terms match the request that modified it.
+    /// </summary>
+    /// <param name="order">The order reported by the provider.</param>
+    /// <param name="request">The request the order was modified from.</param>
     public static void ShouldMatch(this OrderModel order, IModifyOrderRequest request)
     {
         order.ClientOrderId.IsNotDefault();
@@ -30,6 +45,11 @@ public static class OrderModelTestExtensions
         order.LevelPrice.Is(request.LevelPrice);
     }
 
+    /// <summary>
+    /// Asserts that the order's identity and terms match a previously reported order.
+    /// </summary>
+    /// <param name="order">The order reported by the provider.</param>
+    /// <param name="original">The original order to compare against.</param>
     public static void ShouldMatch(this OrderModel order, OrderModel original)
     {
         order.ClientOrderId.Is(original.ClientOrderId);

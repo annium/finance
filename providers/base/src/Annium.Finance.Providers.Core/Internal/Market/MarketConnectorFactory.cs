@@ -8,10 +8,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Finance.Providers.Core.Internal.Market;
 
+/// <summary>
+/// Default <see cref="IMarketConnectorFactory"/> implementation. Builds a standalone market connector in its own
+/// DI scope, resolving the provider-specific instance factory registered for the settings' provider key.
+/// </summary>
+/// <param name="sp">The root service provider used to create the connector's own DI scope.</param>
+/// <param name="logger">The logger instance.</param>
 internal class MarketConnectorFactory(IServiceProvider sp, ILogger logger) : IMarketConnectorFactory, ILogSubject
 {
+    /// <summary>Gets the logger instance.</summary>
     public ILogger Logger { get; } = logger;
 
+    /// <summary>
+    /// Creates a market connector configured with the given settings.
+    /// </summary>
+    /// <param name="settings">The market settings identifying the provider and market to connect to.</param>
+    /// <returns>A new market connector instance.</returns>
     public IMarketConnector Create(MarketSettings settings)
     {
         var providerKey = settings.GetProviderKey();

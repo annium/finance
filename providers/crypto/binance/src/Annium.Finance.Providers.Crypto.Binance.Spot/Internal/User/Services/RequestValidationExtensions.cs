@@ -5,8 +5,12 @@ using static Annium.Finance.Providers.Core.User.Validation;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 
+/// <summary>Validation rules for order placement requests, specific to what each Binance order type requires.</summary>
 internal static class RequestValidationExtensions
 {
+    /// <summary>Validates an order placement request against the field constraints of its order type (e.g. a limit order requires a price, a market order must not have one).</summary>
+    /// <param name="request">The order placement request to validate.</param>
+    /// <returns>A result indicating whether the request is valid.</returns>
     public static UserResult Validate(this IInitOrderRequest request)
     {
         return request.Type switch

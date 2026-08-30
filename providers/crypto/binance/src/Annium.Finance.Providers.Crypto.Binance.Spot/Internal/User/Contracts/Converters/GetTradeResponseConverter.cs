@@ -6,8 +6,14 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts.Converters;
 
+/// <summary>Deserializes a Binance get-trade (my trades) response entry into a <see cref="TradeModel"/>.</summary>
 internal class GetTradeResponseConverter : JsonConverter<TradeModel?>
 {
+    /// <summary>Reads a Binance trade entry and converts it into a <see cref="TradeModel"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the trade object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The converted trade, or null if the order id, symbol or commission asset are missing.</returns>
     public override TradeModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -98,6 +104,10 @@ internal class GetTradeResponseConverter : JsonConverter<TradeModel?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; trades are only ever read from Binance, never written.</summary>
+    /// <param name="writer">The writer to serialize to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, TradeModel? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

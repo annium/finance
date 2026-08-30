@@ -10,19 +10,56 @@ using Annium.Threading;
 
 namespace Annium.Finance.Providers.Core.Internal.Shared.Loaders;
 
+/// <summary>
+/// Default <see cref="ISnapshotLoader{T}"/> implementation. Fetches on a timer starting at
+/// <see cref="SnapshotLoaderConfig.FastInterval"/>; once <see cref="SnapshotLoaderConfig.FastRequestsLimit"/>
+/// consecutive fetches have been attempted without success, it switches to
+/// <see cref="SnapshotLoaderConfig.SlowInterval"/> and keeps retrying at that slower pace until a fetch
+/// succeeds. A successful fetch reports <see cref="ConnectorStatus.Connected"/>, raises <see cref="OnData"/>
+/// once, and stops the timer; <see cref="Stop"/> cancels any in-flight fetch and discards its result.
+/// </summary>
+/// <typeparam name="T">The type of data loaded.</typeparam>
 internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 {
+    /// <summary>Gets the logger instance.</summary>
     public ILogger Logger { get; }
+
+    /// <summary>Raised with the loaded data every time a fetch succeeds.</summary>
     public event Action<T> OnData = delegate { };
+
+    /// <summary>The timing configuration for fetch retries.</summary>
     private readonly SnapshotLoaderConfig _cfg;
+
+    /// <summary>The delegate that performs a single fetch.</summary>
     private readonly Func<CancellationToken, Task<IBaseResult<T?>>> _load;
+
+    /// <summary>The status reporter this loader's connection status is bound to.</summary>
     private readonly IStatusReporter _statusReporter;
+
+    /// <summary>The timer that drives repeated fetch attempts.</summary>
     private readonly ISequentialTimer _timer;
+
+    /// <summary>Synchronizes access to the loader's mutable state across the timer callback and public methods.</summary>
     private readonly Lock _locker = new();
+
+    /// <summary>The loader's current lifecycle state.</summary>
     private State _state;
+
+    /// <summary>Cancels the fetch(es) belonging to the current <see cref="Start"/>/<see cref="Stop"/> cycle.</summary>
     private CancellationTokenSource _cts = new();
+
+    /// <summary>Counts fetch attempts made since the last <see cref="Start"/>, used to decide when to switch to the slow interval.</summary>
     private int _requestCounter;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SnapshotLoader{T}"/> class and binds its connection status
+    /// to <paramref name="statusReporter"/>.
+    /// </summary>
+    /// <param name="cfg">The timing configuration for fetch retries.</param>
+    /// <param name="load">The delegate that performs a single fetch.</param>
+    /// <param name="statusReporter">The status reporter to bind this loader's connection status to.</param>
+    /// <param name="initialStatus">The initial connection status to report before the first fetch completes.</param>
+    /// <param name="logger">The logger instance.</param>
     public SnapshotLoader(
         SnapshotLoaderConfig cfg,
         Func<CancellationToken, Task<IBaseResult<T?>>> load,
@@ -39,6 +76,9 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         _timer = Timers.Async(FetchSnapshotAsync, Timeout.Infinite, Timeout.Infinite, logger);
     }
 
+    /// <summary>
+    /// Cancels any in-flight fetch, stops the timer, and reports a disconnected status. Idempotent.
+    /// </summary>
     public void Dispose()
     {
         this.Trace("start");
@@ -67,6 +107,11 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Starts fetching immediately, then on the fast interval, until a fetch succeeds or the loader is stopped.
+    /// Has no effect unless the loader is currently inactive.
+    /// </summary>
+    /// <param name="reportStatus">Whether to report a connecting status while fetching.</param>
     public void Start(bool reportStatus)
     {
         this.Trace("start");
@@ -95,6 +140,10 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Cancels any in-flight fetch, whose result is then discarded, and stops the timer. Has no effect unless
+    /// the loader is currently active.
+    /// </summary>
     public void Stop()
     {
         this.Trace("start");
@@ -129,6 +178,12 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Performs a single fetch and, on success, raises <see cref="OnData"/> and stops the timer; on failure,
+    /// switches to the slow interval once <see cref="SnapshotLoaderConfig.FastRequestsLimit"/> has been reached
+    /// and logs the failure message, if any.
+    /// </summary>
+    /// <returns>A task that completes once the fetch and its result have been handled.</returns>
     private async ValueTask FetchSnapshotAsync()
     {
         this.Trace("start");
@@ -185,7 +240,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
                 {
                     this.Trace("write error");
                     if (!result.Message.IsNullOrWhiteSpace())
-                        this.Error(result.Message);
+                        this.Error<string>("snapshot load failed: {message}", result.Message);
                 }
             }
         }
@@ -193,10 +248,16 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>The lifecycle states an <see cref="SnapshotLoader{T}"/> can be in.</summary>
     private enum State
     {
+        /// <summary>The loader is not fetching, either before the first <see cref="Start"/> or after <see cref="Stop"/>.</summary>
         Inactive,
+
+        /// <summary>The loader is fetching, on either the fast or the slow interval.</summary>
         Active,
+
+        /// <summary>The loader has been disposed and can no longer be started.</summary>
         Disposed,
     }
 }

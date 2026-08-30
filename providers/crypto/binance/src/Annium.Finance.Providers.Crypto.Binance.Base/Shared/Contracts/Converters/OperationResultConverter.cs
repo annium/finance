@@ -5,8 +5,16 @@ using Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Domain;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.Contracts.Converters;
 
+/// <summary>
+/// Converts a Binance error response (<c>{"code": ..., "msg": ...}</c>) into an <see cref="OperationResult"/>.
+/// </summary>
 public class OperationResultConverter : JsonConverter<OperationResult?>
 {
+    /// <summary>Reads a Binance error object into an <see cref="OperationResult"/>.</summary>
+    /// <param name="reader">The reader positioned at the start of the error object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The parsed operation result, or <c>null</c> if the <c>code</c> or <c>msg</c> field was missing.</returns>
     public override OperationResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -48,6 +56,10 @@ public class OperationResultConverter : JsonConverter<OperationResult?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; operation results are only ever read from Binance responses, never written.</summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The operation result to write.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, OperationResult? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

@@ -6,8 +6,20 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Reads a trade (user fill) entry from the trade lookup endpoint (<c>GET /fapi/v1/userTrades</c>) into a
+/// <see cref="TradeModel"/>, including whether the fill was on the maker or taker side of the trade. Writing is
+/// not supported since this contract is read-only (server-to-client).
+/// </summary>
 internal class GetTradeResponseConverter : JsonConverter<TradeModel?>
 {
+    /// <summary>
+    /// Reads a trade entry.
+    /// </summary>
+    /// <param name="reader">The UTF-8 JSON reader positioned at the start of the trade object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The serializer options in effect.</param>
+    /// <returns>The parsed trade, or null if the order id, symbol or commission asset is missing.</returns>
     public override TradeModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -98,6 +110,12 @@ internal class GetTradeResponseConverter : JsonConverter<TradeModel?>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Not supported: trades are only ever read from the exchange, never written.
+    /// </summary>
+    /// <param name="writer">The UTF-8 JSON writer.</param>
+    /// <param name="value">The trade to write.</param>
+    /// <param name="options">The serializer options in effect.</param>
     public override void Write(Utf8JsonWriter writer, TradeModel? value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

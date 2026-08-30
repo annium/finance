@@ -10,8 +10,16 @@ using Annium.Net.Http;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Shared.HttpExtensions;
 
+/// <summary>Extension methods enforcing Binance's per-minute request weight limit on outgoing requests.</summary>
 public static class HttpRequestRateExtensions
 {
+    /// <summary>
+    /// Rejects the request locally with <see cref="HttpStatusCode.TooManyRequests"/> if the 1-minute request weight
+    /// limit has been reached; otherwise sends it and records the weight used from Binance's <c>x-mbx-used-weight-1m</c> response header.
+    /// </summary>
+    /// <param name="request">The request to rate-limit.</param>
+    /// <param name="rateLimiter">The rate limiter tracking the 1-minute request weight budget.</param>
+    /// <returns>The request, for chaining.</returns>
     public static IHttpRequest WithRateDelay1M(this IHttpRequest request, IRateLimiter rateLimiter) =>
         request.Intercept(async next =>
         {

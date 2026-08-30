@@ -10,16 +10,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Market.Contracts.Market.Converters;
 
+/// <summary>
+/// Verifies that <c>ExchangeInfoConverter</c> reads Binance's <c>/exchangeInfo</c> response - the account-wide
+/// weight rate limit and the per-symbol trading rules - into a <see cref="ExchangeInfo"/>, collapsing the
+/// scattered price/quantity/notional filters onto a single <see cref="InstrumentModel"/>, and that a payload
+/// missing the fields it needs deserializes to null instead of throwing.
+/// </summary>
 public class ExchangeInfoConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExchangeInfoConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public ExchangeInfoConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured <c>/exchangeInfo</c> response is parsed into the request-weight rate limit and, for the one
+    /// symbol it carries, the price/quantity/notional bounds and max open order count pulled out of its filters.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -416,6 +434,9 @@ public class ExchangeInfoConverterTests : ProvidersTestBase
         );
     }
 
+    /// <summary>
+    /// A payload missing the fields the converter needs deserializes to null instead of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {

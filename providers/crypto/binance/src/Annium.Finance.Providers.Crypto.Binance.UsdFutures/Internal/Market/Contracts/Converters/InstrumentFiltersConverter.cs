@@ -6,8 +6,21 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market.Contracts.Converters;
 
+/// <summary>
+/// Reads the <c>filters</c> array of a Binance exchange info symbol entry into an <see cref="InstrumentFilters"/>,
+/// merging the separate <c>LOT_SIZE</c> and <c>MARKET_LOT_SIZE</c> filters into a single, more restrictive lot
+/// size range. Writing is not supported since this contract is read-only (server-to-client).
+/// </summary>
 internal class InstrumentFiltersConverter : JsonConverter<InstrumentFilters>
 {
+    /// <summary>
+    /// Reads the <c>PRICE_FILTER</c>, <c>LOT_SIZE</c>, <c>MARKET_LOT_SIZE</c>, <c>MIN_NOTIONAL</c> and
+    /// <c>MAX_NUM_ORDERS</c> filter entries, combining the two lot size filters into their intersection.
+    /// </summary>
+    /// <param name="reader">The UTF-8 JSON reader positioned at the start of the filters array.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The serializer options in effect.</param>
+    /// <returns>The combined filters, or null if any required filter is missing.</returns>
     public override InstrumentFilters? Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -141,6 +154,12 @@ internal class InstrumentFiltersConverter : JsonConverter<InstrumentFilters>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Not supported: instrument filters are only ever read from the exchange, never written.
+    /// </summary>
+    /// <param name="writer">The UTF-8 JSON writer.</param>
+    /// <param name="value">The filters to write.</param>
+    /// <param name="options">The serializer options in effect.</param>
     public override void Write(Utf8JsonWriter writer, InstrumentFilters value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

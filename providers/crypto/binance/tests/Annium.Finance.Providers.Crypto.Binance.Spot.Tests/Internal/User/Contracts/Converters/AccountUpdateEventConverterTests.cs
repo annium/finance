@@ -9,16 +9,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>AccountUpdateEventConverter</c> reads Binance's <c>outboundAccountPosition</c> user-data
+/// stream event - an event type tag plus a list of per-asset free/locked balances - into an
+/// <see cref="AccountUpdateEvent"/>, and that an event with a different <c>e</c> type deserializes to null
+/// instead of throwing.
+/// </summary>
 public class AccountUpdateEventConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AccountUpdateEventConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public AccountUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured <c>outboundAccountPosition</c> event is parsed into its update time and the free/locked
+    /// balance of each asset it lists.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -48,6 +66,10 @@ public class AccountUpdateEventConverterTests : ProvidersTestBase
         eth.IsEqual(new AccountUpdateEventBalance("ETH", 10.5m, 1.7m));
     }
 
+    /// <summary>
+    /// An event whose <c>e</c> type tag isn't <c>outboundAccountPosition</c> deserializes to null instead
+    /// of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {

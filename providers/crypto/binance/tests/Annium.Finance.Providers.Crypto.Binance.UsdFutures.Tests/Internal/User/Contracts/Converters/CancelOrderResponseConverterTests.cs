@@ -9,16 +9,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>CancelOrderResponseConverter</c> reads Binance's <c>DELETE /order</c> response into a
+/// <see cref="CancelOrderResponse"/>, parsing the echoed <c>clientOrderId</c> as a <see cref="Guid"/> for a
+/// cancelled trailing-stop order.
+/// </summary>
 public class CancelOrderResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CancelOrderResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public CancelOrderResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured cancel-order response for a trailing-stop order is parsed into the client order id (as a
+    /// GUID) and the numeric order id.
+    /// </summary>
     [Fact]
     public void Success()
     {

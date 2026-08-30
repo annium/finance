@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Abstractions.Domain.User.Requests;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Core.Shared.Loaders;
+using Annium.Finance.Providers.Tests.Lib;
 using Annium.Finance.Providers.Tests.Lib.User;
 using Annium.Logging;
 using Xunit;
@@ -11,13 +12,28 @@ using static Annium.Finance.Providers.Abstractions.Domain.User.Requests.RequestB
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User;
 
+/// <summary>
+/// Runs <see cref="UserConnectorTestBase"/>'s scenarios against the real Binance USD-M futures user
+/// connector for DOTUSDT, under the account in <see cref="Settings.User"/>. These tests place, fill, modify
+/// and cancel real orders on that account - the base class actively manages its state around each test,
+/// canceling open orders and flattening any position on setup and teardown - so they run only when
+/// <see cref="Exchange.IsEnabled"/> is set, and must never point at an account you care about.
+/// </summary>
 public class UserConnectorTests : UserConnectorTestBase
 {
+    /// <summary>A quantity far past the instrument's max, used to force an order rejection.</summary>
     private decimal ExtremeHighQty => Instrument.MaxQty * 1_000_000;
+
+    /// <summary>A price far above the current ticker, used to force a trigger-price rejection.</summary>
     private decimal ExtremeHighPrice => Instrument.ToTickSizeDown(Ticker.Price() * 1_000_000m);
+
+    /// <summary>A price moderately above the current ticker, valid as a take-profit/stop trigger.</summary>
     private decimal HighPrice => Instrument.ToTickSizeDown(Ticker.Price() * 1.3m);
+
+    /// <summary>A price moderately below the current ticker, valid as a stop-loss/limit-buy trigger.</summary>
     private decimal LowPrice => Instrument.ToTickSizeDown(Ticker.Price() * 0.7m);
 
+    /// <summary>The smallest quantity that still clears the instrument's minimum notional at <see cref="LowPrice"/>.</summary>
     private decimal MinQty
     {
         get
@@ -27,9 +43,19 @@ public class UserConnectorTests : UserConnectorTestBase
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserConnectorTests"/> class, targeting DOTUSDT under the
+    /// configured <see cref="Settings.User"/> account.
+    /// </summary>
+    /// <param name="output">The xUnit output helper to route trace logging to.</param>
     public UserConnectorTests(ITestOutputHelper output)
         : base(Settings.User, "DOTUSDT", output) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider, with tight reload-loader intervals, so the connector
+    /// under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures(
@@ -42,7 +68,12 @@ public class UserConnectorTests : UserConnectorTestBase
         );
     }
 
-    [Fact]
+    /// <summary>
+    /// Sends a limit buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
+    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Limit_Invalid()
     {
         this.Trace("start");
@@ -60,7 +91,13 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Places a real minimum-size limit buy, asserts the currency balance locks up around it, then cancels
+    /// it and asserts the balance is released. Talks to the real exchange and places/cancels a real order;
+    /// skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Limit_Valid()
     {
         this.Trace("start");
@@ -85,7 +122,12 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Sends a market buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
+    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_Market_Invalid()
     {
         this.Trace("start");
@@ -96,7 +138,15 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Opens a real position with a market buy, then exercises all four trigger order types (stop-loss and
+    /// take-profit, each market and limit) via <see cref="TestOrder"/> - each rejected first with an
+    /// absurd trigger, then placed for real and canceled - before closing the position with a market sell
+    /// and asserting balance/position moved as expected throughout. Talks to the real exchange and
+    /// places/cancels/fills several real orders; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task InitOrder_TakeProfit_StopLoss()
     {
         this.Trace("start");
@@ -181,6 +231,14 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends <paramref name="invalidRequest"/> and asserts the real exchange rejects it, then places
+    /// <paramref name="validRequest"/> for real and cancels it. Talks to the real exchange and
+    /// places/cancels a real order.
+    /// </summary>
+    /// <param name="invalidRequest">A request expected to be rejected by the exchange.</param>
+    /// <param name="validRequest">A request expected to be accepted, which is placed and then canceled.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task TestOrder(IInitOrderRequest invalidRequest, IInitOrderRequest validRequest)
     {
         this.Trace("start {0} order tet", invalidRequest.Type);
@@ -195,7 +253,13 @@ public class UserConnectorTests : UserConnectorTestBase
         await CancelValidOrder(order);
     }
 
-    [Fact]
+    /// <summary>
+    /// Places a real limit order, then sends a modify request with an absurd quantity and asserts the real
+    /// exchange rejects it. Talks to the real exchange and places a real order; skipped unless
+    /// <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task ModifyOrder_Invalid()
     {
         this.Trace("start");
@@ -213,7 +277,14 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Places a real limit order, modifies it to a larger quantity and higher price, asserts the currency
+    /// balance locks up around the modified order, then cancels it and asserts the balance is released.
+    /// Talks to the real exchange and places/modifies/cancels a real order; skipped unless
+    /// <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task ModifyOrder_Valid()
     {
         this.Trace("start");
@@ -246,7 +317,14 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Places a real limit order, cancels it and asserts the currency balance locks then releases around
+    /// the cancellation, then asserts canceling the same (now-canceled) order again is rejected. Talks to
+    /// the real exchange and places/cancels a real order; skipped unless <see cref="Exchange.IsEnabled"/>
+    /// is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task CancelOrder()
     {
         this.Trace("start");
@@ -275,7 +353,12 @@ public class UserConnectorTests : UserConnectorTestBase
         this.Trace("done");
     }
 
-    [Fact]
+    /// <summary>
+    /// Cancels every open order on the account for <see cref="UserConnectorTestBase.Symbol"/>. Talks to the
+    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
     public async Task CancelAllOrders()
     {
         this.Trace("start");

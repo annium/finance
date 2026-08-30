@@ -8,16 +8,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>GetOrderResponseConverter</c> reads Binance's <c>GET /order</c> response into an
+/// <see cref="OrderModel"/>, in particular deriving the average executed price from
+/// <c>cummulativeQuoteQty / executedQty</c> since Binance doesn't report it directly.
+/// </summary>
 public class GetOrderResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetOrderResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetOrderResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured order response for a partially filled take-profit-limit sell is parsed into an
+    /// <see cref="OrderModel"/>, including the executed price derived from cumulative quote quantity
+    /// divided by executed quantity.
+    /// </summary>
     [Fact]
     public void Works()
     {

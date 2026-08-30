@@ -6,8 +6,20 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Reads a single asset entry (<c>assets</c> array item) of the <c>GET /fapi/v2/account</c> response into an
+/// <see cref="AccountResponseBalance"/>. Writing is not supported since this contract is read-only
+/// (server-to-client).
+/// </summary>
 internal class GetAccountResponseBalanceConverter : JsonConverter<AccountResponseBalance>
 {
+    /// <summary>
+    /// Reads an asset balance entry.
+    /// </summary>
+    /// <param name="reader">The UTF-8 JSON reader positioned at the start of the asset object.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The serializer options in effect.</param>
+    /// <returns>The parsed balance.</returns>
     public override AccountResponseBalance Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -78,6 +90,12 @@ internal class GetAccountResponseBalanceConverter : JsonConverter<AccountRespons
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Not supported: balance entries are only ever read from the exchange, never written.
+    /// </summary>
+    /// <param name="writer">The UTF-8 JSON writer.</param>
+    /// <param name="value">The balance to write.</param>
+    /// <param name="options">The serializer options in effect.</param>
     public override void Write(Utf8JsonWriter writer, AccountResponseBalance value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

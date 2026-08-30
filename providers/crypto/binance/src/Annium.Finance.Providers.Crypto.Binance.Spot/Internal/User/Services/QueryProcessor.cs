@@ -6,8 +6,12 @@ using Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Contracts.Domai
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Internal.User.Services;
 
+/// <summary>Builds the Binance request parameters for order placement, modification and cancellation from the library's request models.</summary>
 internal class QueryProcessor
 {
+    /// <summary>Validates and builds the request parameters for placing a new order.</summary>
+    /// <param name="request">The order placement request.</param>
+    /// <returns>A result carrying the request parameters on success, or the validation failure.</returns>
     public UserResult<Dictionary<string, string>> BuildInitOrderQuery(IInitOrderRequest request)
     {
         var validationResult = request.Validate();
@@ -58,6 +62,9 @@ internal class QueryProcessor
         return UserResult.Ok(result);
     }
 
+    /// <summary>Builds the request parameters for modifying an existing order via a Binance cancel-replace request, aborting the replace if the cancel fails.</summary>
+    /// <param name="request">The order modification request, including the order being modified.</param>
+    /// <returns>A result carrying the request parameters.</returns>
     public UserResult<Dictionary<string, string>> BuildModifyOrderQuery(IModifyOrderRequest request)
     {
         var result = new Dictionary<string, string>();
@@ -103,6 +110,9 @@ internal class QueryProcessor
         return UserResult.Ok(result);
     }
 
+    /// <summary>Builds the request parameters for canceling an order, requiring at least the order id or the client order id.</summary>
+    /// <param name="request">Identifies the order to cancel.</param>
+    /// <returns>A result carrying the request parameters on success, or a bad-request failure if neither id is specified.</returns>
     public UserResult<Dictionary<string, string>> BuildCancelOrderQuery(ICancelOrderRequest request)
     {
         var result = new Dictionary<string, string>();
@@ -128,6 +138,9 @@ internal class QueryProcessor
         return UserResult.Ok(result);
     }
 
+    /// <summary>Builds the request parameters for canceling all open orders on a symbol.</summary>
+    /// <param name="symbol">The instrument symbol to cancel orders for.</param>
+    /// <returns>A result carrying the request parameters.</returns>
     public UserResult<Dictionary<string, string>> BuildCancelAllOrdersQuery(string symbol)
     {
         var result = new Dictionary<string, string>();

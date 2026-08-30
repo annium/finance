@@ -23,8 +23,20 @@ using static Annium.Finance.Providers.Crypto.Binance.UsdFutures.Constants;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 
+/// <summary>
+/// Builds fully-wired <see cref="UserConnector"/> instances for the USD-M futures provider: resolves
+/// configuration, the underlying provider, request signing, order management request factories, the listen key
+/// resolver and user data stream, and the context/orders/trades loaders.
+/// </summary>
+/// <param name="sp">The service provider used to resolve dependencies.</param>
 internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorInstanceFactory
 {
+    /// <summary>
+    /// Creates a user connector for the given settings.
+    /// </summary>
+    /// <param name="settings">The user settings identifying the provider, environment and credentials.</param>
+    /// <param name="disposable">Accumulates cleanup actions for the connector's lifetime.</param>
+    /// <returns>A new, ready-to-use user connector.</returns>
     public IUserConnector Create(UserSettings settings, AsyncDisposableBox disposable)
     {
         var config = sp.Resolve<IMapper>().Map<UserConfig>(settings);

@@ -6,8 +6,16 @@ using Annium.Serialization.Json;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Base.Market.Contracts.Converters;
 
+/// <summary>
+/// Converts a Binance kline/candlestick array (<c>[openTime, open, high, low, close, volume, ...]</c>) into a <see cref="CandleModel"/>.
+/// </summary>
 public class CandleConverter : JsonConverter<CandleModel>
 {
+    /// <summary>Reads a Binance kline array into a <see cref="CandleModel"/>, ignoring any trailing fields beyond volume.</summary>
+    /// <param name="reader">The reader positioned at the start of the kline array.</param>
+    /// <param name="typeToConvert">The type being converted.</param>
+    /// <param name="options">The active serializer options.</param>
+    /// <returns>The parsed candle, or <c>null</c> if the array had no open time.</returns>
     public override CandleModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
@@ -68,6 +76,10 @@ public class CandleConverter : JsonConverter<CandleModel>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>Not supported; candles are only ever read from Binance responses, never written.</summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The candle to write.</param>
+    /// <param name="options">The active serializer options.</param>
     public override void Write(Utf8JsonWriter writer, CandleModel value, JsonSerializerOptions options)
     {
         throw new NotImplementedException();

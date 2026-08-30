@@ -18,11 +18,27 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Core.Tests.Market;
 
+/// <summary>
+/// Pins the sync lifecycle of <see cref="MarketConnectorBase"/>: that a sync call runs the connector's own
+/// <see cref="MarketConnectorBase.OnSync"/> handler with the resources and instruments it was given, and that
+/// tickers written while resubscription is in flight are still delivered to subscribers in order.
+/// </summary>
 public class MarketConnectorBaseTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MarketConnectorBaseTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper used to capture test logs.</param>
     public MarketConnectorBaseTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that triggering a sync on a connector invokes <see cref="MarketConnectorBase.OnSync"/> with the
+    /// synced resources and instruments, exposes them via <see cref="MarketConnectorBase.Resources"/> and
+    /// <see cref="MarketConnectorBase.Instruments"/>, and still delivers every ticker emitted during the sync to
+    /// subscribers, in order.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task Sync_Works()
     {
@@ -97,6 +113,12 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         market.Instruments.SequenceEqual(instruments).IsTrue();
     }
 
+    /// <summary>
+    /// Builds a <see cref="FakeMarketConnector"/> wired to a fresh <see cref="FakeMarketProvider"/> and this
+    /// test's status reporter and monitor.
+    /// </summary>
+    /// <param name="settings">The market settings to construct the connector with.</param>
+    /// <returns>The constructed connector.</returns>
     private FakeMarketConnector CreateConnector(MarketSettings settings)
     {
         var provider = new FakeMarketProvider();
@@ -106,6 +128,12 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         return new FakeMarketConnector(settings, provider, reporter, monitor, Logger);
     }
 
+    /// <summary>
+    /// Schedules a background task that feeds each item in <paramref name="data"/> into <paramref name="emit"/>
+    /// with a short delay between items, so tickers arrive while the connector's sync is still in flight.
+    /// </summary>
+    /// <param name="data">The tickers to emit, in order.</param>
+    /// <param name="emit">The callback that pushes a ticker into the connector under test.</param>
     private void Emit(IReadOnlyList<InstrumentTicker> data, Action<InstrumentTicker> emit)
     {
         Task.Run(
@@ -123,6 +151,12 @@ public class MarketConnectorBaseTests : ProvidersTestBase
             .GetAwaiter();
     }
 
+    /// <summary>
+    /// Asserts that the recorded values in <paramref name="log"/> form a contiguous increasing sequence, proving
+    /// none were dropped or reordered; logs the captured entries and rethrows on failure.
+    /// </summary>
+    /// <param name="type">The label identifying which log is being verified, used in diagnostics.</param>
+    /// <param name="log">The log of observed values to verify.</param>
     private void VerifyLog(string type, TestLog<int> log)
     {
         this.Trace<string>("verify {type} log", type);
@@ -141,8 +175,20 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         }
     }
 
+    /// <summary>
+    /// Exposes <see cref="MarketConnectorBase"/>'s protected sync and ticker-write operations as public methods,
+    /// so the test can drive them directly without a real market provider.
+    /// </summary>
     private class FakeMarketConnector : MarketConnectorBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeMarketConnector"/> class.
+        /// </summary>
+        /// <param name="settings">The market settings to construct the connector with.</param>
+        /// <param name="provider">The market provider backing the connector.</param>
+        /// <param name="reporter">The status reporter to bind to.</param>
+        /// <param name="monitor">The status monitor to observe.</param>
+        /// <param name="logger">The logger to use.</param>
         public FakeMarketConnector(
             MarketSettings settings,
             IMarketProvider provider,
@@ -152,24 +198,41 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         )
             : base(settings, provider, reporter, monitor, Annium.Disposable.AsyncBox(logger), logger) { }
 
+        /// <summary>Triggers a sync with the given resources and instruments, exposing the protected <see cref="MarketConnectorBase.ScheduleSync"/> call.</summary>
+        /// <param name="resources">The resources to sync.</param>
+        /// <param name="instruments">The instruments to sync.</param>
         public void Sync(IReadOnlyCollection<ResourceModel> resources, IReadOnlyCollection<InstrumentModel> instruments)
         {
             ScheduleSync(resources, instruments);
         }
 
+        /// <summary>Writes a ticker to the connector's output, exposing the protected <see cref="MarketConnectorBase.Write"/> call.</summary>
+        /// <param name="ticker">The ticker to write.</param>
         public void Ticker(InstrumentTicker ticker)
         {
             Write(ticker);
         }
     }
 
+    /// <summary>
+    /// Stands in for a real <see cref="IMarketProvider"/>; unlike a real provider, both members throw because
+    /// the test never calls them - only <see cref="FakeMarketConnector"/>'s exposed sync and ticker operations are exercised.
+    /// </summary>
     private class FakeMarketProvider : IMarketProvider
     {
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <returns>Never returns.</returns>
         public Task<MarketResult<MarketContext?>> LoadContextAsync()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Not implemented; not exercised by these tests.</summary>
+        /// <param name="instrument">Unused.</param>
+        /// <param name="start">Unused.</param>
+        /// <param name="end">Unused.</param>
+        /// <param name="ct">Unused.</param>
+        /// <returns>Never returns.</returns>
         public IAsyncEnumerable<MarketResult<IReadOnlyCollection<CandleModel>?>> LoadCandlesAsync(
             string instrument,
             Instant start,

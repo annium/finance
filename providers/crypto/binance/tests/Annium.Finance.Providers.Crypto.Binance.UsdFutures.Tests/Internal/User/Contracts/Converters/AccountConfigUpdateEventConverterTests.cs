@@ -8,16 +8,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>AccountConfigUpdateEventConverter</c> reads Binance's <c>ACCOUNT_CONFIG_UPDATE</c>
+/// user-data stream event into an <see cref="AccountConfigUpdateEvent"/>, distinguishing the two shapes it
+/// carries - a multi-assets-mode toggle under <c>ai</c> versus a per-symbol leverage change under
+/// <c>ac</c> - by which field is present, and that an event with a different <c>e</c> type deserializes to
+/// null instead of throwing.
+/// </summary>
 public class AccountConfigUpdateEventConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AccountConfigUpdateEventConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public AccountConfigUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// An event carrying the <c>ai</c> field is parsed as a multi-assets-mode change, with the new mode flag.
+    /// </summary>
     [Fact]
     public void Works_MultiAssetsModeChange()
     {
@@ -42,6 +60,10 @@ public class AccountConfigUpdateEventConverterTests : ProvidersTestBase
         deserialized.MultiAssetsMode.IsTrue();
     }
 
+    /// <summary>
+    /// An event carrying the <c>ac</c> field is parsed as a leverage change, with the affected symbol and
+    /// the new leverage.
+    /// </summary>
     [Fact]
     public void Works_LeverageChange()
     {
@@ -68,6 +90,10 @@ public class AccountConfigUpdateEventConverterTests : ProvidersTestBase
         deserialized.Leverage.Is(25);
     }
 
+    /// <summary>
+    /// An event whose <c>e</c> type tag isn't <c>ACCOUNT_CONFIG_UPDATE</c> deserializes to null instead
+    /// of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {

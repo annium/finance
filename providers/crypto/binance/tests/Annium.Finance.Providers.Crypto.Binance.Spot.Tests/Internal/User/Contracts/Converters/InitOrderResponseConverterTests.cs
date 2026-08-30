@@ -8,16 +8,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>InitOrderResponseConverter</c> reads Binance's <c>POST /order</c> response - which
+/// carries a <c>fills</c> array for the portion executed immediately - into an <see cref="OrderModel"/>,
+/// deriving the average executed price from cumulative quote quantity over executed quantity rather than
+/// from the fills directly.
+/// </summary>
 public class InitOrderResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InitOrderResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public InitOrderResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured order-placement response for a partially filled take-profit-limit sell, with two fills,
+    /// is parsed into an <see cref="OrderModel"/> whose executed price matches the fills' weighted average.
+    /// </summary>
     [Fact]
     public void Success()
     {
