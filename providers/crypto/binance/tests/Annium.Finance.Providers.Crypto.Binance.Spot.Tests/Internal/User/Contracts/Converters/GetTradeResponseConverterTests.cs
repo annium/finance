@@ -8,16 +8,32 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>GetTradeResponseConverter</c> reads Binance's <c>GET /myTrades</c> response into a
+/// <see cref="TradeModel"/>, including the <c>isMaker</c> flag and commission fields.
+/// </summary>
 public class GetTradeResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetTradeResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetTradeResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured trade response is parsed into its ids, price/quantity and commission, and whether the
+    /// account was the maker side.
+    /// </summary>
     [Fact]
     public void Works()
     {

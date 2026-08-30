@@ -9,16 +9,36 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>OrderUpdateEventConverter</c> reads Binance's <c>ORDER_TRADE_UPDATE</c> user-data stream
+/// event - a nested <c>o</c> object covering both the order's cumulative state and its last individual fill -
+/// into an <see cref="OrderUpdateEvent"/>, and that an event with a different <c>e</c> type deserializes to
+/// null instead of throwing.
+/// </summary>
 public class OrderUpdateEventConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OrderUpdateEventConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public OrderUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured <c>ORDER_TRADE_UPDATE</c> event for a partially filled reduce-only trailing-stop order is
+    /// parsed into the order's identifiers, cumulative executed quantity/price, the last individual fill,
+    /// and commission; the event carries no order-creation time, so <see cref="OrderUpdateEvent.CreatedAt"/>
+    /// comes back as zero.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -92,6 +112,9 @@ public class OrderUpdateEventConverterTests : ProvidersTestBase
         deserialized.UpdatedAt.Is(1499405658657);
     }
 
+    /// <summary>
+    /// An event whose <c>e</c> type tag isn't <c>ORDER_TRADE_UPDATE</c> deserializes to null instead of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {

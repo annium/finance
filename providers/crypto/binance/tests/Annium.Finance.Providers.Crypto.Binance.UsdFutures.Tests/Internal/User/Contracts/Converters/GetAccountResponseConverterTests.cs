@@ -10,16 +10,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that the converter reads Binance's <c>GET /account</c> response - per-asset margin balances
+/// alongside every open position, each carrying its own leverage, margin type and unrealized PnL - into an
+/// <see cref="AccountResponse"/>.
+/// </summary>
 public class GetAccountResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetAccountResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetAccountResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured account response with two asset balances and one isolated long position is parsed into
+    /// the matching <see cref="AccountResponseBalance"/> and <see cref="AccountResponsePosition"/> records.
+    /// </summary>
     [Fact]
     public void Works()
     {

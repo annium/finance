@@ -9,16 +9,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that the converter reads Binance's <c>GET /account</c> response - commission rates, trading
+/// flags, and a per-asset free/locked balance list - down to just the balances, mapped to
+/// <see cref="AssetModel"/>.
+/// </summary>
 public class GetAccountResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetAccountResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetAccountResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured account response is parsed into its per-asset balances, discarding the surrounding
+    /// commission and permission data the converter doesn't need.
+    /// </summary>
     [Fact]
     public void Works()
     {

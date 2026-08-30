@@ -8,16 +8,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>GetOrderResponseConverter</c> reads Binance's <c>GET /order</c> response into an
+/// <see cref="OrderModel"/>, notably taking the executed price straight from the futures-only <c>avgPrice</c>
+/// field rather than deriving it, unlike the Spot converter.
+/// </summary>
 public class GetOrderResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetOrderResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public GetOrderResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance USD-M futures provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceUsdFutures();
     }
 
+    /// <summary>
+    /// A captured order response for a partially filled reduce-only take-profit sell is parsed into an
+    /// <see cref="OrderModel"/>, with the executed price taken from <c>avgPrice</c>.
+    /// </summary>
     [Fact]
     public void Works()
     {

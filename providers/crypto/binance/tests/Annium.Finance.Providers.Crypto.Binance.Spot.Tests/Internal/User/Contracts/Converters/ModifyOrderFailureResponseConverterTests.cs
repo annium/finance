@@ -8,16 +8,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that the converter reads Binance's <c>POST /order/cancelReplace</c> failure envelope - which
+/// nests the actual cancel and new-order outcomes under <c>data</c> - and surfaces whichever leg's error
+/// is the relevant one, as an <see cref="OperationResult"/>.
+/// </summary>
 public class ModifyOrderFailureResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ModifyOrderFailureResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public ModifyOrderFailureResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// When the cancel leg itself failed (cancel-replace stops there, the new order is never attempted),
+    /// the nested cancel error's code and message are surfaced.
+    /// </summary>
     [Fact]
     public void StopOnFailure()
     {
@@ -46,6 +63,10 @@ public class ModifyOrderFailureResponseConverterTests : ProvidersTestBase
         deserialized.Message.Is("Unknown order sent.");
     }
 
+    /// <summary>
+    /// When the cancel leg succeeds but placing the replacement order fails, the nested new-order error's
+    /// code and message are surfaced instead of the cancel's.
+    /// </summary>
     [Fact]
     public void NewOrderFails()
     {

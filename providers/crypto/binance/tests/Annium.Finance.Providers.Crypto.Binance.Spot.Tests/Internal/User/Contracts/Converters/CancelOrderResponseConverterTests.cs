@@ -9,16 +9,33 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>CancelOrderResponseConverter</c> reads Binance's <c>DELETE /order</c> response into a
+/// <see cref="CancelOrderResponse"/>, notably parsing the returned <c>clientOrderId</c> - which Binance
+/// generates fresh for the cancel confirmation - as a <see cref="Guid"/>.
+/// </summary>
 public class CancelOrderResponseConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CancelOrderResponseConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public CancelOrderResponseConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured cancel-order response is parsed into the numeric order id and the client order id, the
+    /// latter carried as a GUID.
+    /// </summary>
     [Fact]
     public void Success()
     {

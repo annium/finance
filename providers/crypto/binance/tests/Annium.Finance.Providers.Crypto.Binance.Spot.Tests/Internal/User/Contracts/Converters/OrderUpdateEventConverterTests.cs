@@ -9,16 +9,34 @@ using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Contracts.Converters;
 
+/// <summary>
+/// Verifies that <c>OrderUpdateEventConverter</c> reads Binance's <c>executionReport</c> user-data stream
+/// event - a heavily abbreviated field set covering both the order's cumulative state and the last
+/// individual fill - into an <see cref="OrderUpdateEvent"/>, and that an event with a different <c>e</c>
+/// type deserializes to null instead of throwing.
+/// </summary>
 public class OrderUpdateEventConverterTests : ProvidersTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OrderUpdateEventConverterTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The xUnit output helper to route trace logging to.</param>
     public OrderUpdateEventConverterTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Registers the Binance Spot provider so the converter under test is resolved from its actual registration.
+    /// </summary>
+    /// <param name="ctx">The fluent context to register providers into.</param>
     protected override void RegisterProvider(ProviderRegistrationContext ctx)
     {
         ctx.WithBinanceSpot();
     }
 
+    /// <summary>
+    /// A captured <c>executionReport</c> event is parsed into the order's identifiers, cumulative
+    /// executed quantity/price, the last individual fill's quantity/price, and commission.
+    /// </summary>
     [Fact]
     public void Works()
     {
@@ -87,6 +105,9 @@ public class OrderUpdateEventConverterTests : ProvidersTestBase
         deserialized.UpdatedAt.Is(1499405658677);
     }
 
+    /// <summary>
+    /// An event whose <c>e</c> type tag isn't <c>executionReport</c> deserializes to null instead of throwing.
+    /// </summary>
     [Fact]
     public void SkipsInvalidData()
     {
