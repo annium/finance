@@ -188,12 +188,17 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     {
         this.Trace("start");
 
+        // the source this fetch is issued under, held for the whole call: Start replaces the field with a
+        // fresh one, so a fetch left over from a stopped cycle would otherwise ask the *new* cycle's source
+        // whether it was cancelled, be told no, and deliver its stale answer as if it were the new one's
+        var cts = _cts;
+
         // try to load snapshot - timer is not expected to be switched off at this moment
-        var result = await _load(_cts.Token);
+        var result = await _load(cts.Token);
 
         lock (_locker)
         {
-            if (_cts.IsCancellationRequested)
+            if (cts.IsCancellationRequested)
             {
                 this.Trace("already canceled");
                 return;
@@ -209,7 +214,7 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 
                 this.Trace("cancel cts");
 #pragma warning disable VSTHRD103
-                _cts.Cancel();
+                cts.Cancel();
 #pragma warning restore VSTHRD103
 
                 this.Trace("stop timer");

@@ -123,6 +123,56 @@ public class SnapshotLoaderTests : TestBase
     }
 
     /// <summary>
+    /// A fetch left over from a stopped cycle does not speak for the cycle that replaced it. Stopping and
+    /// starting again gives the loader a fresh cancellation source, and the old fetch - issued under the
+    /// previous one - must be discarded when it finally returns, not delivered as though it answered the
+    /// new cycle's question.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task StaleFetch_FromAStoppedCycle_IsDiscarded()
+    {
+        // arrange - the first fetch is held open; the second answers at once, with a different value
+        var cfg = new SnapshotLoaderConfig(1, 2, 5);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<MarketResult<int>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        var log = Get<TestLog<int>>();
+        var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                if (Interlocked.Increment(ref calls) == 1)
+                {
+                    first.TrySetResult();
+#pragma warning disable VSTHRD003
+                    return await gate.Task;
+#pragma warning restore VSTHRD003
+                }
+
+                return MarketResult.Ok(999);
+            }
+        );
+        loader.OnData += log.Add;
+
+        // act - stop while the first fetch is in flight, start again, then let the stale one return
+        loader.Start(true);
+        await first.Task;
+        loader.Stop();
+        loader.Start(true);
+
+        // the stale answer lands after the restart. The timer is sequential, so the second cycle cannot
+        // begin until this call returns - which is exactly why the stale result must not be acted upon
+        gate.TrySetResult(MarketResult.Ok(1));
+        await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(1));
+
+        // assert
+        log.IsEqual(new[] { 999 });
+
+        await loader.DisposeAsync();
+    }
+
+    /// <summary>
     /// Verifies that starting a loader with <c>reportStatus: false</c> still delivers data on a successful fetch,
     /// while the status monitor jumps straight to connected without ever reporting connecting.
     /// </summary>
