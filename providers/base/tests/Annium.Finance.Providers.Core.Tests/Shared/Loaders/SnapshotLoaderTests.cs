@@ -173,6 +173,36 @@ public class SnapshotLoaderTests : TestBase
     }
 
     /// <summary>
+    /// A loader that has been disposed stops counting towards the connector's status. It reports itself
+    /// disconnected on the way out, which is a transition worth seeing - but if it also stays registered,
+    /// the monitor holds a disconnected target next to the live ones forever, and the connector can never
+    /// report itself connected again for as long as it lives.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DisposedLoader_StopsHoldingTheStatusDown()
+    {
+        // arrange - a second target that stays connected, so the monitor has something to be connected about
+        var monitor = Get<IStatusMonitor>();
+        var survivor = Get<IStatusReporter>();
+        survivor.Bind(this);
+        survivor.Connected();
+
+        var loader = Provider.CreateSnapshotLoader<int>(
+            new SnapshotLoaderConfig(1, 2, 5),
+            _ => Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1))
+        );
+        loader.Start(true);
+        await Expect.ToAsync(() => monitor.Status.Is(Connected));
+
+        // act
+        await loader.DisposeAsync();
+
+        // assert
+        await Expect.ToAsync(() => monitor.Status.Is(Connected));
+    }
+
+    /// <summary>
     /// Verifies that starting a loader with <c>reportStatus: false</c> still delivers data on a successful fetch,
     /// while the status monitor jumps straight to connected without ever reporting connecting.
     /// </summary>

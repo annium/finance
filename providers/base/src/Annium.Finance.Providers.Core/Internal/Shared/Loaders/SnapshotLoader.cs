@@ -102,6 +102,11 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 
             this.Trace("signal disconnected state");
             _statusReporter.Disconnected();
+
+            // and stop counting: a disposed component is gone, not disconnected. Left registered, it sits
+            // in the monitor as a disconnected target beside the live ones, and the connector can never
+            // report itself connected again for as long as it lives
+            _statusReporter.Unbind();
         }
 
         this.Trace("done");
