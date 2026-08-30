@@ -44,11 +44,8 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     public async Task NetworkError()
     {
         // arrange
-        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
-        await server.DisposeAsync();
-
         // act
-        var result = await this.CreateHttpRequest(server, Constants.ServerTimeKey)
+        var result = await this.CreateHttpRequestToClosedPort(Constants.ServerTimeKey)
             .Get("/")
             .AsMarketResultAsync<ServerTime>();
 

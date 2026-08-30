@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Mime;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -40,6 +41,28 @@ public static class TestBaseHttpServerExtensions
     /// <returns>An HTTP request ready to be sent to the server.</returns>
     public static IHttpRequest CreateHttpRequest(this TestBase test, IServer server, string key = "") =>
         test.GetKeyed<IHttpRequestFactory>(key).New(server.HttpUri());
+
+    /// <summary>
+    /// Creates a request aimed at a port nothing is listening on, so connecting to it is refused outright.
+    /// </summary>
+    /// <remarks>
+    /// Starting a server and disposing it does not give the same thing: for a while after the listener
+    /// stops, the operating system still accepts connections to that port and closes them without an
+    /// answer, which is a different failure from a refusal and is classified differently. Which of the two
+    /// a test got depended on how quickly the port went quiet - and on a loaded CI machine it got the
+    /// wrong one. A port never listened on refuses immediately, every time.
+    /// </remarks>
+    /// <param name="test">The test instance to resolve the request factory from.</param>
+    /// <param name="key">The key the factory is registered under.</param>
+    /// <returns>A request aimed at a closed port.</returns>
+    public static IHttpRequest CreateHttpRequestToClosedPort(this TestBase test, string key = "")
+    {
+        using var probe = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        probe.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        var port = ((IPEndPoint)probe.LocalEndPoint!).Port;
+
+        return test.GetKeyed<IHttpRequestFactory>(key).New(new Uri($"http://127.0.0.1:{port}/"));
+    }
 
     /// <summary>
     /// Starts a local test server that always answers with the given status code and a JSON-serialized body.

@@ -40,11 +40,8 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     public async Task NetworkError()
     {
         // arrange
-        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
-        await server.DisposeAsync();
-
         // act
-        var result = await this.CreateHttpRequest(server)
+        var result = await this.CreateHttpRequestToClosedPort()
             .Get("/")
             .AsUserResultAsync<Response, UserError>(GetFailure, MapResponse);
 
