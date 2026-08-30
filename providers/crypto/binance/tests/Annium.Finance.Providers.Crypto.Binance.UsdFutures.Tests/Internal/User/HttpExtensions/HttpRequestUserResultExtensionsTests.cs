@@ -37,7 +37,7 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// A request against a server that closed before responding maps to <see cref="UserOperationStatus.NetworkError"/>.
+    /// A request to a port nothing is listening on - refused outright - maps to <see cref="UserOperationStatus.NetworkError"/>.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]

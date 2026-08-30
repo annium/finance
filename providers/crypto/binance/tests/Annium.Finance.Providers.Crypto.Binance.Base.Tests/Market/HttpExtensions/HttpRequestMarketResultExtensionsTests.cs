@@ -46,7 +46,7 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// A request against a server that closed before responding maps to <see cref="MarketOperationStatus.NetworkError"/>.
+    /// A request to a port nothing is listening on - refused outright - maps to <see cref="MarketOperationStatus.NetworkError"/>.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]

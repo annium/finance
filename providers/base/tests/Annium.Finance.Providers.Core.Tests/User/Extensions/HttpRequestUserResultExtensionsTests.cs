@@ -32,8 +32,7 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// Verifies that a request sent against a server that never responds (connection torn down before the
-    /// response arrives) maps to <see cref="UserOperationStatus.NetworkError"/> with no data or message.
+    /// Verifies that a request to a port nothing is listening on - refused outright - maps to <see cref="UserOperationStatus.NetworkError"/> with no data or message.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
