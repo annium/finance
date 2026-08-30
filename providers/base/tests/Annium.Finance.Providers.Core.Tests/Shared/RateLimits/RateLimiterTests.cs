@@ -52,6 +52,29 @@ public class RateLimiterTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// A limit narrowed after construction takes effect. An exchange reports its rate limits in the
+    /// responses it sends, so the limit a provider starts with is a guess it is expected to correct - and
+    /// a correction that changes nothing leaves the limiter permitting requests the exchange will refuse.
+    /// </summary>
+    [Fact]
+    public void UpdateLimit_AfterConstruction_MovesTheWaterMark()
+    {
+        using var limiter = CreateLimiter();
+
+        // a weight the original limit allows
+        limiter.UsedWeight(50);
+        limiter.CanExecute().IsTrue();
+
+        // the same weight, against a limit half as generous
+        limiter.UpdateLimit(50);
+        limiter.CanExecute().IsFalse("a narrowed limit must refuse a weight the wider one allowed");
+
+        // and widening again lets it through
+        limiter.UpdateLimit(100);
+        limiter.CanExecute().IsTrue("a widened limit must allow what it covers");
+    }
+
+    /// <summary>
     /// Verifies that used weight reported above the water mark eventually decays back below it on its own,
     /// without any further calls, letting <see cref="IRateLimiter.CanExecute"/> allow requests again.
     /// </summary>
