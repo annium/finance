@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
@@ -111,6 +113,34 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         VerifyLog("tickers", tickerLog);
         market.Resources.SequenceEqual(resources).IsTrue();
         market.Instruments.SequenceEqual(instruments).IsTrue();
+    }
+
+    /// <summary>
+    /// A sync handler that throws is reported, and does not leave the connector claiming to be connected.
+    /// The sync cycle unsubscribes the readers before calling the handler and resubscribes after it, so a
+    /// handler that throws part-way leaves the connector with no subscriptions at all - and the executor
+    /// running it swallows the failure into a log line, which is the last place a caller looks.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SyncHandlerThrows_IsReportedAndNotClaimedConnected()
+    {
+        // arrange
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        await using var market = CreateConnector(settings);
+        var errors = new ConcurrentQueue<ConnectorError>();
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        market.OnError += errors.Enqueue;
+        market.OnStatusChanged += statuses.Enqueue;
+
+        market.OnSync += (_, _, _) => throw new InvalidOperationException("sync failed");
+
+        // act
+        market.Sync([], []);
+
+        // assert - the failure reaches the caller, and the connector does not call itself connected
+        await Expect.ToAsync(() => errors.Count.IsGreaterOrEqual(1));
+        statuses.Contains(ConnectorStatus.Connected).IsFalse("a failed sync must not report connected");
     }
 
     /// <summary>

@@ -200,7 +200,22 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
             await UnsubscribeReadersAsync();
 
             this.Trace<string>("{id} sync start", Id);
-            await OnSync(_settings, Resources, Instruments);
+            try
+            {
+                await OnSync(_settings, Resources, Instruments);
+            }
+            catch (Exception e)
+            {
+                // the executor running this catches and logs, so without this the failure ends in a log
+                // line: the readers stay unsubscribed from the step above, the status never completes, and
+                // nothing tells the caller why the connector went quiet
+                this.Error(e);
+                OnError(new ConnectorError($"sync failed: {e.Message}"));
+                CompleteStatusChange(ConnectorStatus.Connecting);
+
+                return;
+            }
+
             this.Trace<string>("{id} sync done", Id);
 
             this.Trace<string>("{id} subscribe readers", Id);

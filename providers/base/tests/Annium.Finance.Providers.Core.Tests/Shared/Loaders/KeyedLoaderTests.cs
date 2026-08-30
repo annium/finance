@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
@@ -28,6 +30,66 @@ public class KeyedLoaderTests : TestBase
             container.AddFinanceProviders();
         });
         this.RegisterTestLogs();
+    }
+
+    /// <summary>
+    /// A key gets one loader however many callers ask for it at once. Creating one is not free - it binds a
+    /// status reporter and starts fetching - so a second one built for the same key does not merely waste
+    /// work: it is dropped from the map while still running, fetching on its own timer and holding the
+    /// connector's status down, with nothing left holding a reference to stop it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ConcurrentRequestsForOneKey_CreateOneLoader()
+    {
+        // arrange - each loader counts from its own context, so a second one repeats the first event
+        const int rounds = 50;
+        const int callers = 16;
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 10);
+        var log = new ConcurrentQueue<(string Key, int Context, int Data)>();
+        var loader = Provider.CreateKeyedLoader<string, int, int>(
+            cfg,
+            0,
+            (_, context, _) => Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1)),
+            (_, _, data) => data
+        );
+
+        try
+        {
+            loader.OnData += (key, context, data) => log.Enqueue((key, context, data));
+
+            // act
+            for (var round = 0; round < rounds; round++)
+            {
+                var key = $"key-{round}";
+                var start = new ManualResetEventSlim();
+                var callersDone = Enumerable
+                    .Range(0, callers)
+                    .Select(_ =>
+                        Task.Run(
+                            () =>
+                            {
+                                start.Wait(TestContext.Current.CancellationToken);
+                                loader.Request(key);
+                            },
+                            TestContext.Current.CancellationToken
+                        )
+                    )
+                    .ToArray();
+                start.Set();
+                await Task.WhenAll(callersDone);
+            }
+
+            await Task.Delay(200, TestContext.Current.CancellationToken);
+
+            // assert - one loader per key means one event from a zero context per key
+            var firsts = log.ToArray().Where(x => x.Context == 0).GroupBy(x => x.Key).ToArray();
+            firsts.All(x => x.Count() == 1).IsTrue("each key must be loaded by exactly one loader");
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
     }
 
     /// <summary>

@@ -43,7 +43,12 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     private readonly Func<TKey, TContext, TData, TContext> _getContext;
 
     /// <summary>The loader entries created so far, keyed by <typeparamref name="TKey"/>.</summary>
-    private readonly ConcurrentDictionary<TKey, KeyedLoaderEntry<TKey, TContext, TData>> _entries = new();
+    // the values are lazy because creating one is not free: it resolves a status reporter, binds it, and
+    // starts the entry - a network fetch and a pair of timers. GetOrAdd's factory can run more than once
+    // when two callers race for a key it does not have, and the loser's result is dropped from the
+    // dictionary but not from existence: its timers keep firing and its reporter stays bound forever.
+    // Constructing a Lazy is free; only the one that wins the race is ever evaluated
+    private readonly ConcurrentDictionary<TKey, Lazy<KeyedLoaderEntry<TKey, TContext, TData>>> _entries = new();
 
     /// <summary>Whether this loader has been disposed.</summary>
     private bool _isDisposed;
@@ -91,8 +96,12 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
 
         foreach (var entry in _entries)
         {
+            // an entry that was never asked for was never created, and has nothing to dispose
+            if (!entry.Value.IsValueCreated)
+                continue;
+
             this.Trace("disconnect {key} entry", entry.Key);
-            entry.Value.Dispose();
+            entry.Value.Value.Dispose();
         }
 
         this.Trace("clear entries");
@@ -109,7 +118,9 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     public void Request(TKey key)
     {
         this.Trace("request {key} load", key);
-        _entries.GetOrAdd(key, CreateLoader).Request();
+        _entries
+            .GetOrAdd(key, k => new Lazy<KeyedLoaderEntry<TKey, TContext, TData>>(() => CreateLoader(k)))
+            .Value.Request();
     }
 
     /// <summary>
