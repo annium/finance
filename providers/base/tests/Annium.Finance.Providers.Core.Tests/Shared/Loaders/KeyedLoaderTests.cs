@@ -115,16 +115,23 @@ public class KeyedLoaderTests : TestBase
             loader.OnData += (key, context, data) => log.Enqueue((key, context, data));
 
             loader.Request("first");
-            await Expect.ToAsync(() => log.Has(2));
-            var first = log.ToArray()[0];
-            first.Is(("first", 0, 1));
+            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(2));
 
             loader.Request("first");
-            await Expect.ToAsync(() => log.Has(3));
+            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(3));
+
+            // assert the chain, not a total: the loader reloads on its own debounce, so how many events
+            // have landed by the time this reads the log is a matter of timing. What must hold whatever
+            // the count is - the loader starts from the initial context, and every load after that is
+            // handed what the one before it produced
             var entries = log.ToArray();
-            entries.Length.Is(3);
-            var last = entries[2];
-            last.Is(("first", 2, 3));
+            entries[0].Is(("first", 0, 1));
+            for (var i = 1; i < entries.Length; i++)
+            {
+                entries[i].Key.Is("first");
+                entries[i].Context.Is(entries[i - 1].Data, $"load {i} did not continue from load {i - 1}");
+                entries[i].Data.Is(entries[i].Context + 1);
+            }
         }
         finally
         {
