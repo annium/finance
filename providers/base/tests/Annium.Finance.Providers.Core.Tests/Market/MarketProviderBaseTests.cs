@@ -70,20 +70,29 @@ public class MarketProviderBaseTests
     {
         // arrange - one chunk covers the whole range
         var provider = new TestMarketProvider();
+        var call = 0;
 
-        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count) =>
-            Task.FromResult(MarketResult.Ok<List<CandleModel>?>(Candles(from, count)));
+        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count)
+        {
+            call++;
+
+            return Task.FromResult(MarketResult.Ok<List<CandleModel>?>(Candles(from, count)));
+        }
 
         // act
         var batches = await provider
             .LoadAsync(_start, _start + Duration.FromMinutes(5), Fetch, TestContext.Current.CancellationToken)
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        // assert - one batch and no more: a chunk landing exactly on the range boundary ends the paging
-        // rather than going round again for a window that is already closed
-        batches.Count.Is(1, "a covered range must not be fetched past its end");
+        // assert
+        batches.Count.Is(1);
         batches[0].Status.Is(MarketOperationStatus.Ok);
         batches[0].Data.NotNull().Count.Is(5);
+
+        // and the provider is asked exactly once. Counting batches is not enough to see this: a chunk
+        // landing exactly on the boundary that failed to end the paging would go round once more, come
+        // back empty, and stop there - same batch count, one wasted request against the exchange's limit
+        call.Is(1, "a range already covered must not be fetched again");
     }
 
     /// <summary>
