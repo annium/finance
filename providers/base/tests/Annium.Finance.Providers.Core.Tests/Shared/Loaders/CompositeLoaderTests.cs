@@ -266,4 +266,83 @@ public class CompositeLoaderTests : TestBase
         await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(3));
         _statuses.ToArray().IsEqual(new[] { Connecting, Connected, Disconnected });
     }
+
+    /// <summary>
+    /// A stopped loader starts again. Stopping is not disposal - it exists so a connector can park its loaders
+    /// across a reconnect and pick them back up - and every test around it pinned only what stopping prevents,
+    /// so a Start that refused to leave the stopped state would have looked entirely correct.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task StoppedLoader_StartsAgain()
+    {
+        // arrange - neither timer runs, so every fetch is one Start asked for
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 0);
+        var attempts = 0;
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                Interlocked.Increment(ref attempts);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1));
+            }
+        );
+
+        try
+        {
+            loader.Start(false);
+            await Expect.ToAsync(() => Volatile.Read(ref attempts).Is(1));
+            loader.Stop();
+
+            // act
+            loader.Start(false);
+
+            // assert
+            await Expect.ToAsync(() => Volatile.Read(ref attempts).Is(2), 1_000);
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// The interval and the debounce reach the timers they name. They are adjacent arguments of the same type
+    /// on the loader's constructor, and every test around them asked only whether reloads eventually arrive -
+    /// which they do either way round, since one timer merely takes over the other's schedule. Only a config
+    /// whose two periods are far apart, and a wait sized against one of them, tells the two apart.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task Interval_AndDebounce_AreNotInterchangeable()
+    {
+        // arrange - reload often, debounce far beyond this test. Nothing here ever calls Request, so every
+        // fetch past the first belongs to the interval timer
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 20, 3_000);
+        var attempts = 0;
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                Interlocked.Increment(ref attempts);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1));
+            }
+        );
+
+        try
+        {
+            // act
+            loader.Start(false);
+
+            // assert - a dozen intervals' worth of time, asserting a fraction of it. Swapped, the interval
+            // becomes three seconds and only the fetch Start itself performs ever lands
+            await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(5), 1_000);
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
 }

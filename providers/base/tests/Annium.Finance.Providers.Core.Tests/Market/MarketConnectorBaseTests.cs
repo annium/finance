@@ -107,12 +107,19 @@ public class MarketConnectorBaseTests : ProvidersTestBase
 
         // assert
         this.Trace("await for all events");
-        await Wait.UntilAsync(() => tickerLog.Count == dataSize);
+        // bounded: the overload without a timeout waits on CancellationToken.None, so a cycle that never
+        // delivers hangs the run instead of failing it - which is a stuck job rather than a red test
+        await Wait.UntilAsync(() => tickerLog.Count == dataSize, 10_000);
 
         this.Trace("verify tickers log");
         VerifyLog("tickers", tickerLog);
         market.Resources.SequenceEqual(resources).IsTrue();
         market.Instruments.SequenceEqual(instruments).IsTrue();
+
+        // and the cycle ends by saying so. Its failing counterpart asserts the connector must not claim to be
+        // connected when the handler throws; nothing asserted that it does when the handler returns, so a
+        // cycle that completed and left the connector reading as still connecting looked correct
+        market.Status.Is(ConnectorStatus.Connected, "a completed sync leaves the connector connected");
     }
 
     /// <summary>

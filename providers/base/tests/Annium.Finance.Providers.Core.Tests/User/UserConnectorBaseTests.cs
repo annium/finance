@@ -130,11 +130,15 @@ public class UserConnectorBaseTests : ProvidersTestBase
 
         // assert (data messages)
         this.Trace("await for all events");
-        await Wait.UntilAsync(() =>
-            assetsLog.Count == dataSize
-            && positionsLog.Count == dataSize
-            && ordersLog.Count == dataSize
-            && tradesLog.Count == dataSize
+        // bounded: the overload without a timeout waits on CancellationToken.None, so a cycle that never
+        // delivers hangs the run instead of failing it - which is a stuck job rather than a red test
+        await Wait.UntilAsync(
+            () =>
+                assetsLog.Count == dataSize
+                && positionsLog.Count == dataSize
+                && ordersLog.Count == dataSize
+                && tradesLog.Count == dataSize,
+            10_000
         );
 
         this.Trace("examine event logs");
@@ -142,6 +146,11 @@ public class UserConnectorBaseTests : ProvidersTestBase
         VerifyLog("positions", positionsLog);
         VerifyLog("orders", ordersLog);
         VerifyLog("trades", tradesLog);
+
+        // and the cycle ends by saying so. Its failing counterpart asserts the connector must not claim to be
+        // connected when the handler throws; nothing asserted that it does when the handler returns, so a
+        // cycle that completed and left the connector reading as still connecting looked correct
+        user.Status.Is(ConnectorStatus.Connected, "a completed sync leaves the connector connected");
     }
 
     /// <summary>

@@ -236,6 +236,43 @@ public class KeyedLoaderTests : TestBase
     }
 
     /// <summary>
+    /// Disposal stops the entries the loader already built. The test beside this one covers the other half -
+    /// that no new entry is built afterwards - and the two are separate mechanisms: the disposed flag refuses
+    /// new entries, while draining the map is what stops the existing ones. Neither substitutes for the other,
+    /// and an entry left running keeps fetching from the exchange for the life of the process.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task Disposal_StopsTheEntriesItAlreadyBuilt()
+    {
+        // arrange - an interval, so the entry keeps loading on its own once started and stopping it is visible
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 20, 0);
+        var loads = 0;
+        var loader = Provider.CreateKeyedLoader<string, int, int>(
+            cfg,
+            0,
+            (_, context, _) =>
+            {
+                Interlocked.Increment(ref loads);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1));
+            },
+            (_, _, data) => data
+        );
+
+        loader.Request("running");
+        await Expect.ToAsync(() => Volatile.Read(ref loads).IsGreaterOrEqual(3));
+
+        // act - disposal waits for whatever load is in flight, so nothing is mid-fetch past this point
+        await loader.DisposeAsync();
+        var settled = Volatile.Read(ref loads);
+
+        // assert - ten intervals' worth of silence
+        await Task.Delay(200, TestContext.Current.CancellationToken);
+        Volatile.Read(ref loads).Is(settled, "an entry built before disposal kept loading after it");
+    }
+
+    /// <summary>
     /// A disposed loader builds nothing. Disposal takes the entries it knows about and never runs again, so an
     /// entry created after it is unreachable and undisposable - a status reporter bound to the shared monitor
     /// for good, and a pair of timers fetching from the exchange for the life of the process. The request that

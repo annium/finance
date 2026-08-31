@@ -159,6 +159,56 @@ public class MarketProviderBaseTests
     }
 
     /// <summary>
+    /// A gap between one chunk and the next is filled too, carrying the previous chunk's close forward. This
+    /// is a separate branch from the within-chunk fill, and the one nothing reached: it needs a second fetch
+    /// whose first candle starts later than the minute the paging asked for, which only happens once a chunk
+    /// has already been paged. Left unfilled, every chunk boundary the provider skipped would leave a hole no
+    /// consumer of a one-minute series expects.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task GapBetweenChunks_IsFilledFromThePreviousChunksClose()
+    {
+        // arrange - minutes 0 and 1 at 10, then a chunk that resumes at minute 4 at 20, skipping 2 and 3
+        var provider = new TestMarketProvider();
+        var minute = Duration.FromMinutes(1);
+        var call = 0;
+
+        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count)
+        {
+            call++;
+
+            return Task.FromResult(
+                MarketResult.Ok<List<CandleModel>?>(
+                    call switch
+                    {
+                        1 => [Candle(_start, 10m), Candle(_start + minute, 10m)],
+                        2 => [Candle(_start + minute * 4, 20m), Candle(_start + minute * 5, 20m)],
+                        _ => [],
+                    }
+                )
+            );
+        }
+
+        // act
+        var batches = await provider
+            .LoadAsync(_start, _start + Duration.FromMinutes(10), Fetch, TestContext.Current.CancellationToken)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        // assert - the second batch opens at the minute the paging asked for, not at the one the provider
+        // answered with, and the minutes between are carried forward from the first batch's close
+        var candles = batches[1].Data.NotNull().ToArray();
+        candles.Length.Is(4, "the gap across the chunk boundary was not filled");
+        candles
+            .Select(x => x.Moment)
+            .ToArray()
+            .IsEqual(Enumerable.Range(2, 4).Select(i => (_start + minute * i).ToUnixTimeMilliseconds()).ToArray());
+        candles[0].Close.Is(10m, "the plug carries the previous chunk's close, not the next one's open");
+        candles[1].Close.Is(10m);
+        candles[2].Close.Is(20m);
+    }
+
+    /// <summary>
     /// Deriving the resource set from a list of instruments keeps, for each asset code, the definition
     /// carrying the most decimal digits. The same asset appears on many instruments and providers do not
     /// always report it at the same precision; keeping the coarser one would round every amount in that
