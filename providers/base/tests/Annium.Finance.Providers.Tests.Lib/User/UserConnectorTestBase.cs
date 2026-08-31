@@ -189,6 +189,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("await for positions and leverages (before closing)");
         await AwaitForInitialPositionsAndLeverages();
 
+        // before anything is placed, and before the first thing that reads a position: the whole suite
+        // assumes a one-way account, and nothing else here would say so plainly
+        EnsureOneWayPositionMode();
+
         this.Trace("close active positions");
         await CloseActivePositions();
 
@@ -557,6 +561,34 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("await for positions");
         return Expect.ToAsync(() => _positions.IsNotEmpty());
+    }
+
+    /// <summary>
+    /// Asserts the account reports its positions the way every order this suite places assumes.
+    /// </summary>
+    /// <remarks>
+    /// A hedge-mode account reports a position per side, as <see cref="OrientationRange.Long"/> or
+    /// <see cref="OrientationRange.Short"/>, and never as <see cref="OrientationRange.Both"/>. Every order
+    /// here carries <see cref="OrientationRange.Both"/>, which such an account rejects outright. Without
+    /// this check the mismatch surfaces twice over and late in both cases: <see cref="GetPosition"/> looks
+    /// for a range that never arrives and throws for want of a match, and any order that got past it comes
+    /// back rejected by the exchange with a code and no explanation.
+    /// </remarks>
+    private void EnsureOneWayPositionMode()
+    {
+        this.Trace("check position mode");
+
+        if (_positions.Any(x => x.OrientationRange is OrientationRange.Both))
+            return;
+
+        var ranges = _positions.Select(x => x.OrientationRange.ToString()).Distinct().ToArray();
+
+        throw new InvalidOperationException(
+            $"the account reports positions as [{string.Join(", ", ranges)}] and never as {OrientationRange.Both}, which is how "
+                + "a hedge-mode account reports them. Every order this suite places carries "
+                + $"{OrientationRange.Both} and the exchange rejects those outright in hedge mode - set the "
+                + "account to one-way position mode before running this suite"
+        );
     }
 
     /// <summary>
