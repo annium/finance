@@ -60,6 +60,22 @@ public class PositionHelperTests
         ResolveState(subject, 2, 0, 1, 0, 1).Data.Is(Filled);
     }
 
+    /// <summary>
+    /// Verifies that a position which has closed only part of what it opened stays reported as opened and
+    /// closing, not as filled. Filled is the state that says a position is done with, so reporting it while
+    /// quantity is still held would tell a caller an exposure had been closed that is in fact still open.
+    /// </summary>
+    [Fact]
+    public void ResolveState_PartiallyClosed_IsNotFilled()
+    {
+        var subject = "demo";
+
+        // assert - two opened, one closed: the same flags a fully closed position carries, and only the
+        // quantities tell the two apart
+        ResolveState(subject, 2, 0, 2, 0, 1).Data.Is(Opened | Closed);
+        ResolveState(subject, 2, 0, 2, 0, 2).Data.Is(Filled, "closing all of what was opened is filled");
+    }
+
     /// <summary>Verifies that a position with a positive total but no quantity in any of the four buckets resolves to <see cref="Annium.Finance.Providers.Abstractions.Domain.User.PositionState.Canceled"/>.</summary>
     [Fact]
     public void ResolveState_Canceled()

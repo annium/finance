@@ -134,6 +134,48 @@ public class CompositeLoaderTests : TestBase
     }
 
     /// <summary>
+    /// A stopped loader stays stopped even though its interval timer keeps ticking. The timer is not cancelled
+    /// by <see cref="ICompositeLoader{T}.Stop"/> — the callback is expected to decline instead — so this is the
+    /// only thing standing between a stopped loader and a stream of requests it was told to stop making. Every
+    /// other test either enables the interval and never stops, or stops with the interval disabled.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task StoppedLoader_IsNotRestartedByItsIntervalTimer()
+    {
+        // arrange - reload every 10ms, no debounce
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 10, 0);
+        var attempts = 0;
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                Interlocked.Increment(ref attempts);
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1));
+            }
+        );
+
+        try
+        {
+            // act - let the interval fire at least once, then stop
+            loader.Start(true);
+            await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(1));
+            loader.Stop();
+            var afterStop = Volatile.Read(ref attempts);
+
+            // assert - twenty more interval ticks fit in this window; none of them may reach the fetch
+            await Task.Delay(200, TestContext.Current.CancellationToken);
+            Volatile
+                .Read(ref attempts)
+                .Is(afterStop, "a stopped loader must not be restarted by a timer that is still ticking");
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
+
+    /// <summary>
     /// Verifies that calling <see cref="ICompositeLoader{T}.Stop"/> after a successful load prevents a subsequent
     /// <see cref="ICompositeLoader{T}.Request"/> from reaching the fetch delegate, and that disposal reports the
     /// connecting, connected, disconnected status sequence.

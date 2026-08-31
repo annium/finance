@@ -171,7 +171,7 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += Trades.Subscribe();
 
         // executor
-        Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+        Disposable += _executor = Executor.Sequential<UserConnectorBase>(logger).Start();
 
         // source subscriptions
         Disposable += _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
