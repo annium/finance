@@ -96,8 +96,8 @@ public class SnapshotLoaderTests : TestBase
     [Fact]
     public async Task FastRequestLimitReached_SwitchesToTheSlowInterval()
     {
-        // arrange - fast retries every 1ms, slow every 400ms, backing off after 2 failed attempts
-        var cfg = new SnapshotLoaderConfig(1, 2, 400);
+        // arrange - fast retries every 1ms, slow every 2s, backing off after 2 failed attempts
+        var cfg = new SnapshotLoaderConfig(1, 2, 2000);
         var attempts = 0;
         using var loader = Provider.CreateSnapshotLoader<int>(
             cfg,
@@ -109,16 +109,17 @@ public class SnapshotLoaderTests : TestBase
             }
         );
 
-        // act - let it reach the limit, then give it far longer than the fast interval needs
+        // act - let it reach the limit, then wait far longer than the fast interval and far less than the slow
         loader.Start(true);
         await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
-        await Task.Delay(200, TestContext.Current.CancellationToken);
+        await Task.Delay(300, TestContext.Current.CancellationToken);
 
-        // assert - at the fast interval two hundred more attempts would have fitted in that window; the
-        // boundary firing one attempt late would show up here as a handful of extra requests
+        // assert - exactly the two the limit allows. The switch turns on a counter rather than a clock, so
+        // once it has fired nothing more is due for two seconds and the count is settled; a boundary off by
+        // one shows up here as exactly one extra attempt, which a looser bound would let through
         Volatile
             .Read(ref attempts)
-            .IsLess(5, "the loader must be on the slow interval once its fast-request limit is reached");
+            .Is(2, "the loader must back off on the attempt that reaches its limit, not the one after it");
     }
 
     /// <summary>
