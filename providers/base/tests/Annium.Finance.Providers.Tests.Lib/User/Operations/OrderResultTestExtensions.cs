@@ -8,6 +8,14 @@ namespace Annium.Finance.Providers.Tests.Lib.User.Operations;
 /// that matching order and quantity would incur, so tests can build up the expected local order state and
 /// diff it against what a connector reports.
 /// </summary>
+/// <remarks>
+/// Each fill adds the fee on its own increment at its own price, rather than recomputing a total from the
+/// cumulative quantity at the newest one. Recomputing re-prices the whole history every time the price moves:
+/// a market order filled 5@100 then 5@110 came to 0.165 where the fees actually charged sum to 0.1575, and
+/// since the position books the difference between the new total and the previous one, the overcharge went
+/// straight into its opened/closed fee totals. Limit orders hid it - their price never moves, so the two
+/// forms agree.
+/// </remarks>
 public static class OrderResultTestExtensions
 {
     /// <summary>
@@ -30,7 +38,7 @@ public static class OrderResultTestExtensions
                     OrderStatus.PartiallyFilled,
                     qty,
                     result.Data.Price,
-                    qty * result.Data.Price.Fee(),
+                    result.Data.Fee + executedQty * result.Data.Price.Fee(),
                     0
                 )
             );
@@ -52,7 +60,15 @@ public static class OrderResultTestExtensions
 
         return result
             .ValidateIsMarket()
-            .Join(result.Data.Update(OrderStatus.PartiallyFilled, qty, price, qty * price.Fee(), 0));
+            .Join(
+                result.Data.Update(
+                    OrderStatus.PartiallyFilled,
+                    qty,
+                    price,
+                    result.Data.Fee + executedQty * price.Fee(),
+                    0
+                )
+            );
     }
 
     /// <summary>
@@ -72,7 +88,7 @@ public static class OrderResultTestExtensions
                     OrderStatus.Filled,
                     result.Data.TotalQty,
                     result.Data.Price,
-                    result.Data.TotalQty * result.Data.Price.Fee(),
+                    result.Data.Fee + (result.Data.TotalQty - result.Data.ExecutedQty) * result.Data.Price.Fee(),
                     0
                 )
             );
@@ -96,7 +112,7 @@ public static class OrderResultTestExtensions
                     OrderStatus.Filled,
                     result.Data.TotalQty,
                     price,
-                    result.Data.TotalQty * price.Fee(),
+                    result.Data.Fee + (result.Data.TotalQty - result.Data.ExecutedQty) * price.Fee(),
                     0
                 )
             );

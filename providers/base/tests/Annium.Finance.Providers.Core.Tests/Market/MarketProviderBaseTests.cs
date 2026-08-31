@@ -79,10 +79,42 @@ public class MarketProviderBaseTests
             .LoadAsync(_start, _start + Duration.FromMinutes(5), Fetch, TestContext.Current.CancellationToken)
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        // assert
-        batches.Count.Is(1);
+        // assert - one batch and no more: a chunk landing exactly on the range boundary ends the paging
+        // rather than going round again for a window that is already closed
+        batches.Count.Is(1, "a covered range must not be fetched past its end");
         batches[0].Status.Is(MarketOperationStatus.Ok);
         batches[0].Data.NotNull().Count.Is(5);
+    }
+
+    /// <summary>
+    /// A provider that runs out of data before the range is covered ends the enumeration rather than asking
+    /// again forever. An empty answer is how a provider says it has nothing further, and it is not a failure —
+    /// so the range simply ends, with no failure batch to report.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task EmptyFetchMidRange_EndsTheEnumeration()
+    {
+        // arrange - five candles, then nothing, for a range wanting sixty
+        var provider = new TestMarketProvider();
+        var call = 0;
+
+        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count)
+        {
+            call++;
+
+            return Task.FromResult(MarketResult.Ok<List<CandleModel>?>(call == 1 ? Candles(from, 5) : []));
+        }
+
+        // act
+        var batches = await provider
+            .LoadAsync(_start, _start + Duration.FromMinutes(60), Fetch, TestContext.Current.CancellationToken)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        batches.Count.Is(1, "the empty answer ends the range instead of being yielded or retried");
+        batches[0].Status.Is(MarketOperationStatus.Ok);
+        call.Is(2, "the provider is asked once more, and its empty answer stops the paging");
     }
 
     /// <summary>

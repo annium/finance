@@ -27,7 +27,10 @@ public static class InstrumentExtensions
     {
         var q = instrument.ToLotSize(qty);
 
-        return q >= 0
+        // the side comes from what was asked for, not from what survived alignment. A sell smaller than one
+        // lot aligns to zero, and zero reads as positive - so taking the branch from the aligned value
+        // turned a sell into a buy of the minimum quantity, which is an order on the wrong side of the book
+        return qty >= 0
             ? Math.Min(Math.Max(q, instrument.MinQty), instrument.MaxQty)
             : -Math.Min(Math.Max(-q, instrument.MinQty), instrument.MaxQty);
     }

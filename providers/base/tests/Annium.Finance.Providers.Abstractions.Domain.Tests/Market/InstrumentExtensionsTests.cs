@@ -105,6 +105,10 @@ public class InstrumentExtensionsTests
         _instrument.ToLotSize(-0.12m).Is(-0.1m, "aligning a sell size must not ask for more than was requested");
         _instrument.ToLotSize(-1.56m).Is(-1.5m);
         _instrument.ToValidQty(-105m).Is(-_instrument.MaxQty);
+        // a sell smaller than one lot aligns to zero; it must still come back a sell. Reading the side off
+        // the aligned value instead of the request turns it into a buy of the minimum quantity
+        _instrument.ToLotSize(-0.05m).Is(0m);
+        _instrument.ToValidQty(-0.05m).Is(-_instrument.MinQty, "a sell must never come back as a buy");
     }
 
     /// <summary>

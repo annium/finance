@@ -94,6 +94,26 @@ public class RateLimiterTests : ProvidersTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// A weight report arriving after disposal is accepted quietly instead of re-arming a timer that is
+    /// already gone. Requests do not stop the instant a connector shuts down: the last responses of its life
+    /// land after its limiter has been disposed, and every one of them reports the weight it used.
+    /// </summary>
+    [Fact]
+    public void UsedWeight_AfterDispose_DoesNotRearmTheTimer()
+    {
+        // arrange
+        var limiter = CreateLimiter();
+
+        // act
+        limiter.Dispose();
+
+        // assert - a weight this far above the water mark is exactly what would arm the decay timer, so
+        // reaching the next line at all is the assertion: rearming a disposed timer throws
+        limiter.UsedWeight(10_000);
+        limiter.CanExecute().IsFalse("a disposed limiter still answers from the weight it was given");
+    }
+
     /// <summary>Creates a rate limiter with a limit of 100 (80 water mark), decaying used weight by 10 every 10ms once above it.</summary>
     /// <returns>The constructed rate limiter.</returns>
     private IRateLimiter CreateLimiter() => Provider.CreateRateLimiter(100, 10, 10);

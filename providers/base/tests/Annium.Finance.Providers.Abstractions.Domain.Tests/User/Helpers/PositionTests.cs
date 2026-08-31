@@ -91,6 +91,8 @@ public class PositionTests
 
         position.OpenedQty.Is(2m);
         position.OpenedSum.Is(220m, "each fill is booked at the price it happened at");
+        // 1*100*0.00015 + 1*120*0.00015, not 2*120*0.00015 - the second fill does not re-price the first
+        position.OpenedFee.Is(0.033m, "each fill is charged at the price it happened at");
 
         // act
         position.RemoveOrder(result.Data).HasNoErrors();
@@ -100,6 +102,34 @@ public class PositionTests
         position.OpenedQty.Is(0m);
         position.OpenedSum.Is(0m, "removing an order must reverse exactly the sum it booked");
         position.OpenedFee.Is(0m);
+    }
+
+    /// <summary>
+    /// A position that has been closed back to flat forgets which way it was pointing, so the next order to
+    /// fill decides its direction afresh. Without that, the first fill a position ever sees fixes its
+    /// orientation for good — and every later order is then classified as opening or closing against a
+    /// direction the position no longer holds, which is the one input all its other bookkeeping turns on.
+    /// </summary>
+    [Fact]
+    public void ClosedPosition_ForgetsItsOrientation()
+    {
+        // arrange - open long and fill it
+        var position = PositionHelper.CreatePosition(1);
+        position.AddLimitBuyOrder(2m, 10m).Fill().HasNoErrors();
+        position.OrientationType.Is(OrientationType.Long);
+        position.IsActive.IsTrue();
+
+        // act - sell the same quantity back, closing the position
+        position.AddLimitSellOrder(2m, 10m).Fill().HasNoErrors();
+
+        // assert - flat again, and pointing nowhere
+        position.ClosedQty.Is(2m);
+        position.OrientationType.Is(null, "a position closed back to flat holds no direction");
+        position.IsActive.IsFalse();
+
+        // assert - so the next fill is free to open the other way
+        position.AddLimitSellOrder(1m, 10m).Fill().HasNoErrors();
+        position.OrientationType.Is(OrientationType.Short, "the next fill opens the position afresh");
     }
 
     /// <summary>

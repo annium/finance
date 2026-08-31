@@ -193,13 +193,16 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         var entries = log.ToArray();
         try
         {
-            for (var i = 1; i < entries.Length - 1; i++)
+            // to entries.Length, not one short of it: stopping early left the final value asserted
+            // by nothing. The count is gated separately, so a plain drop was caught - but a last
+            // entry that arrived duplicated or out of order passed, and order is what this proves
+            for (var i = 1; i < entries.Length; i++)
                 entries[i].Is(entries[i - 1] + 1);
         }
         catch
         {
             this.Error<string>("{type} log is not as expected:", type);
-            for (var i = 0; i < entries.Length - 1; i++)
+            for (var i = 0; i < entries.Length; i++)
                 this.Trace("{entry}", entries[i]);
             throw;
         }
