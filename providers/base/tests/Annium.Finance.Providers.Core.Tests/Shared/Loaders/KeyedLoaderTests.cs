@@ -190,6 +190,52 @@ public class KeyedLoaderTests : TestBase
     }
 
     /// <summary>
+    /// An entry reloads when it is asked to and not otherwise. Its two timing periods are adjacent arguments
+    /// of the same type on the loader it builds, so handing them over the wrong way round leaves an entry that
+    /// reloads on a schedule nobody configured and ignores every request - and it still produces data, from
+    /// its own interval, which is what makes the swap invisible to anything that only watches for data.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task EntryWithoutAnInterval_ReloadsOnlyWhenAsked()
+    {
+        // arrange - the interval is zero, so every load past the entry's first must come from a request
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 10);
+        var loads = 0;
+        var loader = Provider.CreateKeyedLoader<string, int, int>(
+            cfg,
+            0,
+            (_, context, _) =>
+            {
+                Interlocked.Increment(ref loads);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1));
+            },
+            (_, _, data) => data
+        );
+
+        try
+        {
+            loader.Request("only");
+            await Expect.ToAsync(() => Volatile.Read(ref loads).IsGreaterOrEqual(1));
+
+            // act - leave it alone, asking for nothing
+            await Task.Delay(150, TestContext.Current.CancellationToken);
+            var settled = Volatile.Read(ref loads);
+            await Task.Delay(150, TestContext.Current.CancellationToken);
+
+            // assert
+            Volatile
+                .Read(ref loads)
+                .Is(settled, "an entry configured without an interval reloaded without being asked");
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
+
+    /// <summary>
     /// A disposed loader builds nothing. Disposal takes the entries it knows about and never runs again, so an
     /// entry created after it is unreachable and undisposable - a status reporter bound to the shared monitor
     /// for good, and a pair of timers fetching from the exchange for the life of the process. The request that

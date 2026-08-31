@@ -98,21 +98,25 @@ public class ServerTimeSourceTests : ProvidersTestBase
     [Fact]
     public async Task FirstSuccess_SlowsPollingToTheConfirmInterval()
     {
-        // arrange - load every millisecond, confirm far beyond this test's lifetime
+        // arrange - confirm far beyond this test's lifetime. The load interval is spaced well clear of the
+        // work it drives, so the switch to confirming lands long before a second load-interval tick could:
+        // measured any tighter, a tick queued before the switch takes effect makes the count off by one
         var provider = new ScriptedServerTimeProvider(_ => 1_000_000L);
         using var source = new ServerTimeSource(
             provider,
-            new ServerTimeProviderConfig(1, 60_000),
+            new ServerTimeProviderConfig(200, 60_000),
             Get<IStatusReporter>(),
             Logger
         );
 
-        // act - long enough for hundreds of load-interval refreshes
+        // act - ten load intervals' worth of waiting
         await Expect.ToAsync(() => provider.Calls.IsGreaterOrEqual(1));
-        await Task.Delay(500, TestContext.Current.CancellationToken);
+        await Task.Delay(2_000, TestContext.Current.CancellationToken);
 
-        // assert
-        (provider.Calls < 5).IsTrue($"still polling at the load interval: {provider.Calls} refreshes");
+        // assert - exactly the one refresh that succeeded. Change takes a due time and a period, and both
+        // must move to the confirm interval: a due time left on the load interval buys one more refresh
+        // before settling, which any bound loose enough to allow a few would miss
+        provider.Calls.Is(1, $"the source refreshed {provider.Calls} times after its first success");
     }
 
     /// <summary>
@@ -128,13 +132,26 @@ public class ServerTimeSourceTests : ProvidersTestBase
         var provider = new ScriptedServerTimeProvider(call => call == 1 ? 1_000_000L : null);
         using var source = new ServerTimeSource(
             provider,
-            new ServerTimeProviderConfig(1, 300),
+            new ServerTimeProviderConfig(10, 250),
             Get<IStatusReporter>(),
             Logger
         );
 
-        // act / assert - reaching this many refreshes is only possible back on the 1ms load interval;
-        // at the 300ms confirm interval it would take a minute and a half
+        // act - the second refresh is the confirm that fails
+        await Expect.ToAsync(() => provider.Calls.IsGreaterOrEqual(2));
+
+        // assert - the retry after it comes at once. This is the due time rather than the period, and the
+        // two are separate arguments to the same call: left on the confirm interval, the source waits out
+        // one more full confirm before its first retry and only then picks up speed
+        var watch = Stopwatch.StartNew();
+        await Expect.ToAsync(() => provider.Calls.IsGreaterOrEqual(3));
+        watch.Stop();
+        (watch.ElapsedMilliseconds < 150).IsTrue(
+            $"the retry after a failed confirm waited {watch.ElapsedMilliseconds}ms"
+        );
+
+        // and the period followed the due time: this many refreshes takes half a second on the 10ms load
+        // interval, and longer than this assertion will wait on the 250ms confirm one
         await Expect.ToAsync(() => provider.Calls.IsGreaterOrEqual(50));
     }
 
