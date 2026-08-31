@@ -83,6 +83,10 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
     {
         this.Trace("start");
 
+        // flag and cancel under the lock, drain outside it. Disposing the timer waits for an in-flight
+        // callback, and the fetch continuation re-enters this same lock when it returns - so draining while
+        // holding it left each waiting on the other until the budget ran out. Cancelling first still comes
+        // first: that is what lets the in-flight load end quickly once the drain begins
         lock (_locker)
         {
             if (_state is State.Disposed)
@@ -96,18 +100,18 @@ internal class SnapshotLoader<T> : ISnapshotLoader<T>, ILogSubject
 
             this.Trace("cancel cts");
             _cts.Cancel();
-
-            this.Trace("dispose timer");
-            _timer.Dispose();
-
-            this.Trace("signal disconnected state");
-            _statusReporter.Disconnected();
-
-            // and stop counting: a disposed component is gone, not disconnected. Left registered, it sits
-            // in the monitor as a disconnected target beside the live ones, and the connector can never
-            // report itself connected again for as long as it lives
-            _statusReporter.Unbind();
         }
+
+        this.Trace("dispose timer");
+        _timer.Dispose();
+
+        this.Trace("signal disconnected state");
+        _statusReporter.Disconnected();
+
+        // and stop counting: a disposed component is gone, not disconnected. Left registered, it sits
+        // in the monitor as a disconnected target beside the live ones, and the connector can never
+        // report itself connected again for as long as it lives
+        _statusReporter.Unbind();
 
         this.Trace("done");
     }

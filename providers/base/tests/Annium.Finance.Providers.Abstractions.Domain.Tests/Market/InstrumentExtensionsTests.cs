@@ -16,6 +16,26 @@ public class InstrumentExtensionsTests
     private readonly IInstrument _instrument = InstrumentHelper.DefaultInstrument;
 
     /// <summary>
+    /// Pins the limits the fake instrument derives from its lot and tick size. Every boundary case in this
+    /// file is written against those limits by name — <c>ToValidQty(0.05m).Is(_instrument.MinQty)</c> and the
+    /// like — so a change to how they are derived would move every one of those boundaries and keep them all
+    /// agreeing with each other. Stating the numbers once is what stops the rest of the file from being
+    /// self-referential.
+    /// </summary>
+    [Fact]
+    public void DefaultInstrument_HasTheLimitsEverythingElseIsMeasuredAgainst()
+    {
+        // assert - lot 0.1 and tick 0.01
+        _instrument.LotSize.Is(0.1m);
+        _instrument.TickSize.Is(0.01m);
+        _instrument.MinQty.Is(1m);
+        _instrument.MaxQty.Is(10m);
+        _instrument.MinPrice.Is(0.01m);
+        _instrument.MaxPrice.Is(10_000m);
+        _instrument.MinSum.Is(1m);
+    }
+
+    /// <summary>
     /// Verifies that <see cref="InstrumentExtensions.TickPrecision{TInstrument}"/> counts the decimal digits of the
     /// tick size, independent of the price's own precision.
     /// </summary>

@@ -91,6 +91,9 @@ public class PositionTests
 
         position.OpenedQty.Is(2m);
         position.OpenedSum.Is(220m, "each fill is booked at the price it happened at");
+        // and the running average is the two blended, not whichever filled last. This scenario exists to
+        // fill at two prices, so it is the one place the averaging is actually exercised
+        position.Price.Is(110m, "the position's price is the average of its fills, weighted by quantity");
         // 1*100*0.00015 + 1*120*0.00015, not 2*120*0.00015 - the second fill does not re-price the first
         position.OpenedFee.Is(0.033m, "each fill is charged at the price it happened at");
 

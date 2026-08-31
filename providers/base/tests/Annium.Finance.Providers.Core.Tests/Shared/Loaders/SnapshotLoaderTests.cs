@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
@@ -125,6 +126,43 @@ public class SnapshotLoaderTests : TestBase
         Volatile
             .Read(ref attempts)
             .Is(2, "the loader must back off on the attempt that reaches its limit, not the one after it");
+    }
+
+    /// <summary>
+    /// Disposal does not wait on a callback that is waiting on disposal. Disposing the timer drains whatever
+    /// callback is running, and that callback takes the loader's lock — so draining while holding that lock
+    /// leaves each waiting for the other until the drain budget runs out, several seconds later, and leaks
+    /// the wait handle it gave up on. The same shape the rate limiter's disposal was already written around.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task Dispose_DoesNotBlockOnItsOwnCallback()
+    {
+        // arrange - retry every millisecond with a fetch slow enough that one is always in flight
+        var cfg = new SnapshotLoaderConfig(1, 100, 1);
+        var attempts = 0;
+        var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                Interlocked.Increment(ref attempts);
+                await Task.Delay(30, CancellationToken.None);
+
+                return MarketResult.New(MarketOperationStatus.NotFound, 0, "no");
+            }
+        );
+
+        loader.Start(true);
+        await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
+
+        // act
+        var watch = Stopwatch.StartNew();
+        await loader.DisposeAsync();
+        watch.Stop();
+
+        // assert - the drain budget is seconds; the callback and the disposal not blocking each other
+        // means this returns in a fraction of it
+        (watch.ElapsedMilliseconds < 2000).IsTrue($"disposal took {watch.ElapsedMilliseconds}ms");
     }
 
     /// <summary>
