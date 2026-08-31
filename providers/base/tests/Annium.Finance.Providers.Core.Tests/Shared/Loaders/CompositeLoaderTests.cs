@@ -134,11 +134,17 @@ public class CompositeLoaderTests : TestBase
     }
 
     /// <summary>
-    /// A stopped loader stays stopped even though its interval timer keeps ticking. The timer is not cancelled
-    /// by <see cref="ICompositeLoader{T}.Stop"/> — the callback is expected to decline instead — so this is the
-    /// only thing standing between a stopped loader and a stream of requests it was told to stop making. Every
-    /// other test either enables the interval and never stops, or stops with the interval disabled.
+    /// A stopped loader makes no further requests, however its interval is configured. Every other test here
+    /// either enables the interval and never stops, or stops with the interval disabled, so the two together
+    /// went unexercised.
     /// </summary>
+    /// <remarks>
+    /// Two things enforce this and either alone is enough: <see cref="ICompositeLoader{T}.Stop"/> disarms the
+    /// interval timer, and the callback declines when the loader is not active. So neither is pinned on its
+    /// own — removing one leaves the other doing the work and this test still passes. What it pins is the
+    /// contract, and removing both does fail it. The second guard is not redundant, though: it covers a tick
+    /// that fired just before <c>Stop</c> and is waiting on the lock, which nothing here can force to happen.
+    /// </remarks>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task StoppedLoader_IsNotRestartedByItsIntervalTimer()
