@@ -107,9 +107,10 @@ public class MarketConnectorBaseTests : ProvidersTestBase
 
         // assert
         this.Trace("await for all events");
-        // bounded: the overload without a timeout waits on CancellationToken.None, so a cycle that never
-        // delivers hangs the run instead of failing it - which is a stuck job rather than a red test
-        await Wait.UntilAsync(() => tickerLog.Count == dataSize, 10_000);
+        // Expect, not Wait: Wait.UntilAsync swallows its cancellation and returns silently, so bounding it
+        // turns a run that never delivers from a hang into a pass - VerifyLog below walks the log it was
+        // given and an empty one satisfies it vacuously. Expect re-runs the check after the wait and throws
+        await Expect.ToAsync(() => tickerLog.Count.Is(dataSize));
 
         this.Trace("verify tickers log");
         VerifyLog("tickers", tickerLog);

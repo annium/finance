@@ -130,16 +130,16 @@ public class UserConnectorBaseTests : ProvidersTestBase
 
         // assert (data messages)
         this.Trace("await for all events");
-        // bounded: the overload without a timeout waits on CancellationToken.None, so a cycle that never
-        // delivers hangs the run instead of failing it - which is a stuck job rather than a red test
-        await Wait.UntilAsync(
-            () =>
-                assetsLog.Count == dataSize
-                && positionsLog.Count == dataSize
-                && ordersLog.Count == dataSize
-                && tradesLog.Count == dataSize,
-            10_000
-        );
+        // Expect, not Wait: Wait.UntilAsync swallows its cancellation and returns silently, so bounding it
+        // turns a run that never delivers from a hang into a pass - VerifyLog below walks the log it was
+        // given and an empty one satisfies it vacuously. Expect re-runs the check after the wait and throws
+        await Expect.ToAsync(() =>
+        {
+            assetsLog.Count.Is(dataSize);
+            positionsLog.Count.Is(dataSize);
+            ordersLog.Count.Is(dataSize);
+            tradesLog.Count.Is(dataSize);
+        });
 
         this.Trace("examine event logs");
         VerifyLog("assets", assetsLog);
