@@ -60,6 +60,15 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
     {
         this.Trace("start");
 
+        // stop listening before unbinding, not after: a close or an error already in flight lands on
+        // these handlers, and reporting against a reporter that has been unbound throws. Handlers left
+        // attached across the unbind turned an ordinary teardown into an error in the log
+        this.Trace("unhook socket handlers");
+        _socket.OnConnected -= HandleConnected;
+        _socket.OnDisconnected -= HandleDisconnected;
+        _socket.OnTextReceived -= HandleData;
+        _socket.OnError -= HandleError;
+
         this.Trace("signal disconnected");
         _statusReporter.Disconnected();
 
@@ -145,11 +154,9 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
     {
         this.Trace("start");
 
-        // a close that carries an error is not an ordinary reconnect, and saying only "connecting" loses
-        // the difference - the same distinction the user stream already draws
-        if (status is WebSocketCloseStatus.Error)
-            _statusReporter.Error(new ConnectorError("WebSocket closed with error"));
-
+        // no error reported here even when the status carries one: the socket raises OnError alongside
+        // every error-carrying close, always with the exception attached, so HandleError has already said
+        // it - and better, with the reason rather than a fixed string
         this.Trace("signal disconnected: {status}", status);
         _statusReporter.Connecting();
 

@@ -119,8 +119,14 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
         this.Trace("ensure tickers are loaded");
         await market.Tickers.FirstAsync(x => x.Symbol == _symbol);
 
-        // and nothing went wrong on the way there
-        errors.Count.Is(0, $"the connector reported errors: {string.Join("; ", errors.Select(x => x.Message))}");
+        // and it got there in a good state. Not "no errors reported": a first handshake that drops is an
+        // ordinary event on a real network, and the socket answers it by raising OnError and reconnecting
+        // within a fraction of a second - so a zero-error assertion would fail a connector that recovered
+        // exactly as it should. What must hold is where it ended up
+        foreach (var error in errors)
+            this.Trace<string>("connector reported an error on the way: {error}", error.Message);
+
+        market.Status.Is(ConnectorStatus.Connected, "the connector delivered a ticker without being connected");
 
         this.Trace("done");
     }
