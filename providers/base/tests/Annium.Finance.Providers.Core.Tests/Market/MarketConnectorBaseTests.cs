@@ -172,6 +172,48 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// A connector disposed while a sync cycle is still running leaves nothing flowing behind it. The cycle
+    /// disposes and <em>resets</em> the box holding its subscriptions on every pass, and a reset clears that
+    /// box's disposed flag — so while the executor and that box were unordered siblings in one disposable
+    /// box, a cycle finishing during the drain could revive a box the teardown had already passed over and
+    /// fill it with subscriptions nothing would dispose again.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposalDuringSync_LeavesNothingSubscribed()
+    {
+        // arrange - a sync cycle held open until this test lets it finish
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        var tickers = new ConcurrentQueue<InstrumentTicker>();
+        market.Tickers.Subscribe(tickers.Enqueue);
+
+        var syncing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        market.OnSync += async (_, _, _) =>
+        {
+            syncing.TrySetResult();
+#pragma warning disable VSTHRD003
+            await release.Task;
+#pragma warning restore VSTHRD003
+        };
+
+        market.Sync([], []);
+        await syncing.Task;
+
+        // act - tear down with the cycle still in flight, then let it run to its end
+        var disposal = market.DisposeAsync();
+        release.TrySetResult();
+        await disposal;
+
+        // assert - whatever the cycle did on its way out, the connector forwards nothing now
+        tickers.Clear();
+        market.Ticker(new InstrumentTicker("BTCUSDT", 1m, 1m));
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        tickers.IsEmpty("a disposed connector must not still be piping tickers to its subscribers");
+    }
+
+    /// <summary>
     /// A disposed connector stops counting as one of its monitor's targets. Binding registers it, nothing
     /// else removes it, and disposal reports no status — so left registered it sits there at whatever status
     /// it last held, and the monitor keeps resolving an overall status from a component that no longer

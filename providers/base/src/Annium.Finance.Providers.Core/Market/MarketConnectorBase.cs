@@ -143,10 +143,15 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         Disposable += Tickers.Subscribe();
 
         // executor
-        Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+        // the executor and the sync cycle's subscriptions are disposed by DisposeAsync in a fixed
+        // order, not dropped into the box: the box drains its asynchronous entries concurrently, and
+        // a cycle still running during that drain disposes-and-RESETS the subscriptions box, which
+        // clears its disposed flag - so a box the teardown had already passed over came back to life
+        // and collected subscriptions nothing would ever dispose again
+        _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         // source subscriptions
-        Disposable += _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
+        _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
     }
 
     /// <summary>
@@ -156,6 +161,11 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     public async ValueTask DisposeAsync()
     {
         this.Trace<string>("{id} start", Id);
+
+        // drain the executor first: that runs any in-flight sync cycle to completion, so nothing can be
+        // touching the subscriptions box by the time it is disposed below. Only then is its disposal final
+        await _executor.DisposeAsync();
+        await _sourceSubscriptions.DisposeAsync();
 
         await Disposable.DisposeAsync();
 
