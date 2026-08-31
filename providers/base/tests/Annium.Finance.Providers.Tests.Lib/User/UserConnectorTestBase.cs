@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Core.Mapper;
@@ -76,8 +77,8 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     /// <summary>Collects the connector and its subscriptions so they can be disposed together.</summary>
     private AsyncDisposableBox _disposable = null!;
 
-    /// <summary>Whether <see cref="InitializeAsync"/> ran all the way through, so teardown can rely on it.</summary>
-    private bool _isInitialized;
+    /// <summary>Whether the user connector was built, so teardown has something to reach the account with.</summary>
+    private bool _connectorBuilt;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserConnectorTestBase"/> class.
@@ -138,6 +139,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("get user connector for {settings}", _settings);
         _disposable += Connector = userFactory.Create(_settings);
 
+        // from here on the account is reachable, and initialization itself places closing orders before it
+        // is done - so teardown must attempt its cleanup even if what follows throws
+        _connectorBuilt = true;
+
         // every queue takes the initial snapshot AND the updates that follow it. Keeping only the Init
         // event, as assets and positions used to, froze both queues at the account's opening state:
         // GetBalance and GetPosition then answered with the same snapshot for the rest of the test, so
@@ -189,11 +194,6 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
         EnsureNoErrors();
 
-        // only now: everything teardown's account cleanup reads - the connector, and the queues holding
-        // the opening balance and position - is in place. Set before this, it would promise teardown a
-        // fixture that a failure part-way through had not finished building
-        _isInitialized = true;
-
         this.Trace("done");
     }
 
@@ -206,19 +206,24 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        // the cleanup below and the disposal after it are separate obligations, and the first must not be
-        // able to cancel the second. Initialization can fail with a live market connector already in the
-        // box - a symbol the exchange does not list is enough - and it leaves the connector unbuilt and the
-        // snapshot queues empty, so cleanup would throw on its first line. Thrown from here that ended the
-        // whole method: the connector stayed connected and the container behind it was never released
+        // cleanup and disposal are separate obligations, and neither may cancel the other. Cleanup used to
+        // run first and unguarded, so a throw in it - and it starts by talking to the exchange - ended the
+        // method with the connector still connected and the container never released. Disposal alone is not
+        // enough either: what cleanup does is leave a real account flat, and a failure there is the thing
+        // worth reporting, so it must survive a disposal that fails on its way out
+        Exception? cleanupError = null;
+        Exception? disposeError = null;
+
         try
         {
-            if (_isInitialized)
-                await CleanUpAccountAsync();
-            else
-                this.Trace("skip account cleanup, initialization did not complete");
+            await CleanUpAccountAsync();
         }
-        finally
+        catch (Exception e)
+        {
+            cleanupError = e;
+        }
+
+        try
         {
             this.Trace("dispose disposables");
             if (_disposable is not null)
@@ -229,6 +234,23 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
             // every singleton in it - outlives every test class that ever ran
             await base.DisposeAsync();
         }
+        catch (Exception e)
+        {
+            disposeError = e;
+        }
+
+        if (cleanupError is not null && disposeError is not null)
+            throw new AggregateException(
+                "account cleanup and disposal both failed; the account may not be flat",
+                cleanupError,
+                disposeError
+            );
+
+        if (cleanupError is not null)
+            ExceptionDispatchInfo.Capture(cleanupError).Throw();
+
+        if (disposeError is not null)
+            ExceptionDispatchInfo.Capture(disposeError).Throw();
 
         EnsureNoErrors();
 
@@ -237,13 +259,31 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
     /// <summary>
     /// Leaves the account as this fixture found it: every open order on <see cref="Symbol"/> cancelled and
-    /// any remaining position flattened.
+    /// any remaining position flattened. Does as much of that as the fixture got far enough to allow.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task CleanUpAccountAsync()
     {
+        // nothing to clean with, and nothing placed either: the connector is what talks to the account
+        if (!_connectorBuilt)
+        {
+            this.Trace("skip account cleanup, the connector was never built");
+
+            return;
+        }
+
         this.Trace("cancel open orders");
         await CancelOpenOrders();
+
+        // the opening position snapshot arrives after the connector connects, and initialization can fail
+        // between the two - it places real closing orders of its own before it is done. Cancelling above
+        // needs none of that and is worth doing regardless; flattening has nothing to measure without it
+        if (!_positions.Any(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Symbol))
+        {
+            this.Trace("skip closing, no position snapshot arrived");
+
+            return;
+        }
 
         this.Trace("try close position if any");
         var amount = GetPositionAmount();
