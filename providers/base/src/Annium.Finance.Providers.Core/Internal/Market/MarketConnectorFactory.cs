@@ -33,7 +33,6 @@ internal class MarketConnectorFactory(IServiceProvider sp, ILogger logger) : IMa
 
         this.Trace("{key} - create new scope for {settings}", providerKey, settings);
         var scope = sp.CreateAsyncScope();
-        disposable += scope.CastTo<IAsyncDisposable>();
 
         this.Trace("{key} - resolve factory for {settings}", providerKey, settings);
         var factory = scope.ServiceProvider.ResolveKeyed<IMarketConnectorInstanceFactory>(settings.Provider);
@@ -46,6 +45,9 @@ internal class MarketConnectorFactory(IServiceProvider sp, ILogger logger) : IMa
         );
         var connector = factory.Create(settings, disposable);
 
-        return connector;
+        // the scope is not put in the connector's own box: that box drains its asynchronous entries
+        // concurrently, so the scope would tear down alongside the executor rather than after it, and
+        // the executor may still be draining a sync cycle that is using what the scope owns
+        return new ScopedMarketConnector(connector, scope);
     }
 }
