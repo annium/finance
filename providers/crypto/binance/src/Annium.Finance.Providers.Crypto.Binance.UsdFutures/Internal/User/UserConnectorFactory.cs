@@ -71,6 +71,12 @@ internal class UserConnectorFactory(IServiceProvider sp) : IUserConnectorInstanc
             GetTradesContext
         );
 
+        // the context loader is added to the box by the helper that builds it; these two have no such
+        // helper, and the connector only unhooks their events, so without this they outlive it - timers
+        // still fetching, status reporters still bound, and the keyed one still holding an entry per symbol
+        disposable += ordersLoader;
+        disposable += tradesLoader;
+
         var rateLimiter = sp.Resolve<IRateLimiter>();
         var reporter = sp.Resolve<IStatusReporter>();
         var monitor = sp.Resolve<IStatusMonitor>();

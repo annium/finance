@@ -152,7 +152,7 @@ internal class UserConnector : UserConnectorBase, IUserConnector
         Disposable += () => _userStream.OnConnected -= HandleConnected;
 
         _userStream.OnDisconnected += HandleDisconnected;
-        Disposable += () => _userStream.OnConnected -= HandleDisconnected;
+        Disposable += () => _userStream.OnDisconnected -= HandleDisconnected;
 
         _userStream.OnMessage += HandleMessage;
         Disposable += () => _userStream.OnMessage -= HandleMessage;
