@@ -37,7 +37,11 @@ internal class RateLimiter : IRateLimiter, ILogSubject
     /// <summary>Whether the decay timer is currently armed, guarding against arming it more than once.</summary>
     private bool _isLowerWeightRequested;
 
-    /// <summary>Whether this limiter has been disposed, after which the timer must not be re-armed.</summary>
+    /// <summary>
+    /// Whether this limiter has been disposed, after which the timer must not be re-armed. Not load-bearing
+    /// for safety - a disposed timer answers Change with false rather than throwing - but a report arriving
+    /// after disposal should not leave the arm flag saying a decay is scheduled when nothing is.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>The weight threshold, derived from the configured limit, below which requests are allowed.</summary>
@@ -133,7 +137,7 @@ internal class RateLimiter : IRateLimiter, ILogSubject
             // timer in between, leaving the flag saying armed with no timer running - and used weight
             // then sat above the water mark with nothing left to bring it down
             _isLowerWeightRequested = true;
-            ChangeTimer(_lowerWeightDelay, _lowerWeightDelay);
+            _lowerWeight.Change(_lowerWeightDelay, _lowerWeightDelay);
         }
     }
 
@@ -157,27 +161,8 @@ internal class RateLimiter : IRateLimiter, ILogSubject
                 return;
 
             _isLowerWeightRequested = false;
-            ChangeTimer(Timeout.Infinite, Timeout.Infinite);
+            _lowerWeight.Change(Timeout.Infinite, Timeout.Infinite);
             this.Trace("lower timer reset");
-        }
-    }
-
-    /// <summary>
-    /// Reschedules the decay timer, tolerating a disposal that raced this call.
-    /// </summary>
-    /// <param name="dueTime">The delay, in milliseconds, before the next tick.</param>
-    /// <param name="period">The interval, in milliseconds, between ticks.</param>
-    private void ChangeTimer(int dueTime, int period)
-    {
-        try
-        {
-            _lowerWeight.Change(dueTime, period);
-        }
-        catch (ObjectDisposedException)
-        {
-            // disposal won the race; the timer's own contract says callers must expect this, and there
-            // is nothing left to schedule anyway
-            this.Trace("lower timer already disposed");
         }
     }
 }
