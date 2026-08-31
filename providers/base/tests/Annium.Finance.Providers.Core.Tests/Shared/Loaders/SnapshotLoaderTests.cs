@@ -101,11 +101,16 @@ public class SnapshotLoaderTests : TestBase
         var attempts = 0;
         using var loader = Provider.CreateSnapshotLoader<int>(
             cfg,
-            _ =>
+            async _ =>
             {
                 Interlocked.Increment(ref attempts);
 
-                return Task.FromResult<IBaseResult<int>>(MarketResult.New(MarketOperationStatus.NotFound, 0, "no"));
+                // each attempt takes long enough that the timer cannot queue the next one while the switch
+                // to the slow interval is still being applied. With an instant fetch a third tick could
+                // already be due before the change took effect, and the count was not deterministic
+                await Task.Delay(40, CancellationToken.None);
+
+                return MarketResult.New(MarketOperationStatus.NotFound, 0, "no");
             }
         );
 

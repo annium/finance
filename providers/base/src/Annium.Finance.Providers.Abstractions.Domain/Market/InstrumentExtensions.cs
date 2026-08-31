@@ -17,7 +17,7 @@ public static class InstrumentExtensions
         return instrument.TickSize.Align().Decimals();
     }
 
-    /// <summary>Rounds a quantity down to the nearest lot size, then clamps it into the instrument's allowed quantity range.</summary>
+    /// <summary>Rounds a quantity towards zero to the nearest lot size, then clamps it into the instrument's allowed quantity range, keeping the side it was asked for.</summary>
     /// <typeparam name="TInstrument">The instrument type.</typeparam>
     /// <param name="instrument">The instrument whose lot size and quantity bounds apply.</param>
     /// <param name="qty">The quantity to normalize, in the instrument's base asset.</param>

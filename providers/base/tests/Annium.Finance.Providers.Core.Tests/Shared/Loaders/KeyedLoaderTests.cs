@@ -2,10 +2,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared.Operations;
 using Annium.Finance.Providers.Core.Shared;
 using Annium.Finance.Providers.Core.Shared.Loaders;
+using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Testing;
 using Xunit;
 
@@ -85,6 +87,51 @@ public class KeyedLoaderTests : TestBase
             // assert - one loader per key means one event from a zero context per key
             var firsts = log.ToArray().Where(x => x.Context == 0).GroupBy(x => x.Key).ToArray();
             firsts.All(x => x.Count() == 1).IsTrue("each key must be loaded by exactly one loader");
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// A new key does not drag the connector's status down while it loads. Each entry binds its own reporter,
+    /// registered as connected, and starts without reporting — so a per-key refresher created at any moment
+    /// stays silent. Reporting its progress instead would flash the shared monitor to connecting every time a
+    /// key is first requested, and the monitor resolves connected only when every target is, so a connector
+    /// would drop out of connected for reasons unrelated to its own connection.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task NewKey_DoesNotReportItsOwnProgress()
+    {
+        // arrange - watch the shared monitor for the whole life of the loader
+        var monitor = Get<IStatusMonitor>();
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        monitor.OnStatusChanged += statuses.Enqueue;
+
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 10);
+        var log = new ConcurrentQueue<(string Key, int Context, int Data)>();
+        var loader = Provider.CreateKeyedLoader<string, int, int>(
+            cfg,
+            0,
+            (_, context, _) => Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1)),
+            (_, _, data) => data
+        );
+
+        try
+        {
+            loader.OnData += (key, context, data) => log.Enqueue((key, context, data));
+
+            // act
+            loader.Request("first");
+            await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(1));
+
+            // assert - the entry registered as connected and never moved off it
+            monitor.Status.Is(ConnectorStatus.Connected);
+            statuses
+                .Contains(ConnectorStatus.Connecting)
+                .IsFalse("a per-key loader must not report its own progress to the shared monitor");
         }
         finally
         {

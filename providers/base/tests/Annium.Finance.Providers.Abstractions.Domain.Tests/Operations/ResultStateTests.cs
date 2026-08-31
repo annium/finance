@@ -56,6 +56,69 @@ public class ResultStateTests
     }
 
     /// <summary>
+    /// Verifies that carrying a result forward keeps its outcome. Each of the three <c>From</c> overloads
+    /// exists to move a status and message onto a differently-shaped result — dropping data, attaching data,
+    /// or replacing it — and a failure that loses its status on the way becomes a success carrying whatever
+    /// empty payload the caller supplied. That is the shape a rejected order takes when its validation result
+    /// is handed on: an <c>Ok</c> result with an empty parameter set, submitted as if it had passed.
+    /// </summary>
+    [Fact]
+    public void MarketResult_CarriedForward_KeepsItsOutcome()
+    {
+        // arrange
+        var failed = MarketResult.New(MarketOperationStatus.BadRequest, "rejected");
+        var failedWithData = MarketResult.New<string?>(MarketOperationStatus.BadRequest, null, "rejected");
+
+        // assert - data dropped
+        var dropped = MarketResult.From(failedWithData);
+        dropped.Status.Is(MarketOperationStatus.BadRequest);
+        dropped.Message.Is("rejected");
+        dropped.IsSuccess.IsFalse();
+
+        // assert - data attached to a data-less result
+        var attached = MarketResult.From(failed, "payload");
+        attached.Status.Is(MarketOperationStatus.BadRequest, "attaching data must not turn a refusal into a success");
+        attached.Message.Is("rejected");
+        attached.Data.Is("payload");
+
+        // assert - data replaced
+        var replaced = MarketResult.From(failedWithData, 42);
+        replaced.Status.Is(MarketOperationStatus.BadRequest);
+        replaced.Message.Is("rejected");
+        replaced.Data.Is(42);
+    }
+
+    /// <summary>
+    /// Verifies the same on the user side. This is the live path: a rejected order request's validation result
+    /// is carried onto the query the connector would send, and a status lost here submits a malformed order.
+    /// </summary>
+    [Fact]
+    public void UserResult_CarriedForward_KeepsItsOutcome()
+    {
+        // arrange
+        var failed = UserResult.New(UserOperationStatus.BadRequest, "rejected");
+        var failedWithData = UserResult.New<string?>(UserOperationStatus.BadRequest, null, "rejected");
+
+        // assert - data dropped
+        var dropped = UserResult.From(failedWithData);
+        dropped.Status.Is(UserOperationStatus.BadRequest);
+        dropped.Message.Is("rejected");
+        dropped.IsSuccess.IsFalse();
+
+        // assert - data attached to a data-less result
+        var attached = UserResult.From(failed, "payload");
+        attached.Status.Is(UserOperationStatus.BadRequest, "attaching data must not turn a refusal into a success");
+        attached.Message.Is("rejected");
+        attached.Data.Is("payload");
+
+        // assert - data replaced
+        var replaced = UserResult.From(failedWithData, 42);
+        replaced.Status.Is(UserOperationStatus.BadRequest);
+        replaced.Message.Is("rejected");
+        replaced.Data.Is(42);
+    }
+
+    /// <summary>
     /// Verifies the same sorting on the user side, whose statuses cover the account operations rather than the
     /// market ones.
     /// </summary>

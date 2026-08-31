@@ -139,11 +139,11 @@ public class CompositeLoaderTests : TestBase
     /// went unexercised.
     /// </summary>
     /// <remarks>
-    /// Two things enforce this and either alone is enough: <see cref="ICompositeLoader{T}.Stop"/> disarms the
-    /// interval timer, and the callback declines when the loader is not active. So neither is pinned on its
-    /// own — removing one leaves the other doing the work and this test still passes. What it pins is the
-    /// contract, and removing both does fail it. The second guard is not redundant, though: it covers a tick
-    /// that fired just before <c>Stop</c> and is waiting on the lock, which nothing here can force to happen.
+    /// On the interval path two things enforce this and either alone is enough: <see cref="ICompositeLoader{T}.Stop"/>
+    /// disarms the interval timer, and the callback declines when the loader is not active. So on this path
+    /// neither is pinned on its own — removing one leaves the other doing the work and this test still passes;
+    /// removing both does fail it, which is what it pins. The debounce path is not like that at all: see
+    /// <see cref="StoppedLoader_IsNotRestartedByAPendingDebounce"/>.
     /// </remarks>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
@@ -174,6 +174,52 @@ public class CompositeLoaderTests : TestBase
             Volatile
                 .Read(ref attempts)
                 .Is(afterStop, "a stopped loader must not be restarted by a timer that is still ticking");
+        }
+        finally
+        {
+            await loader.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// A debounced request already in flight when the loader stops does not fetch. This is the path where the
+    /// state check in the callback is doing the work alone: <see cref="ICompositeLoader{T}.Stop"/> calls
+    /// <c>Change</c> on the debounce timer, and that only rewrites the period — it does not cancel a firing
+    /// already armed by an earlier <see cref="ICompositeLoader{T}.Request"/>. So a request followed by a stop
+    /// inside the debounce window reaches the callback regardless, and the only thing between it and a fetch
+    /// against a connector that believes itself stopped is that check.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task StoppedLoader_IsNotRestartedByAPendingDebounce()
+    {
+        // arrange - no interval, and a debounce long enough to stop inside
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 150);
+        var attempts = 0;
+        var loader = Provider.CreateCompositeLoader(
+            cfg,
+            _ =>
+            {
+                Interlocked.Increment(ref attempts);
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1));
+            }
+        );
+
+        try
+        {
+            // act - let the load that Start itself performs settle first, so what follows is the debounce
+            // and nothing else
+            loader.Start(false);
+            await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(1));
+            var afterStart = Volatile.Read(ref attempts);
+
+            // arm the debounce, then stop well before it fires
+            loader.Request();
+            loader.Stop();
+
+            // assert - the armed firing still arrives; it must find the loader stopped and do nothing
+            await Task.Delay(400, TestContext.Current.CancellationToken);
+            Volatile.Read(ref attempts).Is(afterStart, "a debounce armed before Stop must not fetch after it");
         }
         finally
         {
