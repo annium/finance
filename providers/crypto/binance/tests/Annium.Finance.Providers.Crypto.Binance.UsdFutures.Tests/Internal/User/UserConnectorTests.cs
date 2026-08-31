@@ -19,6 +19,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User
 /// canceling open orders and flattening any position on setup and teardown - so they run only when
 /// <see cref="Exchange.IsEnabled"/> is set, and must never point at an account you care about.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class UserConnectorTests : UserConnectorTestBase
 {
     /// <summary>A quantity far past the instrument's max, used to force an order rejection.</summary>

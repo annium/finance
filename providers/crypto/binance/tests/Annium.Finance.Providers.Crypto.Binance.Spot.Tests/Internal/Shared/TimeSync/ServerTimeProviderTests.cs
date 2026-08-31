@@ -15,6 +15,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Shared.Tim
 /// <see cref="ConnectorStatus.Connected"/>, and starts tracking a synced server time. Read-only, but it does
 /// open a real connection to Binance, so it runs only when <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class ServerTimeProviderTests : ProvidersTestBase
 {
     /// <summary>

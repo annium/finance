@@ -12,6 +12,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Servi
 /// the way Binance expects, by checking a fixed query string against a signature pinned in <c>test.env</c>
 /// rather than against a live account.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class SignatureServiceTests : ProvidersTestBase
 {
     /// <summary>

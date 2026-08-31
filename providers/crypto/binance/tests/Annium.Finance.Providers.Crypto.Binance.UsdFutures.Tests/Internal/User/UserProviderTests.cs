@@ -13,6 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User
 /// Read-only, but it does authenticate against a real account, so every case runs only when
 /// <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class UserProviderTests : UserProviderTestBase
 {
     /// <summary>

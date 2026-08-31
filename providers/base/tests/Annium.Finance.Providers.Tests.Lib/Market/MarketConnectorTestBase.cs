@@ -78,9 +78,13 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
         market.Resources.Contains(instrument.Currency).IsTrue();
         instrument.Symbol.IsNullOrWhiteSpace().IsFalse();
 
-        // a bound the exchange does not enforce arrives as zero, and the domain reads it that way - every
-        // one of these is guarded on `> 0` where it is used. Demanding a value would fail a correct
-        // provider on any symbol the exchange leaves unbounded, which is what this fixture used to do
+        // the domain guards each of these on `> 0` where it uses them - ToLotSize, the ToTickSize family,
+        // and IsValidQtyPrice's two price checks - so a zero means "not enforced" and is a value a correct
+        // provider may report. Demanding one, as this fixture used to, would fail it.
+        //
+        // How a bound goes missing is provider-specific and not what these assertions rest on: a filter
+        // absent altogether drops the whole symbol in the converters rather than zeroing a field, and the
+        // futures notional filter hard-codes its maximum. What holds regardless is the reading below
         (instrument.MinQty >= 0m).IsTrue($"negative min quantity: {instrument.MinQty}");
         (instrument.LotSize >= 0m).IsTrue($"negative lot size: {instrument.LotSize}");
         (instrument.MinPrice >= 0m).IsTrue($"negative min price: {instrument.MinPrice}");
@@ -88,10 +92,15 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
         (instrument.TickSize >= 0m).IsTrue($"negative tick size: {instrument.TickSize}");
         (instrument.MinSum >= 0m).IsTrue($"negative min sum: {instrument.MinSum}");
 
-        // these three are read without that guard, so zero is not "unbounded" but "nothing is allowed": a
-        // zero max clamps every quantity to nothing, rejects every sum, and permits no orders at all
+        // these two are read without that guard - ToValidQty clamps against MaxQty, IsValidQtyPrice compares
+        // against MaxSum - so for them zero is not "unbounded" but "nothing is allowed": every quantity
+        // clamped to nothing, every order value rejected
         (instrument.MaxQty > 0m).IsTrue("max quantity is zero, which allows no order of any size");
         (instrument.MaxSum > 0m).IsTrue("max sum is zero, which rejects every order value");
+
+        // MaxOrders has no domain consumer at all - nothing in the codebase reads it. This asserts what the
+        // exchange means by it rather than what our code does with it, which is the weaker of the two
+        // claims and worth marking as such
         (instrument.MaxOrders > 0).IsTrue("max orders is zero, which permits no orders at all");
 
         // and a bound that is set must not be inverted - the pair being present says nothing about it

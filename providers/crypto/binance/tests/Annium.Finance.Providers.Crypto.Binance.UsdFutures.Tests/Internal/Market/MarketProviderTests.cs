@@ -13,6 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Mark
 /// data look right. Read-only, but it does call the real exchange, so it runs only when
 /// <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class MarketProviderTests : MarketProviderTestBase
 {
     /// <summary>

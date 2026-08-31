@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market;
 using Annium.Linq;
@@ -42,6 +43,10 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
         _socket.OnConnected += HandleConnected;
         _socket.OnDisconnected += HandleDisconnected;
         _socket.OnTextReceived += HandleData;
+        // the user stream reports its socket's faults and this half never did, so a market connector that
+        // kept failing looked no different from one merely reconnecting - and OnError is the only channel
+        // a connector has for saying otherwise
+        _socket.OnError += HandleError;
 
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
@@ -140,7 +145,24 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
     {
         this.Trace("start");
 
+        // a close that carries an error is not an ordinary reconnect, and saying only "connecting" loses
+        // the difference - the same distinction the user stream already draws
+        if (status is WebSocketCloseStatus.Error)
+            _statusReporter.Error(new ConnectorError("WebSocket closed with error"));
+
         this.Trace("signal disconnected: {status}", status);
+        _statusReporter.Connecting();
+
+        this.Trace("done");
+    }
+
+    /// <summary>Reports a WebSocket error and switches the connector back to reconnecting.</summary>
+    /// <param name="error">The exception raised by the WebSocket.</param>
+    private void HandleError(Exception error)
+    {
+        this.Trace("start");
+
+        _statusReporter.Error(new ConnectorError(error.ToString()));
         _statusReporter.Connecting();
 
         this.Trace("done");

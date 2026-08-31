@@ -13,6 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Market;
 /// look right. Read-only, but it does call the real exchange, so it runs only when
 /// <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class MarketProviderTests : MarketProviderTestBase
 {
     /// <summary>
