@@ -94,7 +94,11 @@ public sealed record Order(
             fee,
             ExecutedQty,
             Fee,
-            UpdatedAt,
+            // the moment of this update, not the one before it. This is the third argument in this same
+            // call to have been given the field instead of the parameter beside it - the position was told
+            // the order's previous timestamp every time, so its own moment trailed one update behind for
+            // as long as it lived, and every existing test passed zero and never saw it
+            now,
             result
         );
 

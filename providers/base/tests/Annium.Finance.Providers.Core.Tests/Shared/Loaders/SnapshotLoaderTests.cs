@@ -79,7 +79,46 @@ public class SnapshotLoaderTests : TestBase
 
         await Expect.ToAsync(() => log.Has(1));
         log.At(0).Is(10);
+
+        // wait on the statuses before asserting them. The successful fetch hands the data to OnData a line
+        // before it reports connected, so a poll on the log alone can pass while the status has not been
+        // reported yet - the same mistake as three other tests in this suite once had
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
         _statuses.IsEqual(new[] { Connecting, Connected });
+    }
+
+    /// <summary>
+    /// The loader backs off to the slow interval once it has made as many failed attempts as its fast-request
+    /// limit allows — on that attempt, not one after it. Every extra attempt at the fast interval is a request
+    /// against the exchange's rate limit that the configuration said not to make.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task FastRequestLimitReached_SwitchesToTheSlowInterval()
+    {
+        // arrange - fast retries every 1ms, slow every 400ms, backing off after 2 failed attempts
+        var cfg = new SnapshotLoaderConfig(1, 2, 400);
+        var attempts = 0;
+        using var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            _ =>
+            {
+                Interlocked.Increment(ref attempts);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.New(MarketOperationStatus.NotFound, 0, "no"));
+            }
+        );
+
+        // act - let it reach the limit, then give it far longer than the fast interval needs
+        loader.Start(true);
+        await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
+        await Task.Delay(200, TestContext.Current.CancellationToken);
+
+        // assert - at the fast interval two hundred more attempts would have fitted in that window; the
+        // boundary firing one attempt late would show up here as a handful of extra requests
+        Volatile
+            .Read(ref attempts)
+            .IsLess(5, "the loader must be on the slow interval once its fast-request limit is reached");
     }
 
     /// <summary>

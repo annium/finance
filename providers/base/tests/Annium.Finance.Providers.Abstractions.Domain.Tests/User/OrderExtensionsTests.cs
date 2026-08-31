@@ -1,3 +1,4 @@
+using System;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Tests.Lib.User;
 using Annium.Finance.Providers.Tests.Lib.User.Operations;
@@ -12,6 +13,47 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 /// </summary>
 public class OrderExtensionsTests
 {
+    /// <summary>
+    /// Verifies that an order's target price is its limit price where its type carries one, its trigger price
+    /// where it waits on one, and zero for a plain market order — the same rule the request side applies
+    /// before the order exists. Nothing asserted this: it reaches tests only through
+    /// <see cref="Order.ToString"/>, which they match on unrelated substrings.
+    /// </summary>
+    /// <param name="type">The order type under test.</param>
+    /// <param name="expected">The price the order is aimed at.</param>
+    [Theory]
+    [InlineData(OrderType.Limit, 10)]
+    [InlineData(OrderType.Market, 0)]
+    [InlineData(OrderType.StopLossMarket, 9)]
+    [InlineData(OrderType.TakeProfitMarket, 9)]
+    [InlineData(OrderType.StopLossLimit, 10)]
+    [InlineData(OrderType.TakeProfitLimit, 10)]
+    public void TargetPrice_IsThePriceTheTypeAimsAt(OrderType type, int expected)
+    {
+        // arrange - a limit price of 10 and a trigger of 9, so the two can never be mistaken for each other
+        var position = PositionHelper.CreatePosition(1);
+        var isLimitPriced = type is OrderType.Limit or OrderType.StopLossLimit or OrderType.TakeProfitLimit;
+        var isLeveled = type is not (OrderType.Limit or OrderType.Market);
+        var order = new Annium.Finance.Providers.Tests.Lib.User.Order(
+            Guid.NewGuid(),
+            position,
+            OrderSide.Buy,
+            type,
+            1m,
+            isLimitPriced ? 10m : 0m,
+            isLeveled ? 9m : 0m,
+            0L,
+            OrderStatus.New,
+            0m,
+            0m,
+            0m,
+            0L
+        );
+
+        // assert
+        order.TargetPrice().Is(expected);
+    }
+
     /// <summary>Verifies that <see cref="OrderExtensions.IsActive{TOrder}"/> is true for new and partially filled orders, false once filled or canceled.</summary>
     [Fact]
     public void IsActive()

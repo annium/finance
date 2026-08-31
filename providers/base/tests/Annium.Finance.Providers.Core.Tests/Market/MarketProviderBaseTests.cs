@@ -159,6 +159,43 @@ public class MarketProviderBaseTests
     }
 
     /// <summary>
+    /// Deriving the resource set from a list of instruments keeps, for each asset code, the definition
+    /// carrying the most decimal digits. The same asset appears on many instruments and providers do not
+    /// always report it at the same precision; keeping the coarser one would round every amount in that
+    /// asset short of what the exchange actually quotes.
+    /// </summary>
+    [Fact]
+    public void ResolveResources_KeepsTheHighestPrecisionPerCode()
+    {
+        // arrange - BTC seen at 2 decimals on one instrument and 8 on another
+        var provider = new TestMarketProvider();
+        var instruments = new[]
+        {
+            Instrument("BTCUSDT", new ResourceModel("BTC", 2), new ResourceModel("USDT", 2)),
+            Instrument("BTCEUR", new ResourceModel("BTC", 8), new ResourceModel("EUR", 4)),
+        };
+
+        // act
+        var resources = provider.Resolve(instruments);
+
+        // assert
+        resources.Count.Is(3);
+        resources["BTC"].Precision.Is((byte)8, "the finer definition of an asset is the one to keep");
+        resources["USDT"].Precision.Is((byte)2);
+        resources["EUR"].Precision.Is((byte)4);
+    }
+
+    /// <summary>
+    /// Builds an instrument carrying the given resources, with limits these tests do not depend on.
+    /// </summary>
+    /// <param name="symbol">The instrument's symbol.</param>
+    /// <param name="target">The base resource.</param>
+    /// <param name="quote">The quote resource, also used as the settlement currency.</param>
+    /// <returns>The instrument.</returns>
+    private static InstrumentModel Instrument(string symbol, ResourceModel target, ResourceModel quote) =>
+        new(symbol, target, quote, quote, 1m, 100m, 1m, 1m, 100m, 1m, 1m, decimal.MaxValue, int.MaxValue);
+
+    /// <summary>
     /// Builds a run of consecutive one-minute candles starting at the given moment.
     /// </summary>
     /// <param name="from">The moment the first candle covers.</param>
@@ -195,5 +232,13 @@ public class MarketProviderBaseTests
             Func<string, Instant, int, Task<MarketResult<List<CandleModel>?>>> fetch,
             CancellationToken ct
         ) => LoadCandlesBaseAsync("XY", start, end, 1000, fetch, ct);
+
+        /// <summary>
+        /// Exposes <see cref="MarketProviderBase.ResolveResources"/>, which is protected, to these tests.
+        /// </summary>
+        /// <param name="instruments">The instruments to derive resources from.</param>
+        /// <returns>The resources, keyed by asset code.</returns>
+        public Dictionary<string, ResourceModel> Resolve(IReadOnlyCollection<InstrumentModel> instruments) =>
+            ResolveResources(instruments);
     }
 }

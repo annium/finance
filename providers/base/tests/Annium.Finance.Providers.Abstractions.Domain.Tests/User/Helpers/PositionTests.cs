@@ -133,6 +133,29 @@ public class PositionTests
     }
 
     /// <summary>
+    /// A position's last-updated moment only ever moves forward. Updates do not arrive in the order they
+    /// happened — a fill reported late carries an earlier timestamp than one already applied — and letting
+    /// it overwrite the newer moment would make the position claim to be older than what it already holds.
+    /// </summary>
+    [Fact]
+    public void OutOfOrderUpdate_DoesNotMoveTheMomentBackwards()
+    {
+        // arrange - a fill stamped late
+        var position = PositionHelper.CreatePosition(1);
+        var result = position.AddLimitBuyOrder(4m, 10m);
+        result.HasNoErrors();
+        result.Data.Update(OrderStatus.PartiallyFilled, 1m, 10m, 0m, 500L).HasNoErrors();
+        position.UpdatedAt.Is(500L);
+
+        // act - and one stamped earlier arriving after it
+        result.Data.Update(OrderStatus.PartiallyFilled, 2m, 10m, 0m, 200L).HasNoErrors();
+
+        // assert - the quantity is taken, the clock is not wound back
+        position.OpenedQty.Is(2m);
+        position.UpdatedAt.Is(500L, "a later update already seen must not be undone by an earlier one");
+    }
+
+    /// <summary>
     /// An order that fails validation is not booked against its position. Registering it anyway rolled its
     /// quantity into the position's totals, leaving every later comparison measured against an order the
     /// exchange would have refused.

@@ -118,6 +118,12 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         _reporter = reporter;
         _reporter.Bind(this, ConnectorStatus.Connected);
 
+        // and stop counting once disposed. Binding registers this connector as a target of the monitor,
+        // and nothing else removes it - a disposed connector left registered sits there at whatever status
+        // it last held, so the monitor goes on resolving an overall status from a component that is gone.
+        // Every other component that binds a reporter was given this; these two were missed
+        Disposable += () => _reporter.Unbind();
+
         Status = monitor.Status;
 
         monitor.OnStatusChanged += HandleStatusChanged;

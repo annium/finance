@@ -144,6 +144,33 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// A disposed connector stops counting as one of its monitor's targets. Binding registers it, nothing
+    /// else removes it, and disposal reports no status — so left registered it sits there at whatever status
+    /// it last held, and the monitor keeps resolving an overall status from a component that no longer
+    /// exists. Each factory hands a connector its own scope today, which is what keeps this out of the way;
+    /// the contract should not depend on that.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposedConnector_StopsCountingTowardsItsMonitor()
+    {
+        // arrange
+        var monitor = Get<IStatusMonitor>();
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        monitor.Status.Is(ConnectorStatus.Connected, "the connector registers itself as a connected target");
+
+        // act
+        await market.DisposeAsync();
+
+        // assert - no targets left at all, which is what an empty monitor resolves to
+        monitor.Status.Is(
+            ConnectorStatus.Disconnected,
+            "a disposed connector must unregister, not linger at its last status"
+        );
+    }
+
+    /// <summary>
     /// Builds a <see cref="FakeMarketConnector"/> wired to a fresh <see cref="FakeMarketProvider"/> and this
     /// test's status reporter and monitor.
     /// </summary>
