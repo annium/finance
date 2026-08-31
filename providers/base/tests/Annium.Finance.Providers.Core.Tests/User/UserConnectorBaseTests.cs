@@ -179,6 +179,39 @@ public class UserConnectorBaseTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// An error a component reports through its status reporter reaches the connector's own listeners — the
+    /// far half of the relay whose near end the campaign already repaired in the status monitor. The other
+    /// route into <c>OnError</c>, a sync handler that throws, is tested above and does not touch this one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ErrorReportedByAnotherComponent_ReachesTheConnector()
+    {
+        // arrange - a second component bound to the same monitor, as a provider's services are
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Connected);
+
+        var settings = new UserSettings
+        {
+            Provider = "fake",
+            Environment = ProviderEnvironment.Test,
+            Key = "some_key",
+            Secret = "some_secret",
+        };
+        await using var user = CreateConnector(settings, new FakeUserProvider());
+        var errors = new ConcurrentQueue<ConnectorError>();
+        user.OnError += errors.Enqueue;
+
+        // act
+        other.Error(new ConnectorError("listen key expired"));
+
+        // assert
+        await Expect.ToAsync(() => errors.Count.Is(1));
+        errors.TryPeek(out var error).IsTrue();
+        error.NotNull().Message.Is("listen key expired", "the error must arrive intact, not merely as a signal");
+    }
+
+    /// <summary>
     /// Builds a <see cref="FakeUserConnector"/> wired to the given provider and this test's status reporter and
     /// monitor.
     /// </summary>

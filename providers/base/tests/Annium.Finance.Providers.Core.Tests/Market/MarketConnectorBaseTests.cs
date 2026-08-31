@@ -144,6 +144,34 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// An error a component reports through its status reporter reaches the connector's own listeners. This
+    /// is the far half of a relay the campaign already repaired at its near end: the monitor was raising
+    /// nothing at all, and now that it does, the connector still has to pass it on. The other route into
+    /// <c>OnError</c> — a sync handler that throws — is tested above and does not touch this one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ErrorReportedByAnotherComponent_ReachesTheConnector()
+    {
+        // arrange - a second component bound to the same monitor, as a provider's loaders are
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Connected);
+
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        await using var market = CreateConnector(settings);
+        var errors = new ConcurrentQueue<ConnectorError>();
+        market.OnError += errors.Enqueue;
+
+        // act
+        other.Error(new ConnectorError("websocket dropped"));
+
+        // assert
+        await Expect.ToAsync(() => errors.Count.Is(1));
+        errors.TryPeek(out var error).IsTrue();
+        error.NotNull().Message.Is("websocket dropped", "the error must arrive intact, not merely as a signal");
+    }
+
+    /// <summary>
     /// A disposed connector stops counting as one of its monitor's targets. Binding registers it, nothing
     /// else removes it, and disposal reports no status — so left registered it sits there at whatever status
     /// it last held, and the monitor keeps resolving an overall status from a component that no longer
