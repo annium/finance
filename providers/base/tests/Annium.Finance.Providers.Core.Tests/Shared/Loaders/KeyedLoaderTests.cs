@@ -189,6 +189,48 @@ public class KeyedLoaderTests : TestBase
         }
     }
 
+    /// <summary>
+    /// A disposed loader builds nothing. Disposal takes the entries it knows about and never runs again, so an
+    /// entry created after it is unreachable and undisposable - a status reporter bound to the shared monitor
+    /// for good, and a pair of timers fetching from the exchange for the life of the process. The request that
+    /// does it needs no race to arrive: the connector's websocket handler calls Request from a callback, and a
+    /// fill for a symbol never traded before can land at any point during teardown.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposedLoader_BuildsNoFurtherEntries()
+    {
+        // arrange
+        var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 10);
+        var loads = new ConcurrentQueue<string>();
+        var loader = Provider.CreateKeyedLoader<string, int, int>(
+            cfg,
+            0,
+            (key, context, _) =>
+            {
+                loads.Enqueue(key);
+
+                return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1));
+            },
+            (_, _, data) => data
+        );
+
+        loader.Request("known");
+        await Expect.ToAsync(() => loads.Contains("known").IsTrue());
+
+        // disposal waits for whatever load is in flight, so nothing can still be fetching past this point
+        await loader.DisposeAsync();
+        loads.Clear();
+
+        // act - a key it already held, and one it never saw. Clearing the entries makes both of them new
+        loader.Request("known");
+        loader.Request("fresh");
+
+        // assert - well past the moment a started entry would have fetched
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        loads.Count.Is(0, "a disposed loader must not start an entry that nothing is left to dispose");
+    }
+
     // [Fact]
     // public async Task StopPreventsRequestsUntilRestart()
     // {

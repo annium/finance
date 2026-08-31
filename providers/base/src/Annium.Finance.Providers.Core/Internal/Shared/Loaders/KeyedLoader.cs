@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -42,15 +43,19 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     /// <summary>The delegate that derives an entry's updated context from its key, prior context, and loaded data.</summary>
     private readonly Func<TKey, TContext, TData, TContext> _getContext;
 
-    /// <summary>The loader entries created so far, keyed by <typeparamref name="TKey"/>.</summary>
-    // the values are lazy because creating one is not free: it resolves a status reporter, binds it, and
-    // starts the entry - a network fetch and a pair of timers. GetOrAdd's factory can run more than once
-    // when two callers race for a key it does not have, and the loser's result is dropped from the
-    // dictionary but not from existence: its timers keep firing and its reporter stays bound forever.
-    // Constructing a Lazy is free; only the one that wins the race is ever evaluated
-    private readonly ConcurrentDictionary<TKey, Lazy<KeyedLoaderEntry<TKey, TContext, TData>>> _entries = new();
+    /// <summary>
+    /// Guards <see cref="_entries"/> and <see cref="_isDisposed"/> together. Creating an entry is not free -
+    /// it resolves a status reporter, binds it, and starts the entry, meaning a network fetch and a pair of
+    /// timers - and an entry that escapes this dictionary is unreachable and undisposable: its timers keep
+    /// firing and its reporter stays bound for the life of the process. Two callers racing for a key it does
+    /// not hold, and a caller racing disposal, are both that same escape.
+    /// </summary>
+    private readonly Lock _locker = new();
 
-    /// <summary>Whether this loader has been disposed.</summary>
+    /// <summary>The loader entries created so far, keyed by <typeparamref name="TKey"/>.</summary>
+    private readonly Dictionary<TKey, KeyedLoaderEntry<TKey, TContext, TData>> _entries = new();
+
+    /// <summary>Whether this loader has been disposed, after which no new entry may be created.</summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -86,26 +91,30 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     {
         this.Trace("start");
 
-        if (_isDisposed)
+        KeyedLoaderEntry<TKey, TContext, TData>[] entries;
+
+        lock (_locker)
         {
-            this.Trace("skip, already disposed");
-            return;
+            if (_isDisposed)
+            {
+                this.Trace("skip, already disposed");
+                return;
+            }
+
+            _isDisposed = true;
+
+            this.Trace("take entries");
+            entries = _entries.Values.ToArray();
+            _entries.Clear();
         }
 
-        _isDisposed = true;
-
-        foreach (var entry in _entries)
+        // and drain them outside the lock: disposing an entry waits for its timers' in-flight callbacks,
+        // and a callback that reaches Request would be waiting for the lock this thread holds
+        foreach (var entry in entries)
         {
-            // an entry that was never asked for was never created, and has nothing to dispose
-            if (!entry.Value.IsValueCreated)
-                continue;
-
             this.Trace("disconnect {key} entry", entry.Key);
-            entry.Value.Value.Dispose();
+            entry.Dispose();
         }
-
-        this.Trace("clear entries");
-        _entries.Clear();
 
         this.Trace("done");
     }
@@ -118,9 +127,26 @@ internal sealed class KeyedLoader<TKey, TContext, TData> : IKeyedLoader<TKey, TC
     public void Request(TKey key)
     {
         this.Trace("request {key} load", key);
-        _entries
-            .GetOrAdd(key, k => new Lazy<KeyedLoaderEntry<TKey, TContext, TData>>(() => CreateLoader(k)))
-            .Value.Request();
+
+        KeyedLoaderEntry<TKey, TContext, TData> entry;
+
+        lock (_locker)
+        {
+            // a disposed loader has already drained everything it knew about and will never drain again,
+            // so an entry created now is started, bound, and left running with nothing able to stop it
+            if (_isDisposed)
+            {
+                this.Trace("skip {key} load, already disposed", key);
+                return;
+            }
+
+            if (!_entries.TryGetValue(key, out var existing))
+                _entries[key] = existing = CreateLoader(key);
+
+            entry = existing;
+        }
+
+        entry.Request();
     }
 
     /// <summary>
