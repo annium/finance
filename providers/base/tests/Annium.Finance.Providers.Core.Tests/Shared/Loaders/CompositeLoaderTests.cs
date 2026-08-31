@@ -91,15 +91,18 @@ public class CompositeLoaderTests : TestBase
         for (var i = 0; i < 10; i++)
             loader.Request();
 
-        var statuses = Array.Empty<ConnectorStatus>();
-        await Expect.ToAsync(() =>
-        {
-            statuses = _statuses.ToArray();
-            log.Has(1);
-        });
+        await Expect.ToAsync(() => log.Has(1));
         log.At(0).Is(3);
+
+        // the opening of the sequence, not the whole of it. Snapshotting the statuses at the top of the
+        // predicate read them before the condition that follows had held, so the run where the data
+        // finally arrived could still be looking at a queue from before it connected. And the tail is not
+        // fixed either: with a reload interval set, the next scheduled load fails again and appends
+        // another Connecting. What this test is about is that the loader connects, having been connecting
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
+        var statuses = _statuses.Take(2).ToArray();
         this.Trace<string>("statuses: {statuses}", statuses.Select(x => x.ToString()).Join(", "));
-        statuses.ToArray().IsEqual(new[] { Connecting, Connected });
+        statuses.IsEqual(new[] { Connecting, Connected });
     }
 
     /// <summary>
@@ -164,7 +167,9 @@ public class CompositeLoaderTests : TestBase
         attempts.Is(attemptsAfterStop);
 
         await loader.DisposeAsync();
-        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
+        // three, not two: waiting for the count this assertion needs, rather than one short of it, so the
+        // disconnected disposal reports has actually arrived by the time the sequence is compared
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(3));
         _statuses.ToArray().IsEqual(new[] { Connecting, Connected, Disconnected });
     }
 }
