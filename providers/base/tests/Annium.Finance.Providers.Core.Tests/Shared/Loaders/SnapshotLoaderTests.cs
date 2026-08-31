@@ -97,32 +97,31 @@ public class SnapshotLoaderTests : TestBase
     [Fact]
     public async Task FastRequestLimitReached_SwitchesToTheSlowInterval()
     {
-        // arrange - fast retries every 1ms, slow every 2s, backing off after 2 failed attempts
-        var cfg = new SnapshotLoaderConfig(1, 2, 2000);
+        // arrange - fast retries far apart relative to the fetch, so each tick lands on an idle loader.
+        // At a 1ms interval with a slower fetch the timer keeps firing while the callback runs; those ticks
+        // are dropped, but one queued between the last drop and the switch taking effect still runs, and the
+        // attempt count is then nondeterministic by one for a reason that has nothing to do with the
+        // boundary under test. Spacing the ticks removes that, rather than widening the assertion to admit it
+        var cfg = new SnapshotLoaderConfig(50, 2, 2000);
         var attempts = 0;
         using var loader = Provider.CreateSnapshotLoader<int>(
             cfg,
             async _ =>
             {
                 Interlocked.Increment(ref attempts);
-
-                // each attempt takes long enough that the timer cannot queue the next one while the switch
-                // to the slow interval is still being applied. With an instant fetch a third tick could
-                // already be due before the change took effect, and the count was not deterministic
-                await Task.Delay(40, CancellationToken.None);
+                await Task.Delay(5, CancellationToken.None);
 
                 return MarketResult.New(MarketOperationStatus.NotFound, 0, "no");
             }
         );
 
-        // act - let it reach the limit, then wait far longer than the fast interval and far less than the slow
+        // act - two fast attempts are due by 50ms; wait well past that and well short of the slow interval
         loader.Start(true);
         await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
-        await Task.Delay(300, TestContext.Current.CancellationToken);
+        await Task.Delay(400, TestContext.Current.CancellationToken);
 
-        // assert - exactly the two the limit allows. The switch turns on a counter rather than a clock, so
-        // once it has fired nothing more is due for two seconds and the count is settled; a boundary off by
-        // one shows up here as exactly one extra attempt, which a looser bound would let through
+        // assert - exactly the two the limit allows. A boundary off by one shows up as a third attempt at
+        // 100ms, comfortably inside the window above
         Volatile
             .Read(ref attempts)
             .Is(2, "the loader must back off on the attempt that reaches its limit, not the one after it");
