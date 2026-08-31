@@ -28,6 +28,13 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// position on it, and on teardown it cancels open orders again and market-sells off any remaining position,
 /// so tests start and leave the account flat. Gate real runs behind <see cref="Exchange.IsEnabled"/>.
 /// </summary>
+/// <remarks>
+/// One provider derives from this: the Binance USD-M futures suite. Spot has no user-connector tests at all -
+/// only provider ones - so nothing exercises a spot user connector, gated or otherwise. Two commented-out
+/// bases used to stand in for that coverage, one of them carrying a position-closing filter that skipped
+/// short positions, which is a defect already fixed here; they were removed rather than left as something to
+/// revive. The coverage they implied still does not exist.
+/// </remarks>
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     /// <summary>Gets the instrument metadata resolved for <see cref="Symbol"/> from the market connector.</summary>
@@ -68,6 +75,9 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
     /// <summary>Collects the connector and its subscriptions so they can be disposed together.</summary>
     private AsyncDisposableBox _disposable = null!;
+
+    /// <summary>Whether <see cref="InitializeAsync"/> ran all the way through, so teardown can rely on it.</summary>
+    private bool _isInitialized;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserConnectorTestBase"/> class.
@@ -179,6 +189,11 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
         EnsureNoErrors();
 
+        // only now: everything teardown's account cleanup reads - the connector, and the queues holding
+        // the opening balance and position - is in place. Set before this, it would promise teardown a
+        // fixture that a failure part-way through had not finished building
+        _isInitialized = true;
+
         this.Trace("done");
     }
 
@@ -191,6 +206,42 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
+        // the cleanup below and the disposal after it are separate obligations, and the first must not be
+        // able to cancel the second. Initialization can fail with a live market connector already in the
+        // box - a symbol the exchange does not list is enough - and it leaves the connector unbuilt and the
+        // snapshot queues empty, so cleanup would throw on its first line. Thrown from here that ended the
+        // whole method: the connector stayed connected and the container behind it was never released
+        try
+        {
+            if (_isInitialized)
+                await CleanUpAccountAsync();
+            else
+                this.Trace("skip account cleanup, initialization did not complete");
+        }
+        finally
+        {
+            this.Trace("dispose disposables");
+            if (_disposable is not null)
+                await _disposable.DisposeAsync();
+
+            // the connector and its subscriptions are gone; the container that built them is the base's to
+            // release. InitializeAsync calls up to the base, and this has to match it or the provider - and
+            // every singleton in it - outlives every test class that ever ran
+            await base.DisposeAsync();
+        }
+
+        EnsureNoErrors();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Leaves the account as this fixture found it: every open order on <see cref="Symbol"/> cancelled and
+    /// any remaining position flattened.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task CleanUpAccountAsync()
+    {
         this.Trace("cancel open orders");
         await CancelOpenOrders();
 
@@ -220,18 +271,6 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         }
 
         EnsureNoErrors();
-
-        this.Trace("dispose disposables");
-        await _disposable.DisposeAsync();
-
-        EnsureNoErrors();
-
-        // the connector and its subscriptions are gone; the container that built them is the base's to
-        // release. InitializeAsync calls up to the base, and this has to match it or the provider - and
-        // every singleton in it - outlives every test class that ever ran
-        await base.DisposeAsync();
-
-        this.Trace("done");
     }
 
     /// <summary>

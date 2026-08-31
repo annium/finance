@@ -37,10 +37,14 @@ public static class TestEnv
         // split on the first `=` only. Splitting on every one of them, and then keeping the lines that
         // came back in exactly two pieces, silently dropped any secret containing an `=` - base64
         // padding above all - so the variable was simply absent and the failure surfaced far from here
+        // a key with nothing after the `=` is not a variable. Kept as an empty string it counted towards
+        // IsAvailable, so a half-filled file read as credentials being present: the gated tests ran, and
+        // GetVariable handed back "" instead of saying which variable was missing - a signature mismatch
+        // far from the cause, rather than the clean skip the gate exists to give
         var variables = new Dictionary<string, string>();
         var raw = File.ReadAllLines(envFile)
             .Select(x => x.Split('=', 2))
-            .Where(x => x.Length == 2 && x[0].Trim().Length > 0)
+            .Where(x => x.Length == 2 && x[0].Trim().Length > 0 && x[1].Trim().Length > 0)
             .Select(x => (x[0].Trim(), x[1].Trim()))
             .ToArray();
         foreach (var (key, value) in raw)
