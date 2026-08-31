@@ -277,42 +277,10 @@ public class KeyedLoaderTests : TestBase
         loads.Count.Is(0, "a disposed loader must not start an entry that nothing is left to dispose");
     }
 
-    // [Fact]
-    // public async Task StopPreventsRequestsUntilRestart()
-    // {
-    //     var cfg = new CompositeLoaderConfig(1, 2, 5, 0, 5);
-    //     var attempts = 0;
-    //     var loader = Provider.CreateKeyedLoader<string, int, int>(
-    //         cfg,
-    //         0,
-    //         (_, context, _) =>
-    //         {
-    //             Interlocked.Increment(ref attempts);
-    //             return Task.FromResult<IBaseResult<int>>(MarketResult.Ok(context + 1));
-    //         },
-    //         (_, _, data) => data
-    //     );
-    //
-    //     try
-    //     {
-    //         loader.Request("key");
-    //         await Expect.ToAsync(() => attempts.Is(1));
-    //
-    //         loader.Start(true);
-    //         loader.Stop();
-    //
-    //         var attemptsAfterStop = attempts;
-    //         loader.Request("key");
-    //         await Task.Delay(30, CancellationToken.None);
-    //         attempts.Is(attemptsAfterStop);
-    //
-    //         loader.Start(true);
-    //         loader.Request("key");
-    //         await Expect.ToAsync(() => attempts.IsGreater(attemptsAfterStop));
-    //     }
-    //     finally
-    //     {
-    //         await loader.DisposeAsync();
-    //     }
-    // }
+    // A commented-out StopPreventsRequestsUntilRestart used to sit here, calling Start and Stop on the
+    // loader. IKeyedLoader has neither, and never did - the block would not have compiled, and it read as
+    // coverage of a contract that does not exist. Stopping is not offered by design: an entry is started
+    // once when its key is first requested and only ever disposed, so a keyed loader has nothing between
+    // running and gone. The part of that test which is expressible - that an entry reloads only when asked -
+    // is EntryWithoutAnInterval_ReloadsOnlyWhenAsked above.
 }
