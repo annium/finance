@@ -171,6 +171,46 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// A connector stops listening to its monitor before it stops counting towards it. Unregistering a target
+    /// recomputes the aggregate status, which can raise the monitor's event synchronously — so unbinding while
+    /// still subscribed delivers a status change to a connector already being torn down. On a transition to
+    /// connected that lands in <c>HandleSync</c>, scheduling a fresh resync on an executor the disposal has not
+    /// reached yet, against resources it is about to release.
+    /// </summary>
+    /// <remarks>
+    /// The sibling test above registers the connector as the monitor's only target, and with one target
+    /// unregistering always resolves to disconnected — the path where the aggregate changes into something the
+    /// connector acts on is unreachable from that setup. This one keeps a second component bound so removing
+    /// the connector's own target actually moves the aggregate.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposingConnector_StopsListeningBeforeItUnbinds()
+    {
+        // arrange - a second component on the same monitor, sitting at disconnected
+        var monitor = Get<IStatusMonitor>();
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Disconnected);
+
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        monitor.Status.Is(
+            ConnectorStatus.Connecting,
+            "one connected and one disconnected target resolve to connecting"
+        );
+
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        market.OnStatusChanged += statuses.Enqueue;
+
+        // act - disposal removes this connector's target, leaving only the disconnected one
+        await market.DisposeAsync();
+
+        // assert - the aggregate did move, and none of it reached the connector
+        monitor.Status.Is(ConnectorStatus.Disconnected);
+        statuses.IsEmpty("a connector being disposed must not still be handling its monitor's events");
+    }
+
+    /// <summary>
     /// Builds a <see cref="FakeMarketConnector"/> wired to a fresh <see cref="FakeMarketProvider"/> and this
     /// test's status reporter and monitor.
     /// </summary>

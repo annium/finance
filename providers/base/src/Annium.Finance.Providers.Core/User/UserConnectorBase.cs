@@ -136,12 +136,6 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
         _reporter = reporter;
         _reporter.Bind(this, ConnectorStatus.Connected);
 
-        // and stop counting once disposed. Binding registers this connector as a target of the monitor,
-        // and nothing else removes it - a disposed connector left registered sits there at whatever status
-        // it last held, so the monitor goes on resolving an overall status from a component that is gone.
-        // Every other component that binds a reporter was given this; these two were missed
-        Disposable += () => _reporter.Unbind();
-
         Status = monitor.Status;
 
         monitor.OnStatusChanged += HandleStatusChanged;
@@ -149,6 +143,17 @@ public abstract class UserConnectorBase : IAsyncDisposable, ILogSubject
 
         monitor.OnError += HandleError;
         Disposable += () => monitor.OnError -= HandleError;
+
+        // and only then stop counting. Binding registers this connector as a target of the monitor, and
+        // nothing else removes it - left registered, a disposed connector sits there at whatever status it
+        // last held and the monitor goes on resolving an overall status from a component that is gone.
+        //
+        // Registered last, so it runs last: the box drains its synchronous disposals in the order they were
+        // added, and unregistering a target recomputes the aggregate status, which can raise OnStatusChanged
+        // synchronously. Unbinding while still subscribed delivers that to a connector already being torn
+        // down - and on a transition to connected, straight into scheduling a fresh resync on an executor
+        // this phase has not reached yet
+        Disposable += () => _reporter.Unbind();
 
         // assets
         _assets = new ChannelPair<ChangeEvent<AssetModel>>(logger);
