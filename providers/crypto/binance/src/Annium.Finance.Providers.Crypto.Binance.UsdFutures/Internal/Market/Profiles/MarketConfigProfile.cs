@@ -27,13 +27,12 @@ internal class MarketConfigProfile : Profile
     /// <returns>The resolved market configuration.</returns>
     private static MarketConfig MapSettingsToConfig(MarketSettings settings)
     {
-        var httpApi = Endpoints.GetHttpApi(settings.Environment);
-        var wsApi = Endpoints.GetWsApi(settings.Environment);
+        var httpApi = Endpoints.HttpApi;
+        var wsApi = Endpoints.WsApi;
 
         return new MarketConfig
         {
             Provider = settings.Provider,
-            Environment = settings.Environment,
             HttpApi = httpApi,
             WsApi = wsApi,
             WsUriPath = "/stream",

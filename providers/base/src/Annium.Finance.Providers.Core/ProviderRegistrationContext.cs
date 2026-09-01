@@ -53,7 +53,7 @@ public readonly struct ProviderRegistrationContext
         where TUserConnectorFactory : IUserConnectorInstanceFactory
         where TFinanceService : IFinanceService
     {
-        var (provider, environments, serverTimeConfig) = cfg;
+        var (provider, serverTimeConfig) = cfg;
 
         // market
         Container.Add<TMarketProviderFactory>().AsKeyed<IMarketProviderFactory>(provider).Scoped();
@@ -64,25 +64,21 @@ public readonly struct ProviderRegistrationContext
         Container.Add<TUserConnectorFactory>().AsKeyed<IUserConnectorInstanceFactory>(provider).Scoped();
         Container.Add<TFinanceService>().AsKeyed<IFinanceService>(provider).Scoped();
 
-        foreach (var env in environments.EnumerateFlags())
-        {
-            var providerKey = ProviderKey.Create(provider, env);
-
-            // shared
-            Container.Add(providerKey).AsSelf().Singleton();
-            Container.Add(serverTimeConfig).AsKeyed<ServerTimeProviderConfig>(providerKey).Singleton();
-            Container.Add(ServerTimeSourceFactory).AsKeyed<IServerTimeSource>(providerKey).Scoped();
-        }
+        // shared
+        var providerKey = ProviderKey.Create(provider);
+        Container.Add(providerKey).AsSelf().Singleton();
+        Container.Add(serverTimeConfig).AsKeyed<ServerTimeProviderConfig>(providerKey).Singleton();
+        Container.Add(ServerTimeSourceFactory).AsKeyed<IServerTimeSource>(providerKey).Scoped();
 
         return this;
     }
 
     /// <summary>
-    /// Resolves the keyed dependencies for a provider's environment and builds its server time source.
+    /// Resolves a provider's keyed dependencies and builds its server time source.
     /// </summary>
     /// <param name="sp">The service provider to resolve dependencies from.</param>
-    /// <param name="key">The environment-specific <see cref="ProviderKey"/> the dependencies are keyed by.</param>
-    /// <returns>A new server time source for the given provider/environment.</returns>
+    /// <param name="key">The <see cref="ProviderKey"/> the dependencies are keyed by.</param>
+    /// <returns>A new server time source for the given provider.</returns>
     private static IServerTimeSource ServerTimeSourceFactory(IServiceProvider sp, object key)
     {
         var provider = sp.ResolveKeyed<IServerTimeProvider>(key);

@@ -12,11 +12,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests;
 internal static class Settings
 {
     /// <summary>The market settings (provider and environment) used to resolve the live market connector/provider.</summary>
-    public static readonly MarketSettings Market = new()
-    {
-        Provider = Constants.Provider,
-        Environment = ProviderEnvironment.Real,
-    };
+    public static readonly MarketSettings Market = new() { Provider = Constants.Provider };
 
     /// <summary>
     /// Gets the user settings, including the API key/secret read from <c>test.env</c>, used to resolve the
@@ -28,7 +24,6 @@ internal static class Settings
         field ??= new UserSettings
         {
             Provider = Constants.Provider,
-            Environment = ProviderEnvironment.Real,
             Key = TestEnv.GetVariable("TEST_KEY"),
             Secret = TestEnv.GetVariable("TEST_SECRET"),
         };

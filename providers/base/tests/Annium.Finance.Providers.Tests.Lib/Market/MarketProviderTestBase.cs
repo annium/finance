@@ -52,7 +52,7 @@ public abstract class MarketProviderTestBase : ProvidersTestBase
         // act - resolve market provider
         this.Trace("resolve market provider");
         var providerFactory = GetKeyed<IMarketProviderFactory>(providerKey.Provider);
-        var settings = new MarketSettings { Provider = providerKey.Provider, Environment = providerKey.Environment };
+        var settings = new MarketSettings { Provider = providerKey.Provider };
         var provider = providerFactory.Create(settings);
 
         // act - load context

@@ -157,20 +157,7 @@ public class InstrumentExtensionsTests
     {
         // arrange - prices allowed in [10, 100], every value below tick aligned and comfortably inside
         // the quantity and notional bounds, so the price bound is the only thing any case turns on
-        var instrument = new Instrument(
-            "fake",
-            ProviderEnvironment.Test,
-            "XY",
-            1m,
-            1m,
-            1m,
-            100m,
-            10m,
-            100m,
-            1m,
-            decimal.MaxValue,
-            int.MaxValue
-        );
+        var instrument = new Instrument("fake", "XY", 1m, 1m, 1m, 100m, 10m, 100m, 1m, decimal.MaxValue, int.MaxValue);
 
         // assert
         instrument.IsValidQtyPrice(1m, 9m).IsFalse("a price below the instrument's minimum is not valid");
@@ -188,20 +175,7 @@ public class InstrumentExtensionsTests
     public void IsValidQtyPrice_UnboundedPrice_IsNotEnforced()
     {
         // arrange - neither bound is set, as an exchange reports for a symbol it does not limit
-        var instrument = new Instrument(
-            "fake",
-            ProviderEnvironment.Test,
-            "XY",
-            1m,
-            1m,
-            1m,
-            100m,
-            0m,
-            0m,
-            1m,
-            decimal.MaxValue,
-            int.MaxValue
-        );
+        var instrument = new Instrument("fake", "XY", 1m, 1m, 1m, 100m, 0m, 0m, 1m, decimal.MaxValue, int.MaxValue);
 
         // assert
         instrument.IsValidQtyPrice(1m, 1m).IsTrue("an unset minimum must not reject a low price");

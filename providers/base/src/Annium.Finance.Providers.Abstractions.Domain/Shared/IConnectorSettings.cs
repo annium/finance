@@ -7,7 +7,4 @@ public interface IConnectorSettings
 {
     /// <summary>Gets the name of the provider to connect to.</summary>
     string Provider { get; }
-
-    /// <summary>Gets the environment (real or test) to connect to.</summary>
-    ProviderEnvironment Environment { get; }
 }
