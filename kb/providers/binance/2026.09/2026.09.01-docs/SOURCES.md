@@ -47,10 +47,44 @@ byte-identical responses before this was noticed. Reject any response beginning 
 consequential finding of this run — is not a change-log entry. It lives on its own page, reachable
 only through a link inside the change log. Follow the links out.
 
+## usd-futures request schemas — tier 1 (upstream git repository)
+
+Repository `github.com/binance/binance-api-postman`, pinned at
+**`bf7c41820ddef7684a5b861c485791ade747e8a2`**. The official Postman collections are machine-readable,
+versioned and diffable — a better source for the request side than any rendered page.
+
+| file | bytes | covers |
+|---|---|---|
+| `usd-futures/postman-usds-futures.json` | 260693 | 95 requests, every endpoint this module calls, with full parameter lists |
+| `spot/postman-spot.json` | 238150 | the spot equivalent |
+
+They carry **no response examples** — 0 of 95 — so they close the request side and nothing else.
+
+## usd-futures response schemas — tier 3 (lossy)
+
+`usd-futures/catalog-readings-tier3.md`. See its own header for what that means and what it does not.
+
+## Rejected as a source: the Binance MCP server
+
+`https://agent.binance.com/mcp/agentic` is not a documentation server. It is an account-connected
+agent, reached by OAuth against a logged-in Binance account, and Binance's own page says plainly:
+"Never paste the MCP endpoint into an AI chat and ask it to install the server." It was considered for
+this gap and rejected — wrong instrument, and one whose installation the vendor explicitly warns
+against doing this way.
+
 ## Gap in this snapshot
 
-The per-endpoint futures reference pages (exchange information, klines, new/modify/cancel order,
-account, trade list) could not be located: every path tried returned the shell. This run therefore
-verified the futures endpoint *inventory* against `general-info` and the change log, but not each
-endpoint's parameter and response schema against its own page. Recorded as a gap rather than counted
-as coverage. Finding those paths is the first task of the next run.
+Two things remain unretrieved at a fidelity worth storing.
+
+**The nested payloads of the user-data-stream events.** `ORDER_TRADE_UPDATE`'s order object and
+`ACCOUNT_UPDATE`'s balance and position entries render from a schema source the tier-3 reading did not
+reach. Our manifest holds ~20 short field names for them (`sp`, `ap`, `R`, `wb`, `cw`, `bc`, `pa`,
+`ep`, `up`, …), every one still unverified against its own page.
+
+**Everything the catalog serves, as a stored document.** Tier 3 answers a question; it does not give a
+file to diff. Until the catalog can be retrieved as text, response-schema drift on futures will be
+detected by asking again rather than by comparing — which is weaker, and slower to notice.
+
+How the paths were found, for the next run: `developers.binance.com/en/docs/llms.txt` is a site index
+listing every documentation page. The futures product section has exactly 13, all now snapshotted. The
+catalog is not in it.

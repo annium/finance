@@ -23,7 +23,7 @@ created: 2026-09-01
 | step | state | evidence | outstanding |
 |---|---|---|---|
 | 1 — derive existing state | **converged** | ~70 anchors verified against the tree, then re-anchored after the environment removal; four missing entries added | none |
-| 2 — collect facts, compute drift | **drift** | all 13 futures pages and 7 spot files snapshotted; every category walked | futures per-endpoint request/response schemas remain unverified against their own pages — those live in the client-rendered catalog, which serves neither `.md` nor an entry in `llms.txt`. Next technique: Binance's documented docs MCP server. **This blocks: the step may not be declared done partially** |
+| 2 — collect facts, compute drift | **drift** | all 13 futures pages and 7 spot files snapshotted; every category walked | request side closed at tier 1 by the official Postman collections; response side read at tier 3, lossy. Remaining: the nested user-data-stream event payloads (~20 field names) reached by no technique, and one unresolved item — whether `POST /fapi/v1/order` returns `avgPrice`, which our converter reads. **This blocks: the step may not be declared done partially** |
 | 3 — wire types and serialization | not-started | — | — |
 | 4 — provider, read paths (+ registration, config, read-only live validation) | not-started | — | **the futures WebSocket base URLs are legacy, decommissioned 2026-04-23** — market to `/public`, user data to `/private` |
 | 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | blocked on the same URL drift: a user stream on a dead URL delivers nothing |
