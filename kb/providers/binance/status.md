@@ -28,6 +28,22 @@ created: 2026-09-01
 | 4 — provider, read paths (+ registration, config, read-only live validation) | not-started | — | **the futures WebSocket base URLs are legacy, decommissioned 2026-04-23** — market to `/public`, user data to `/private` |
 | 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | blocked on the same URL drift: a user stream on a dead URL delivers nothing |
 
+## Queued work
+
+Named here rather than left implied, with the reason each is not being done now.
+
+- **Rebuild the signing golden value.** The fixture's query — `symbol=LTCBTC&side=BUY&…` — contains no
+  character requiring percent-encoding, so it passes whether or not the implementation encodes before
+  signing, which Binance has required since 2026-01-15. The test is `vacuous` for that property. Not
+  rebuilt yet: a live signed request settles it either way, so if the exchange stages pass, the
+  implementation is right and only the test needs strengthening; if they fail with `-1022`, the fix is
+  the implementation and the test is the second job, not the first.
+- **Rate-limit handling in the runtime** — 418 folded into the same status as 429, `Retry-After` read
+  nowhere, and a limiter that throttles only on its own accounting. Deliberately deferred until a live
+  read-only run shows whether we approach the limits at all, so the backoff is designed against
+  observation rather than documentation.
+- **Per-entry two-axis annotation** — see step 1's row above.
+
 ## Reconcile history
 
 One line per run. The report holds the findings; the snapshot beside it holds the documentation those
