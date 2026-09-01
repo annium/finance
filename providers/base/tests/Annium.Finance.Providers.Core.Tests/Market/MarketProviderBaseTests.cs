@@ -209,6 +209,43 @@ public class MarketProviderBaseTests
     }
 
     /// <summary>
+    /// A provider that answers with the same page forever is stopped and reported, rather than paged until
+    /// something else gives out. Nothing else in the loop closes it: the answer is neither empty nor a
+    /// failure, so both of the other exits stay shut and the window never moves.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ProviderThatNeverAdvances_IsStoppedAndReported()
+    {
+        // arrange - always the same candle, whatever was asked for
+        var provider = new TestMarketProvider();
+        var call = 0;
+
+        Task<MarketResult<List<CandleModel>?>> Fetch(string symbol, Instant from, int count)
+        {
+            call++;
+
+            return Task.FromResult(MarketResult.Ok<List<CandleModel>?>([Candle(_start, 10m)]));
+        }
+
+        // act
+        var batches = await provider
+            .LoadAsync(_start, _start + Duration.FromMinutes(60), Fetch, TestContext.Current.CancellationToken)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        // assert - it stops, and the last thing the caller gets says why. The count is three rather than
+        // two because the gap fill plugs the minute the second request asked for and did not receive,
+        // which advances the window once before it stalls for good
+        batches[^1]
+            .Status.Is(
+                MarketOperationStatus.UnknownError,
+                "a range that stopped advancing must say so rather than be paged forever"
+            );
+        batches.Take(batches.Count - 1).All(x => x.Status == MarketOperationStatus.Ok).IsTrue();
+        (call < 5).IsTrue($"the loop asked {call} times before stopping");
+    }
+
+    /// <summary>
     /// Deriving the resource set from a list of instruments keeps, for each asset code, the definition
     /// carrying the most decimal digits. The same asset appears on many instruments and providers do not
     /// always report it at the same precision; keeping the coarser one would round every amount in that

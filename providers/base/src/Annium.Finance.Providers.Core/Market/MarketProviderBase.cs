@@ -87,7 +87,24 @@ public abstract class MarketProviderBase
 
             // adjust window
             last = result.Data.Last();
-            from = Instant.FromUnixTimeMilliseconds(last.Moment + _minute);
+            var next = Instant.FromUnixTimeMilliseconds(last.Moment + _minute);
+
+            // a window that did not move is a provider answering the same page forever, and this loop has
+            // nothing else to stop it: the answer is neither empty nor a failure, so both the breaks below
+            // and above stay shut. Say so and stop, rather than page the same minute until something else
+            // gives out
+            if (next <= from)
+            {
+                yield return MarketResult.New<IReadOnlyCollection<CandleModel>?>(
+                    MarketOperationStatus.UnknownError,
+                    null,
+                    $"{instrument} candles did not advance past {from}"
+                );
+
+                break;
+            }
+
+            from = next;
 
             // if window closed - break
             if (end <= from)
