@@ -47,7 +47,7 @@ public abstract class MarketConnectorTestBase : ProvidersTestBase
         var factory = Get<IMarketConnectorFactory>();
 
         // arrange - create market connector
-        var settings = new MarketSettings { Provider = providerKey.Provider, Environment = providerKey.Environment };
+        var settings = new MarketSettings { Provider = providerKey.Provider };
         this.Trace("get market connector for {settings}", settings);
         await using var market = factory.Create(settings);
 

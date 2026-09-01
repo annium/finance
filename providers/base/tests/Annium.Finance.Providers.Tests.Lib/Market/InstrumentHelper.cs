@@ -22,7 +22,6 @@ public static class InstrumentHelper
     public static Instrument CreateInstrument(string resource, string currency, decimal lotSize, decimal tickSize) =>
         new(
             "fake",
-            ProviderEnvironment.Test,
             $"{resource}{currency}",
             lotSize,
             tickSize,

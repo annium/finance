@@ -46,7 +46,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     {
         // arrange
         this.Trace("prepare settings");
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
 
         this.Trace("prepare data");
         const int dataSize = 1000;
@@ -134,7 +134,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     public async Task SyncHandlerThrows_IsReportedAndNotClaimedConnected()
     {
         // arrange
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
         await using var market = CreateConnector(settings);
         var errors = new ConcurrentQueue<ConnectorError>();
         var statuses = new ConcurrentQueue<ConnectorStatus>();
@@ -165,7 +165,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         var other = Get<IStatusReporter>();
         other.Bind("other", ConnectorStatus.Connected);
 
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
         await using var market = CreateConnector(settings);
         var errors = new ConcurrentQueue<ConnectorError>();
         market.OnError += errors.Enqueue;
@@ -191,7 +191,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     public async Task DisposalDuringSync_LeavesNothingSubscribed()
     {
         // arrange - a sync cycle held open until this test lets it finish
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
         var market = CreateConnector(settings);
         var tickers = new ConcurrentQueue<InstrumentTicker>();
         market.Tickers.Subscribe(tickers.Enqueue);
@@ -234,7 +234,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
     {
         // arrange
         var monitor = Get<IStatusMonitor>();
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
         var market = CreateConnector(settings);
         monitor.Status.Is(ConnectorStatus.Connected, "the connector registers itself as a connected target");
 
@@ -270,7 +270,7 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         var other = Get<IStatusReporter>();
         other.Bind("other", ConnectorStatus.Disconnected);
 
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
         var market = CreateConnector(settings);
         monitor.Status.Is(
             ConnectorStatus.Connecting,

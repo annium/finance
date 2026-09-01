@@ -11,9 +11,6 @@ public abstract record UserConfigBase
     /// <summary>Gets the name of the provider to connect to.</summary>
     public required string Provider { get; init; }
 
-    /// <summary>Gets the environment (real or test) to connect to.</summary>
-    public required ProviderEnvironment Environment { get; init; }
-
     /// <summary>Gets the API key identifying the account to Binance.</summary>
     public required string Key { get; init; }
 
@@ -43,7 +40,6 @@ public static class UserConfigBaseExtensions
         new()
         {
             Provider = config.Provider,
-            Environment = config.Environment,
             Key = config.Key,
             Secret = config.Secret,
         };

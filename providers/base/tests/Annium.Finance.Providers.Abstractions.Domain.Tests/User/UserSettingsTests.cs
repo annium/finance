@@ -11,8 +11,8 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 public class UserSettingsTests
 {
     /// <summary>
-    /// Verifies that the description carries the provider, the environment and only a prefix of the key,
-    /// never the key in full and never the secret.
+    /// Verifies that the description carries the provider and only a prefix of the key, never the key in
+    /// full and never the secret.
     /// </summary>
     [Fact]
     public void ToString_ShowsOnlyAKeyPrefix()
@@ -21,13 +21,12 @@ public class UserSettingsTests
         var settings = new UserSettings
         {
             Provider = "binance",
-            Environment = ProviderEnvironment.Test,
             Key = "0123456789abcdef",
             Secret = "s3cr3t",
         };
 
         // assert
-        settings.ToString().Is("binance[Test]0123456");
+        settings.ToString().Is("binance[0123456]");
     }
 
     /// <summary>
@@ -38,18 +37,13 @@ public class UserSettingsTests
     /// <param name="key">The key to describe.</param>
     /// <param name="expected">The description the settings are expected to produce.</param>
     [Theory]
-    [InlineData("", "binance[Test]")]
-    [InlineData("abc", "binance[Test]abc")]
-    [InlineData("0123456", "binance[Test]0123456")]
+    [InlineData("", "binance[]")]
+    [InlineData("abc", "binance[abc]")]
+    [InlineData("0123456", "binance[0123456]")]
     public void ToString_ShortKey_IsDescribedNotRejected(string key, string expected)
     {
         // arrange
-        var settings = new UserSettings
-        {
-            Provider = "binance",
-            Environment = ProviderEnvironment.Test,
-            Key = key,
-        };
+        var settings = new UserSettings { Provider = "binance", Key = key };
 
         // assert
         settings.ToString().Is(expected);

@@ -46,7 +46,7 @@ public class MarketConnectorFactoryTests : ProvidersTestBase
         // arrange
         var capture = Get<ScopeCapture>();
         var factory = Get<IMarketConnectorFactory>();
-        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var settings = new MarketSettings { Provider = "fake" };
 
         // act
         var connector = factory.Create(settings);

@@ -47,11 +47,7 @@ public static class ProviderRegistrationContextExtensions
     )
     {
         // provider
-        var baseCfg = new ProviderBaseConfiguration(
-            Provider,
-            ProviderEnvironment.Real | ProviderEnvironment.Test,
-            cfg.ServerTime
-        );
+        var baseCfg = new ProviderBaseConfiguration(Provider, cfg.ServerTime);
         ctx.AddProvider<
             MarketProviderFactory,
             MarketConnectorFactory,
@@ -92,26 +88,21 @@ public static class ProviderRegistrationContextExtensions
         ctx.Container.Add<QueryProcessor>().AsSelf().Singleton();
         ctx.Container.Add(RateLimiterFactory).AsSelf().Scoped();
 
-        foreach (var env in baseCfg.Environments.EnumerateFlags())
-        {
-            var providerKey = ProviderKey.Create(Provider, env);
-            ctx.Container.Add(ServerTimeProviderFactory).AsKeyed<IServerTimeProvider>(providerKey).Singleton();
-        }
+        var providerKey = ProviderKey.Create(Provider);
+        ctx.Container.Add(ServerTimeProviderFactory).AsKeyed<IServerTimeProvider>(providerKey).Singleton();
 
         return ctx;
     }
 
     /// <summary>
-    /// Creates the server time provider for a given environment's provider key, pointed at that environment's
-    /// server time endpoint.
+    /// Creates the server time provider for the provider's key, pointed at its server time endpoint.
     /// </summary>
     /// <param name="sp">The service provider used to resolve dependencies.</param>
-    /// <param name="key">The keyed registration's provider key, identifying the environment.</param>
-    /// <returns>A new server time provider for the environment.</returns>
+    /// <param name="key">The keyed registration's provider key.</param>
+    /// <returns>A new server time provider.</returns>
     private static IServerTimeProvider ServerTimeProviderFactory(IServiceProvider sp, object key)
     {
-        var providerKey = key.CastTo<ProviderKey>();
-        var httpApi = Endpoints.GetHttpApi(providerKey.Environment);
+        var httpApi = Endpoints.HttpApi;
 
         return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, "/fapi/v1/time");
     }

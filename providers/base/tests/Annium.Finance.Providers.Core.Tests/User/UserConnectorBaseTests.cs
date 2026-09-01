@@ -48,7 +48,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
         var settings = new UserSettings
         {
             Provider = "fake",
-            Environment = ProviderEnvironment.Test,
             Key = "some_key",
             Secret = "some_secret",
         };
@@ -167,7 +166,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
         var settings = new UserSettings
         {
             Provider = "fake",
-            Environment = ProviderEnvironment.Test,
             Key = "some_key",
             Secret = "some_secret",
         };
@@ -203,7 +201,6 @@ public class UserConnectorBaseTests : ProvidersTestBase
         var settings = new UserSettings
         {
             Provider = "fake",
-            Environment = ProviderEnvironment.Test,
             Key = "some_key",
             Secret = "some_secret",
         };
