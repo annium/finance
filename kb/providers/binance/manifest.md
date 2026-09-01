@@ -88,28 +88,41 @@ state it is stated once at its head.
 
 ### Where this manifest stands, as of 2026-09-01
 
+Documentation is closed. Verification was censused against the test suites entry by entry, and the
+result corrected two claims an earlier category-level reading of this table had got wrong — noted
+below, because a summary that reads as an annotation is the failure this model exists to prevent.
+
 | category | documentation | verification |
 |---|---|---|
-| 1 endpoints | `confirmed`, except the futures websocket bases, which are **wrong** — see the drift entries | `gated` — reachable only through the exchange suite |
-| 2 request parameters | `confirmed` at tier 1 from the official Postman collections | `gated`; the futures query processor's shapes are `pinned` by offline unit tests |
-| 3 response fields | spot `confirmed` at **tier 1** from `rest-api.md` — every field our converters read is present, `cummulativeQuoteQty` typo and all. Futures account / query-order / trade `confirmed` at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | converters are `pinned` offline; what the exchange actually sends is `gated` |
-| 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned` |
-| 5 enumerations | `confirmed` on both venues against their documented lists. Three gaps found, all recorded below | `pinned` |
-| 6 error and status codes | `confirmed` | `pinned` for the HTTP mapping; the two Binance codes are `none` — no test in `Base.Tests`, which is why the drifted third copy went unnoticed |
-| 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | `pinned` for the limiter's own behaviour, `none` for whether our ceilings match Binance's |
-| 8 auth and signing | `confirmed` | `pinned` — but the golden value's query has no character needing percent-encoding, so the 2026-01-15 encoding rule is **`vacuous`** |
-| 9 timing and lifecycle | `confirmed` | `none` for the documented caps; `pinned` for our own paging |
-| 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | `none` |
+| 1 endpoints | `confirmed`, except the futures websocket bases, which are **wrong** — see the drift entries | `gated`. **Except the user-stream URI — the drift entry itself — which is `none`:** no test anywhere opens the user-data websocket, so nothing watches it even with the gate open |
+| 2 request parameters | `confirmed` at tier 1 from the official Postman collections | futures order shapes are **`pinned`** offline, per order type, both init and modify, with `reduceOnly` branching asserted both ways. The signing scaffolding is `gated` as a whole; `recvWindow`'s value is `none` |
+| 3 response fields | spot `confirmed` at **tier 1** from `rest-api.md`; futures account / query-order / trade `confirmed` at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | `pinned` per converter, every one having its own test with real fixtures. Negative branches are `none`: a non-GUID cancel id, a non-`TRADING` status, a missing `SPOT` permission, an absent filter dropping the instrument |
+| 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned`, including the lot-size merge arithmetic — but entirely piggybacked on the exchange-info fixture; there is no filter test of its own |
+| 5 enumerations | `confirmed` on both venues against their documented lists | **not `pinned` as a category — corrected.** Only values that happen to appear in a fixture are covered. Sides and position sides are `pinned`; on the **read** side `MARKET`, `STOP_LOSS`/`STOP_MARKET`, `STOP_LOSS_LIMIT`/`STOP`, spot's `LIMIT_MAKER` fold, and every order status but `NEW` and `PARTIALLY_FILLED` are `none` |
+| 6 error and status codes | `confirmed` | HTTP mapping `pinned` in all three copies. The two Binance codes are `pinned` in Spot and UsdFutures and `none` in `Base` — the drifted copy is exactly the untested one |
+| 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | the mechanism is `pinned` — header casing, missing and malformed values, water mark, decay, post-dispose. The production ceilings, the decay constants, the water-mark fraction and the runtime `REQUEST_WEIGHT` overwrite are all `none` |
+| 8 auth and signing | `confirmed` | `gated`, and **`vacuous`** for the percent-encoding rule. What is signed, the exclusion of `signature` itself, and the use of synced rather than local time are each `none` |
+| 9 timing and lifecycle | `confirmed` | candle interval and page size `gated` against a real count. The order and trade paging windows are **`vacuous`** — see below. Sync cadence `none` |
+| 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | `none` throughout, but for `"BTCUSDT"` liveness and the kline page size, which are `gated` |
 
-**Counts worth watching, and where they should go.** One `vacuous` (§8, the signing test). Two facts
-`undocumented` and untested at once: the futures asset-precision heuristic and the settlement-currency
-assumption, both §10. Everything the exchange suite alone would catch is `gated`, and stays that way
-until the live stages run.
+**Two `vacuous` entries, and both are the same shape: the input chosen cannot exercise the property.**
 
-**Not yet done at entry granularity.** The table above is a category-level statement; annotating each
-of the ~200 entries individually is step 1's work on the next run. Recorded here rather than implied,
-because a category-level claim reads as an entry-level one to anyone who does not know it was written
-this way.
+1. **The signing golden value** (§8). Its query — `symbol=LTCBTC&side=BUY&…` — contains no character
+   requiring percent-encoding, so it passes identically whether or not the implementation encodes
+   before signing, which Binance has required since 2026-01-15.
+2. **The history paging windows** (§9). `LoadHistoryOrdersBaseAsync` and `LoadHistoryTradesBaseAsync`
+   request **one day** of history while claiming to protect a seven-day chunking window and a
+   three-month cap. Even with the exchange gate open the fixture cannot reach either boundary; it can
+   only confirm the call did not error.
+
+**Five components have no test file at all:** `WebSocketService`, `ListenKeyResolver`,
+`HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first two
+carry the connection lifecycle for every stream this module runs.
+
+**Where the exposure is.** The `none` bucket is the largest by a wide margin, and its centre of mass is
+not where anyone would guess: not the exotic paths, but the constants. Production rate-limit ceilings,
+`recvWindow`, the water mark, the precision heuristics — the values most likely to be copied wrong and
+least likely to be noticed.
 
 Structural markers stay separate from both axes: **[DIVERGES]** between spot and futures,
 **[DUPLICATED]** across files, **[DEAD]** for code unreachable in production, **[DRIFT]** where what we

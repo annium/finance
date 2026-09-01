@@ -22,7 +22,7 @@ created: 2026-09-01
 
 | step | state | evidence | outstanding |
 |---|---|---|---|
-| 1 — derive existing state | **drift** | ~70 anchors verified; four missing entries added; two-axis states set at category granularity | per-entry documentation and verification states not yet set — the category-level table is a summary, not the annotation |
+| 1 — derive existing state | **converged** | ~70 anchors verified and re-anchored after the environment removal; four missing entries added; both axes censused entry by entry against the test suites | none |
 | 2 — collect facts, compute drift | **drift** | all 13 futures pages and 7 spot files snapshotted; every category walked | request side closed at tier 1 by the official Postman collections; response side read at tier 3, lossy. Remaining: the nested user-data-stream event payloads (~20 field names) reached by no technique, and one unresolved item — whether `POST /fapi/v1/order` returns `avgPrice`, which our converter reads. **This blocks: the step may not be declared done partially** |
 | 3 — wire types and serialization | not-started | — | — |
 | 4 — provider, read paths (+ registration, config, read-only live validation) | not-started | — | **the futures WebSocket base URLs are legacy, decommissioned 2026-04-23** — market to `/public`, user data to `/private` |
@@ -42,7 +42,15 @@ Named here rather than left implied, with the reason each is not being done now.
   nowhere, and a limiter that throttles only on its own accounting. Deliberately deferred until a live
   read-only run shows whether we approach the limits at all, so the backoff is designed against
   observation rather than documentation.
-- **Per-entry two-axis annotation** — see step 1's row above.
+- **Two `vacuous` tests**, both of the same shape — the input chosen cannot exercise the property the
+  test claims. The signing golden value, above; and the history paging tests, which request one day
+  while claiming to protect a seven-day window and a three-month cap. Neither is fixed here: the first
+  waits on the live run, the second belongs to the step that owns the read paths.
+- **Five components with no test file at all** — `WebSocketService`, `ListenKeyResolver`,
+  `HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first
+  two carry the connection lifecycle of every stream this module runs.
+- **The read-side enumeration gaps** — most order-type and order-status wire strings are never parsed
+  by any test, only written. Work for the step that owns serialization.
 
 ## Reconcile history
 
