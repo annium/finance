@@ -175,6 +175,11 @@ Walk the manifest in order. Every entry gets exactly one outcome:
 | **undocumented** | we depend on something the documentation does not state |
 | **contested** | two sources disagree — record both readings and what would settle it, and pick neither |
 
+An entry whose value is **assembled** from parts — a base and a path, a template and a substitution —
+is one fact, not two, and it is the assembled value that must be recorded and checked. Recording the
+parts separately hides the composition, and composition is where these go wrong: this provider's
+websocket route was correct in both the base and the path and wrong once joined.
+
 **Every date in the documentation is read against today's date.** An announced removal is only
 `deprecated` while its date is ahead of us. Once that date has passed the entry is `changed`, and
 almost certainly blocking: the thing was withdrawn and we did not move. The first Binance run found a
