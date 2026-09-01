@@ -1,6 +1,6 @@
 ---
 name: implement-provider-contract
-description: Reconcile an exchange provider's wire contract — derive every API fact the module depends on, verify the manifest still matches the code, diff it against the exchange's current documentation, and report what drifted and what it costs us. This is the drift check. Use as layer 1 of implement-provider, or standalone when the user says "сверь контракт", "проверь дрейф API", "check the provider contract", or when an exchange test fails for a reason that might not be our defect.
+description: Establish an exchange provider's wire contract in two gated steps — first derive what the code currently assumes, then collect the provider's actual API facts and compute the drift between them. Step two must be complete before anything is built on it. This is the drift check. Use as steps 1 and 2 of implement-provider, or standalone when the user says "сверь контракт", "проверь дрейф API", "check the provider contract", or when an exchange test fails for a reason that might not be our defect.
 user-invocable: true
 ---
 
@@ -8,7 +8,12 @@ user-invocable: true
 
 Produce and keep current the **wire contract** for one exchange provider: every fact about someone
 else's API that this module depends on. The contract is the target every other layer is measured
-against, so this layer runs first and re-converges first.
+against, so it runs first and re-converges first.
+
+It is **two steps with a gate between them**, and they answer different questions. Step 1 asks what
+*we* believe; step 2 asks what is *true*. Run together they blur: a fact read in the documentation
+while the code is open reads as agreement more often than it should. Derived first, in the code's own
+terms and confirmed by the user, the comparison in step 2 has something fixed to push against.
 
 Assessing the contract against the exchange's documentation **is** the drift check. There is no
 separate skill for it, and there should not be: a drift report that is not written back into a target
@@ -47,14 +52,12 @@ One manifest per exchange, with a shared section and one per market type, becaus
 between market types are the drift-prone part and are only visible when both halves sit on the same
 page.
 
-## Workflow
-
-### Phase 0 — establish the tree
+## Phase 0 — establish the tree
 
 Clean and on `main` level with `origin/main`, or on `feature/<provider>`. Anything else stops the run;
 report the actual state and ask. Never stash, never force, never hard-reset.
 
-### Phase 1 — derive, or verify, the manifest against the code
+## Step 1 — derive the existing state from the code
 
 **On a first run** there is no manifest. Derive the manifest from the code: sweep the provider's tree and
 record every fact that belongs to the exchange, anchored to `file:line`, in the categories below. Mark
@@ -72,10 +75,25 @@ external:
 - **Every entry still corresponds to live code.** An entry for something deleted becomes `[DEAD]` or
   goes.
 
-Delegate this to a fresh subagent given the manifest and the tree. A reviewer who wrote the manifest will
-read what it meant to say.
+On a greenfield provider the derivation is **empty**, and saying so explicitly is the result: an empty
+derivation and an unasked question look identical a month later.
 
-### Phase 2 — snapshot the documentation
+Delegate this to a fresh subagent given the manifest and the tree. A reviewer who wrote the manifest
+will read what it meant to say.
+
+**→ GATE.** Present the derived state and stop. The user confirms it describes the implementation
+before it is compared against anything external. Everything in it is `[UNVERIFIED]` — it is what we
+believe, not what is true, and the distinction is the whole point of deriving it separately.
+
+## Step 2 — collect the provider's facts, and compute the drift
+
+### Phase 2a — snapshot the documentation
+
+**Completeness is this step's gate condition, not an aspiration.** Every category covered, every entry
+given an outcome. A step-3 transcription measured against a half-checked contract inherits the
+unchecked half as silent assumption, and nothing downstream will ever question it. A source that
+cannot be retrieved is a **gap**, recorded as one, and it **blocks** — "the important parts were
+checked" is precisely the reasoning that leaves the unchecked parts unchecked forever.
 
 Do not read the documentation live and compare it against memory. **Fetch it, store it, and diff it
 against the previous run's snapshot.** Memory of a vendor's API is exactly the thing that drifts, so a
@@ -135,7 +153,7 @@ pinned revision where there is one. Then diff against the previous run's snapsho
 what moved. On a first run there is nothing to diff against — read the changelogs whole, and say in the
 report that this run established the baseline rather than measured a change.
 
-### Phase 3 — diff, category by category
+### Phase 2b — diff, category by category
 
 Walk the manifest in order. Every entry gets exactly one outcome:
 
@@ -163,7 +181,7 @@ to break silently.
 Read categories in this order, most consequential first: endpoints and auth, then request parameters,
 then enumerations and error codes, then response fields, then filters, then rate limits, then timing.
 
-### Phase 4 — report
+### Phase 2c — report
 
 Write `kb/providers/<provider>/<YYYY.MM>/<YYYY.MM.DD>-contract.md`, beside the snapshot it was written from. Immutable once written.
 
@@ -178,7 +196,7 @@ it blocks the exchange run. A diff alone does not.
 
 End with a plain statement: does anything found block running against the exchange?
 
-### Phase 5 — write back
+### Phase 2d — write back
 
 Update `manifest.md` **in place**: correct the changed facts, adjust markers, set `checked_against` to
 today, and append one line to `status.md`'s reconcile history pointing at the report.
@@ -193,7 +211,7 @@ manifest changed without the snapshot it was changed from leaves a fact with no 
 Code fixes go in separate commits, so the manifest's history stays a history of the exchange rather
 than of our repairs.
 
-### Phase 6 — gate
+### Phase 2e — gate
 
 Present: what was checked, what held, what drifted with its consequence, and whether anything blocks
 the exchange run. Stop. Remediation of the other layers is the parent's business and the user's call.
@@ -223,9 +241,10 @@ For each entry also record, where it applies: `[DIVERGES]` between market types,
 files, `[DEAD]` if unreachable from production. All three change what a later change costs, and all
 three are invisible from any single file.
 
-## What this layer does not do
+## What these steps do not do
 
-- It does not call the exchange. Provenance is upgraded to `[LIVE]` by layer 6, from an actual response.
+- They do not call the provider. Provenance is upgraded to `[LIVE]` in steps 4 and 5, from an actual
+  response.
 - It does not resolve a disagreement between two sources by picking one. Two sources that contradict
   each other are **unresolved**, recorded as such, until a third settles it — a search summary claiming
   a change the changelog does not contain is not a finding.

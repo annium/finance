@@ -1,13 +1,13 @@
 ---
 name: implement-provider
-description: Drive an exchange provider module to a target state, layer by layer — wire contract, contracts and converters, provider, connector, registration, and the staged live validation against the exchange — by assessing each layer against the contract, remediating only the drift, and stopping at a human gate between layers. Use when onboarding a new exchange, when reconciling an existing one after the exchange changed its API, when the user says "реализуй провайдера <exchange>", "сверь провайдера с документацией", "implement the <exchange> provider", "check the provider for drift", or when an exchange test fails for a reason that might not be our defect.
+description: Drive an exchange provider module to a target state, step by step — derive what the code assumes, collect the provider's actual API facts and the drift between them, then wire types, provider and connector, each with its tests and its own live validation — assessing every step against the contract, remediating only the drift, and stopping at a human gate between steps. Use when onboarding a new exchange, when reconciling an existing one after the exchange changed its API, when the user says "реализуй провайдера <exchange>", "сверь провайдера с документацией", "implement the <exchange> provider", "check the provider for drift", or when an exchange test fails for a reason that might not be our defect.
 user-invocable: true
 ---
 
 # Implement Provider
 
-Drive an exchange provider module to a **target state**, layer by layer. This skill is a
-**reconciler**, not a one-shot builder: every call *assesses* each layer's current implementation
+Drive an exchange provider module to a **target state**, step by step. This skill is a
+**reconciler**, not a one-shot builder: every call *assesses* each step's current implementation
 against its target, *remediates* only the drift, *verifies*, and stops at a **human gate** before
 advancing. A first run on a new exchange, a resumed run, and a re-run after the exchange changed its
 documentation all converge through the same loop.
@@ -16,39 +16,40 @@ documentation all converge through the same loop.
 
 Some of what this skill validates places **real orders on a real account**.
 
-- **NEVER set `FINANCE_EXCHANGE_TESTS` on your own.** Layer 6 stages the live runs and each stage is a
-  human gate. The variable is set by the user, or by you only when the user has approved *that stage*
+- **NEVER set `FINANCE_EXCHANGE_TESTS` on your own.** Steps 4 and 5 carry the live runs and each stage
+  is a human gate. The variable is set by the user, or by you only when the user has approved *that stage*
   in *that call*.
 - `test.env` files hold real credentials. Never read them for their values, never print them, never
   commit them.
-- Assessment and remediation of layers 1–5 need no exchange access at all. Only layer 6 does.
+- Steps 1-3 need no provider access at all. Steps 4 and 5 do, and stage themselves accordingly:
+  step 4's live validation only reads, step 5's trades.
 
-## The load-bearing idea: one contract, ported into every layer
+## The load-bearing idea: one contract, ported into every step
 
-Layer 1 produces the **wire contract** — every fact about the exchange's API that this module depends
+Step 1 produces the **wire contract** — every fact about the exchange's API that this module depends
 on: endpoints, auth and signing, request parameters, response field names, filters, enumerations,
 error codes, rate limits, stream payloads. It lives in the provider's `manifest.md` and it is the **single
-target** every later layer is measured against.
+target** every later step is measured against.
 
-Layers 2–5 are independent transcriptions of that same contract into C#. They are consistent with
+Steps 3–5 are independent transcriptions of that same contract into C#. They are consistent with
 **the exchange**, not with each other — each is checked against the contract, never against a sibling.
 That is what makes a divergence detectable: if converters and query processors were checked against
 one another, a shared misreading would look like agreement.
 
-When the exchange changes something, layer 1 re-converges **first**, and the drift propagates outward
-from there. Layer 1 is therefore not preamble; it is the thing the rest copy.
+When the exchange changes something, step 1 re-converges **first**, and the drift propagates outward
+from there. Step 1 is therefore not preamble; it is the thing the rest copy.
 
 ## The second target: what a fact is worth
 
 A contract fact is not just a value. It carries **provenance**, and the provenance decides how much a
-layer may rely on it:
+step may rely on it:
 
 | marker | meaning |
 |---|---|
 | *(unmarked)* | confirmed against documentation at the manifest's `checked_against` date |
 | `[UNVERIFIED]` | derived from our own code or from memory, never checked against the exchange's docs |
 | `[UNDOCUMENTED]` | we depend on it, the documentation does not state it. Inferred from observed behaviour — **changes without a changelog entry**, so no drift check will ever catch it in advance |
-| `[LIVE]` | confirmed by an actual exchange response in a layer-6 run, with the date |
+| `[LIVE]` | confirmed by an actual exchange response in a step-6 run, with the date |
 | `[DIVERGES]` | market types (spot / futures / …) assume different things here |
 | `[DUPLICATED]` | encoded in more than one place, so a change must be made more than once |
 | `[DEAD]` | encoded but unreachable from production today |
@@ -56,39 +57,39 @@ layer may rely on it:
 Only exceptions carry a marker. A fact confirmed at the last check needs none — `checked_against`
 covers it. The reader needs the list of what *cannot* be trusted, not a list of everything.
 
-**Provenance is upgraded by layer 6, not by layer 1.** This differs from the usual arrangement and is
-worth stating plainly: our live validation is expensive and staged, so layer 1 can only ever produce
-`doc-derived` facts. A fact becomes `[LIVE]` when an exchange run actually exercised it and layer 6
+**Provenance is upgraded by steps 4 and 5, not by step 1.** This differs from the usual arrangement and is
+worth stating plainly: our live validation is expensive and staged, so step 1 can only ever produce
+`doc-derived` facts. A fact becomes `[LIVE]` when an exchange run actually exercised it and steps 4 and 5
 writes that back into the manifest. A contract with no `[LIVE]` facts is not wrong — it is unproven, and
 the manifest says which.
 
 ## Convergence model — assess → remediate → verify → gate
 
-Idempotence here means **convergence, not abort**. There is no "already exists → skip". Each layer
+Idempotence here means **convergence, not abort**. There is no "already exists → skip". Each step
 runs the same loop on every call:
 
-1. **Assess.** Measure the layer's current implementation against its target — the contract for layers
-   2–6, the exchange's documentation for layer 1. Delegate the judgement to a **fresh verifier
-   subagent** given the contract, the layer's files, and the layer's done-checklist. A fresh
+1. **Assess.** Measure the step's current implementation against its target — the contract for steps
+   3–5, the provider's documentation for steps 1–2. Delegate the judgement to a **fresh verifier
+   subagent** given the contract, the step's files, and the step's done-checklist. A fresh
    adversarial context is what makes re-runs converge instead of manufacturing new work; a reviewer
    carrying findings from the last pass will always find more.
 2. **Remediate**, only if there is drift. The drift list **is** the remediation spec — a scoped
    work-list, not a rebuild. Record it in `status.md` so an interrupted run resumes exactly there.
-3. **Verify.** Re-assess. The layer is converged only when its checklist passes.
+3. **Verify.** Re-assess. The step is converged only when its checklist passes.
 4. **Gate.** Stop. Builds, credentials, exchange access and money are the user's. **Never advance
-   while the current layer has open drift** — a later layer's target is the contract, and an
+   while the current step has open drift** — a later step's target is the contract, and an
    unconverged contract is not a target worth porting.
 
-A converged layer re-assessed later is a no-op. A layer whose target moved surfaces fresh drift.
+A converged step re-assessed later is a no-op. A step whose target moved surfaces fresh drift.
 
 ## State — the per-provider documents
 
 ```
 kb/providers/<provider>/
   manifest.md                     living — the contract. Changes when the exchange changes
-  status.md                       living — convergence per layer, drift, run history. Changes when we work
+  status.md                       living — convergence per step, drift, run history. Changes when we work
   <YYYY.MM>/
-    <YYYY.MM.DD>-<layer>.md       the run's report. Immutable
+    <YYYY.MM.DD>-<step>.md        the run's report. Immutable
     <YYYY.MM.DD>-docs/            the documentation snapshot the report was written from
       SOURCES.md                  per file: URL, retrieval tier, date, size
       <venue>/<page>.md
@@ -161,119 +162,143 @@ still a stop, and the answer is usually "yes, continue" — one question, and th
 could destroy work is gone.
 
 Assessment is read-only and runs on whatever is checked out. **Remediation never writes on `main`**:
-branch to `feature/<provider>` before the first edit. A layer with no drift is never branched, so a
+branch to `feature/<provider>` before the first edit. A step with no drift is never branched, so a
 converged pass leaves the tree exactly as it found it — which makes "no-op" observable rather than
 asserted.
 
 Committing, pushing and merging are the user's unless asked for in that call.
 
-## Layers
+## Steps
 
-Each layer lists its target and the checklist a verifier measures against.
+Five, and the first two are the contract. Registration, configuration and live validation are **not**
+steps of their own: each belongs to the step whose work it serves, and separating them was how a
+connector ended up configured in one place and implemented in another.
 
-### Layer 1 — wire contract ✅ child skill: `implement-provider-contract`
+### Step 1 — derive the existing state from the code ✅ `implement-provider-contract`
 
-**Target.** The manifest, complete and current: every fact the module depends on,
-anchored, with provenance. **Assessing this layer against the exchange's documentation is the drift
-check** — there is no separate skill for it.
+**Target.** What this codebase currently believes about the provider's API, written down: every
+endpoint, parameter, field name, enumeration, code and limit it depends on, each anchored to
+`file:line`. On a greenfield provider this is **empty**, and saying so explicitly is the result — an
+empty derivation and an unasked question look identical later.
 
-**Done.** Every anchor resolves to the line it claims. Every assumption present in the code has an
-entry. Every entry has an outcome from the last documentation pass. `checked_against` is today.
+Everything derived here is `[UNVERIFIED]` by construction. It is what *we* think, not what is true.
 
-**Gate.** The manifest is converged and its drift, if any, is written as the remediation spec for the
-layers that carry it.
+**Done.** Every anchor resolves to the line it claims — line numbers move with every edit, and a
+manifest pointing at the wrong line is worse than none because it will be trusted. Every assumption in
+the code has an entry; a converter that gained a field nobody recorded is outside every future check.
+Every entry still corresponds to live code.
 
-### Layer 2 — contracts and converters ⬜ no child skill yet
+**→ GATE.** Present the derived state. The user confirms it describes the implementation before
+anything is compared against the outside world.
 
-**Target.** The `Contracts/` tree: the DTOs and `JsonConverter`s that transcribe the contract.
+### Step 2 — collect the provider's actual API facts, and compute the drift ✅ `implement-provider-contract`
 
-**Done.** Every response field in the manifest is read by a converter, and every field a converter
-reads is in the manifest — the second direction catches the fields we invented. Enumerations map every
-documented value in both directions. Positional payloads (a kline is an array, not an object) have
-their indices pinned by a test. Offline converter tests green.
+**Target.** The current documented truth, snapshotted, and every entry from step 1 given an outcome
+against it: unchanged, changed, deprecated, new, or undocumented.
 
-### Layer 3 — provider ⬜ no child skill yet
+**Completeness is the gate condition, not a quality goal.** Every category must be covered and every
+entry must have an outcome. A partial collection cannot be built on: a step-3 transcription measured
+against a half-checked contract inherits the unchecked half as silent assumption, and no later step
+will ever question it. If a source cannot be retrieved, that is a **gap**, it is recorded as one, and
+**it blocks**. Do not proceed on "the important parts were checked" — the parts nobody checked are the
+ones nobody will think to check again.
 
-**Target.** The read paths: exchange info, candles, account, orders, trades.
+**Done.** Every entry has an outcome. Every source that was fetched is stored beside the report, with
+its retrieval tier. Every source that could not be fetched is named, with what was tried. Nothing is
+counted as verified that was checked against a document other than its own.
 
-**Done.** Every endpoint in the manifest that the module uses is called with exactly the manifest's
-parameters. Paging windows and page sizes match the manifest's documented caps. Failure paths return a
-result the caller can act on rather than an empty success.
+**→ GATE.** Present the drift and the gaps. The user confirms the picture is complete enough to build
+on — which, given the paragraph above, normally means there are no gaps left.
 
-### Layer 4 — connector ⬜ no child skill yet
+### Step 3 — wire types and serialization ⬜ no child skill yet
 
-**Target.** The streams and the order lifecycle: subscriptions, the sync cycle, status reporting,
-place / modify / cancel.
+**Target.** The types that carry the wire format, and the code that reads and writes it, **with their
+tests**, built from what steps 1 and 2 established.
 
-**Done.** Every stream event in the manifest is handled. Status transitions map to the domain's
-vocabulary. Errors reach `OnError` rather than a log line — a connector that fails silently is
-indistinguishable from one that is merely reconnecting.
+The format is not necessarily JSON — a provider may speak protobuf, FIX, SBE, msgpack, or a
+positional text encoding. The step is *serialization*, and the transcription is measured against the
+contract, never against a sibling implementation.
 
-### Layer 5 — registration and configuration ⬜ no child skill yet
+**Done.** Every field in the contract is read; every field read is in the contract — the second
+direction is what catches the fields we invented. Enumerations map every documented value in both
+directions. Positional payloads have their indices pinned, because there the index *is* the contract
+and nothing else protects it. Tests green.
 
-**Target.** Endpoints, keyed registrations, rate-limit configuration, DI wiring.
+### Step 4 — provider: the read paths ⬜ no child skill yet
 
-**Done.** Every configured limit matches the manifest, including the decay arithmetic. Every keyed
-registration resolves. Nothing that is really an exchange fact is hard-coded where the manifest cannot
-see it.
+**Target.** Exchange information, candles, account, orders, trades — with their tests. **If the test
+project does not exist, it is created as part of this step**, not deferred.
 
-### Layer 6 — live validation ⬜ no child skill yet · **staged, each stage a gate**
+Registration, endpoints and configuration for everything this step touches are done **here**, as it is
+built. A read path whose endpoint is configured in a later step is a read path that cannot be tested
+in this one.
 
-This is the only layer that touches the exchange, and it is staged by the cost of being wrong. **Each
-stage is a separate human gate.** Never run a stage the user has not approved in this call, and never
-run a later stage because an earlier one passed.
+**Live validation belongs to this step too, and it reads only.** Signing, server time, public market
+data, then authenticated account reads. Nothing here places an order, which is what makes it the safe
+half of validation — and the reason it comes before step 5 rather than after it.
 
-| stage | what runs | touches |
-|---|---|---|
-| 6a | signing, server time | nothing — public endpoints |
-| 6b | market connector, market provider | public market data |
-| 6c | user provider | reads the account |
-| 6d | **the connector suite** | **places and cancels real orders** |
+**Done.** Every endpoint called with exactly the contract's parameters. Paging and windows match the
+documented caps. Failure paths return something the caller can act on rather than an empty success.
+Tests green offline; the read-only live stages pass.
 
-Before 6d, confirm with the user: the account's position mode, that no position exists on the test
-symbol that the fixture would close as "cleanup", and sufficient margin. Run 6d **alone** — nothing
-else against the same account concurrently.
+### Step 5 — connector: streams and the order lifecycle ⬜ no child skill yet
 
-After each stage, write what it confirmed back into the manifest as `[LIVE]` with the date. That
-write-back is this layer's real product: it is the only thing that upgrades a fact's provenance.
+**Target.** Subscriptions, the sync cycle, status reporting, place / modify / cancel — with their
+tests, and with their registration and configuration done here as they are built.
 
-**Gate.** The user's explicit go, per stage.
+**Live validation belongs to this step too, and this is the half that trades.** It is gated
+separately, per stage, and never advances on the previous stage having passed. Before anything places
+an order, confirm with the user: the account's position mode, that no position exists on the test
+symbol which the fixture would close as "cleanup", and sufficient margin. Run the trading suite
+**alone** — nothing else against the same account concurrently.
+
+**Done.** Every stream event handled. Status transitions map to the domain's vocabulary. Errors reach
+the connector's error channel rather than a log line — a connector that fails silently is
+indistinguishable from one that is merely reconnecting. Tests green; the live stages pass, each
+approved in turn.
+
+## Provenance, and which step supplies it
+
+A fact is `[UNVERIFIED]` when step 1 derives it, documented when step 2 confirms it, and `[LIVE]` only
+when an actual response from the provider exercised it — which happens in steps 4 and 5, and is
+written back into the manifest there. A contract with no `[LIVE]` facts is not wrong; it is unproven,
+and the manifest says which parts.
 
 ## Orchestration
 
-Run the preflight, read `manifest.md` and `status.md`, then reconcile each layer in order. For each: invoke its child
-skill in reconcile mode, or — where no child exists — run the verifier subagent against that layer's
+Run the preflight, read `manifest.md` and `status.md`, then reconcile each step in order. For each: invoke its child
+skill in reconcile mode, or — where no child exists — run the verifier subagent against that step's
 checklist, write the drift into `status.md` as a printed hand-off spec, and **stop**. A missing child
 skill degrades to an honest hand-off; it never silently skips.
 
-Thread `<provider>` and the provider's kb directory through every layer. Only advance on the user's go, and only
-when the layer is verified converged.
+Thread `<provider>` and the provider's kb directory through every step. Only advance on the user's go,
+and only when the step is verified converged.
 
 ## Arguments
 
 ```
-/implement-provider <provider> [--from-layer=N] [--only-layer=N] [--docs=<url or path>]
+/implement-provider <provider> [--from-step=N] [--only-step=N] [--docs=<url or path>]
 ```
 
 - `<provider>` — the module name as it appears under `providers/`, e.g. `binance`. Ask if missing.
-- `--from-layer=N` — start at layer N. Still refuses to advance past an earlier layer `status.md` marks
-  unconverged; use `--only-layer` to override deliberately.
-- `--only-layer=N` — reconcile just that layer.
-- `--docs` — where the exchange's current documentation lives, forwarded to layer 1.
+- `--from-step=N` — start at step N. Still refuses to advance past an earlier step `status.md` marks
+  unconverged; use `--only-step` to override deliberately.
+- `--only-step=N` — reconcile just that step.
+- `--docs` — where the exchange's current documentation lives, forwarded to step 1.
 
 ## Error recovery
 
-1. A child skill reports its own failures; the parent surfaces them and stops at that layer's gate,
+1. A child skill reports its own failures; the parent surfaces them and stops at that step's gate,
    with the drift in `status.md` so the next call resumes there.
 2. Never advance past a gate on the user's behalf.
-3. Reconcile is order-strict: refuse to remediate layer N+1 while layer N has open drift.
+3. Reconcile is order-strict: refuse to remediate step N+1 while step N has open drift.
 4. Never auto-retry anything that writes, and never retry an exchange call that may have placed an
    order — read the account instead.
 5. A failed preflight stops the pass. Report the actual state and ask.
 
 ## Writing the remaining child skills
 
-Layers 2–6 have no child skill yet, and that is deliberate. **Drive a layer by hand once, then write
+Steps 3-5 have no child skill yet, and that is deliberate. **Drive a step by hand once, then write
 its skill.** A checklist written from reading the code is always missing the items that only appear on
 contact; the parent's degraded hand-off is good enough until then, and an incomplete child skill is
 worse than none because it looks authoritative.
