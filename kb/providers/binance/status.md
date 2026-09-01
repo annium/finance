@@ -22,8 +22,8 @@ created: 2026-09-01
 
 | step | state | evidence | outstanding |
 |---|---|---|---|
-| 1 — derive existing state | **drift** | manifest derived 2026-09-01 | anchors were never verified against the code; the derivation was taken on trust from the sweep that produced it |
-| 2 — collect facts, compute drift | **drift** | partial pass against the 2026-09-01 snapshot | not every entry has an outcome — the high-value categories were walked, the rest were not. Futures per-endpoint reference pages unretrievable; the `.md` trick does not work for the `/catalog/` routes, so a different technique is needed. **Both block: this step may not be declared done partially** |
+| 1 — derive existing state | **converged** | ~70 anchors verified against the tree, then re-anchored after the environment removal; four missing entries added | none |
+| 2 — collect facts, compute drift | **drift** | all 13 futures pages and 7 spot files snapshotted; every category walked | futures per-endpoint request/response schemas remain unverified against their own pages — those live in the client-rendered catalog, which serves neither `.md` nor an entry in `llms.txt`. Next technique: Binance's documented docs MCP server. **This blocks: the step may not be declared done partially** |
 | 3 — wire types and serialization | not-started | — | — |
 | 4 — provider, read paths (+ registration, config, read-only live validation) | not-started | — | **the futures WebSocket base URLs are legacy, decommissioned 2026-04-23** — market to `/public`, user data to `/private` |
 | 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | blocked on the same URL drift: a user stream on a dead URL delivers nothing |
@@ -36,4 +36,4 @@ findings were read from.
 | date | layer | report | outcome |
 |---|---|---|---|
 | 2026-09-01 | 1-2 — contract | *(derived from code, no report)* | manifest inventoried; `checked_against: never` |
-| 2026-09-01 | 1-2 — contract | [`2026.09/2026.09.01-contract.md`](2026.09/2026.09.01-contract.md) | partial baseline; **blocking drift**: futures WebSocket URLs decommissioned. One unverified assumption settled in our favour |
+| 2026-09-01 | 1-2 — contract | [`2026.09/2026.09.01-contract.md`](2026.09/2026.09.01-contract.md) | **blocking drift**: futures WebSocket URLs decommissioned. Step 1 converged; step 2 complete but for the futures endpoint schemas. One unverified assumption settled in our favour; the sandbox environment removed from the code entirely |

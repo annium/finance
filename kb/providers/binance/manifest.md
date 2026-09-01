@@ -95,10 +95,15 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 
 | Fact | Where |
 |---|---|
-| Spot HTTP `https://api.binance.com`, test `https://testnet.binance.vision` | `Spot/Internal/Shared/Endpoints.cs:15-16` |
-| Spot WS `wss://stream.binance.com`, test `wss://testnet.binance.vision` | `Spot/Internal/Shared/Endpoints.cs:26-27` |
-| Futures HTTP `https://fapi.binance.com`, test `https://testnet.binancefuture.com` | `UsdFutures/Internal/Shared/Endpoints.cs:19-20` |
-| Futures WS `wss://fstream.binance.com`, test `wss://stream.binancefuture.com` — **[DRIFT] legacy, decommissioned 2026-04-23.** Now split: `/public` (high-frequency public, incl. `@bookTicker`), `/market` (regular market data), `/private` (user data) | `UsdFutures/Internal/Shared/Endpoints.cs:32-33` |
+| Spot HTTP `https://api.binance.com` | `Spot/Internal/Shared/Endpoints.cs:11` |
+| Spot WS `wss://stream.binance.com` | `Spot/Internal/Shared/Endpoints.cs:14` |
+| Futures HTTP `https://fapi.binance.com` | `UsdFutures/Internal/Shared/Endpoints.cs:11` |
+| Futures WS `wss://fstream.binance.com` — **[DRIFT] legacy, decommissioned 2026-04-23.** Now split: `/public` (high-frequency public, incl. `@bookTicker`), `/market` (regular market data), `/private` (user data) | `UsdFutures/Internal/Shared/Endpoints.cs:14` |
+
+Sandbox base URLs are gone: all testing is against the live exchange, so the environment concept was
+removed from the code entirely rather than kept and corrected. The futures sandbox had moved to
+`demo-fapi` / `demo-fstream` and the spot sandbox websocket host had never been right — both are
+recorded here only so a future reader knows the omission is deliberate.
 
 ### REST paths
 
@@ -106,10 +111,10 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 |---|---|---|
 | `GET api/v3/exchangeInfo` | spot | `Spot/Internal/Market/MarketProvider.cs:48` |
 | `GET api/v3/klines` | spot | `Spot/Internal/Market/MarketProvider.cs:91` |
-| `GET /api/v1/time` **[DIVERGES]** — `v1` while the rest of spot's surface is `v3` | spot | `Spot/ProviderRegistrationContextExtensions.cs:106` |
+| `GET /api/v1/time` **[DIVERGES]** — `v1` while the rest of spot's surface is `v3` | spot | `Spot/ProviderRegistrationContextExtensions.cs:98` |
 | `GET fapi/v1/exchangeInfo` | futures | `UsdFutures/Internal/Market/MarketProvider.cs:51` |
 | `GET fapi/v1/klines` | futures | `UsdFutures/Internal/Market/MarketProvider.cs:100` |
-| `GET /fapi/v1/time` | futures | `UsdFutures/ProviderRegistrationContextExtensions.cs:116` |
+| `GET /fapi/v1/time` | futures | `UsdFutures/ProviderRegistrationContextExtensions.cs:107` |
 | `GET /fapi/v2/account` — note `v2` | futures | `UsdFutures/Internal/User/UserProvider.cs:68` |
 | `GET /fapi/v1/openOrders` | futures | `UsdFutures/Internal/User/UserProvider.cs:103` |
 | `GET /fapi/v1/allOrders` | futures | `UsdFutures/Internal/User/UserProvider.cs:163,207,245` |
@@ -126,9 +131,9 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 
 | Fact | Where |
 |---|---|
-| Combined stream path `/stream` | `Spot/Internal/Market/Profiles/MarketConfigProfile.cs:30`, `UsdFutures/.../MarketConfigProfile.cs:39` |
+| Combined stream path `/stream` | `Spot/Internal/Market/Profiles/MarketConfigProfile.cs:29`, `UsdFutures/.../MarketConfigProfile.cs:38` |
 | Book ticker topic `{symbol}@bookTicker`, symbol lowercased | `Base/Internal/Market/Services/BookTickerService.cs:75` |
-| User stream URI is `{WsApi}/ws/{listenKey}` — **[DRIFT]** the base must now be `wss://fstream.binance.com/private`, so the full URI is `/private/ws/<listenKey>` | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:38`, `UsdFutures/.../UserConfigProfile.cs:48` |
+| User stream URI is `{WsApi}/ws/{listenKey}` — **[DRIFT]** the base must now be `wss://fstream.binance.com/private`, so the full URI is `/private/ws/<listenKey>` | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:37`, `UsdFutures/.../UserConfigProfile.cs:47` |
 
 ---
 
@@ -167,6 +172,11 @@ Same base set minus `positionSide`/`reduceOnly` (24-28); modify via cancel-repla
 `cancelReplaceMode="STOP_ON_FAILURE"`, `cancelOrigClientOrderId`, `newClientOrderId`,
 `timeInForce="GTC"` (72-79). Never invoked — see §9.
 
+Its **response** shape is encoded too: top-level `code` / `msg` / `data`, with `data.cancelResponse`
+and `data.newOrderResponse` nested inside, and the cancel leg's error preferred over the init leg's
+when only one failed — `Spot/.../ModifyOrderFailureResponseConverter.cs:60-129`,
+`ModifyOrderSuccessResponseConverter.cs:49-50`. Also `[DEAD]`.
+
 ---
 
 ## 3. Response fields
@@ -174,7 +184,7 @@ Same base set minus `positionSide`/`reduceOnly` (24-28); modify via cancel-repla
 ### Exchange info
 
 - Rate limits: entry with `rateLimitType`/`limit`; only `"REQUEST_WEIGHT"` is read, and its window is
-  **assumed to already be one minute** — `Base/Market/Contracts/Converters/RateLimitsConverter.cs:37-44`
+  **assumed to already be one minute** — `Base/Market/Contracts/Converters/RateLimitsConverter.cs:37-44`, field names read at `:68,71`
   **[UNVERIFIED]**
 - Spot instrument: `symbol`, `status` (must be `"TRADING"`), `baseAsset`, `baseAssetPrecision`,
   `quoteAsset`, `quoteAssetPrecision`, `isSpotTradingAllowed`, `filters`, `permissions[]` /
@@ -183,6 +193,13 @@ Same base set minus `positionSide`/`reduceOnly` (24-28); modify via cancel-repla
   `status`, `baseAsset`, `baseAssetPrecision`, `quoteAsset`, **`quotePrecision`** — **[DIVERGES]**, spot
   spells the same idea `quoteAssetPrecision` — `UsdFutures/.../InstrumentConverter.cs:49-107`
 - Futures assets: `assets[]` with `asset`, `marginAvailable` — `UsdFutures/.../AssetConverter.cs:28-62`
+
+### Exchange information envelope
+
+| Fact | Where |
+|---|---|
+| Top level carries `rateLimits` and `symbols` (spot) | `Spot/.../ExchangeInfoConverter.cs:53,56` |
+| Top level carries `rateLimits`, `assets` and `symbols` (futures) **[DIVERGES]** | `UsdFutures/.../ExchangeInfoConverter.cs:58,61,64` |
 
 ### Market data
 
@@ -193,6 +210,7 @@ Same base set minus `positionSide`/`reduceOnly` (24-28); modify via cancel-repla
 | Server time `{"serverTime": long}` | `Base/Shared/Contracts/Converters/ServerTimeConverter.cs:42-43` |
 | Error envelope `{"code": long, "msg": string}` | `Base/Shared/Contracts/Converters/OperationResultConverter.cs:43-47` |
 | WS control ack `{"id": long, "result": …}` | `Base/Shared/Contracts/Converters/CommandResultConverter.cs:44-48` |
+| WS control **request** `{"id": auto-increment, "method": "SUBSCRIBE"\|"UNSUBSCRIBE", "params": [topics]}` | `Base/Internal/Market/Services/WebSocketService.cs:100,120,179-195` |
 | Combined-stream envelope `{"stream": string, "data": {…}}` | `Base/Shared/Contracts/Converters/StreamDataConverter.cs:45-49` |
 | Listen key `{"listenKey": string}` | `Base/User/Contracts/Converters/ListenKeyResponseConverter.cs:37-39` |
 
@@ -256,7 +274,8 @@ array.
 **Order status** — `NEW`, `PARTIALLY_FILLED`, `FILLED`, `CANCELED`, `REJECTED`, `EXPIRED`. Spot also
 folds `PENDING_CANCEL` → `Canceled` and `EXPIRED_IN_MATCH` → `Rejected`
 (`Spot/.../OrderStatuses.cs:38,41`); futures folds only `EXPIRED_IN_MATCH` **[DIVERGES]**
-(`UsdFutures/.../OrderStatuses.cs:39`).
+(`UsdFutures/.../OrderStatuses.cs:40`) — confirmed against the documented futures status list, which has no
+`PENDING_CANCEL`.
 
 **Order type — [DIVERGES], entirely different naming schemes:**
 
@@ -313,8 +332,9 @@ generic fallback. A new Binance code needs adding in two places, and the third c
 |---|---|
 | Weight header `x-mbx-used-weight-1m`, matched case-insensitively | `Base/Shared/HttpExtensions/HttpRequestRateExtensions.cs:43` |
 | A missing or unparseable header leaves the weight unchanged; the response is still returned | same, 48-64 |
-| Initial ceilings: spot `6000`/min, futures `2400`/min | `Spot/ProviderRegistrationContextExtensions.cs:114`, `UsdFutures/...:127` |
+| Initial ceilings: spot `6000`/min, futures `2400`/min | `Spot/ProviderRegistrationContextExtensions.cs:106`, `UsdFutures/...:118` |
 | Decay `300` every `3000`ms on **both** — i.e. 6000/min, which does not match the futures ceiling **[UNVERIFIED]** | same lines |
+| Binance also returns an `x-mbx-order-*` family of order-count limit headers; the code knows to mask both prefixes in logs but reads neither | `Base/Shared/HttpExtensions/HttpRequestLogExtensions.cs:10` |
 | Ceiling is overwritten at runtime from exchange-info's `REQUEST_WEIGHT` | `Spot/Internal/Market/MarketProvider.cs:63-65`, `UsdFutures/...:69-71` |
 | Local gate at 80% of the ceiling, before the request is sent | `providers/base/src/Annium.Finance.Providers.Core/Internal/Shared/RateLimits/RateLimiter.cs:17,88` |
 | A locally-gated request is synthesized as `429` | `Base/Shared/HttpExtensions/HttpRequestRateExtensions.cs:26-39` |
