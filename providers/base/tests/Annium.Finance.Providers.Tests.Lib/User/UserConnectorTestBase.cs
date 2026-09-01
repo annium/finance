@@ -36,6 +36,7 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// short positions, which is a defect already fixed here; they were removed rather than left as something to
 /// revive. The coverage they implied still does not exist.
 /// </remarks>
+[Trait(TestBlock.Name, TestBlock.Write)]
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     /// <summary>Gets the instrument metadata resolved for <see cref="Symbol"/> from the market connector.</summary>

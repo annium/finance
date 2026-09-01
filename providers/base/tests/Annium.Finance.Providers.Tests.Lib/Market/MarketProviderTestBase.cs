@@ -18,6 +18,7 @@ namespace Annium.Finance.Providers.Tests.Lib.Market;
 /// Base for tests that resolve a provider's market data provider (request/response, not streaming) and
 /// check that it can load context and two days of one-minute candles for a fixed symbol. Read-only.
 /// </summary>
+[Trait(TestBlock.Name, TestBlock.Read)]
 public abstract class MarketProviderTestBase : ProvidersTestBase
 {
     /// <summary>The symbol the derived test loads candles for.</summary>

@@ -16,6 +16,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Shared.Tim
 /// open a real connection to Binance, so it runs only when <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
+[Trait(TestBlock.Name, TestBlock.Read)]
 public class ServerTimeProviderTests : ProvidersTestBase
 {
     /// <summary>

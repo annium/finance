@@ -23,9 +23,11 @@ public static class Exchange
     /// This gate says nothing about the network. The signature tests resolve their service through the
     /// container, and resolving one pulls in a keyed <c>IServerTimeSource</c>, which begins polling the
     /// exchange's public server-time endpoint from its constructor. Nothing signed or placed - but a test
-    /// behind this gate and not behind <see cref="IsEnabled"/> does reach the exchange. Starting network
-    /// work from a constructor is what makes it unavoidable here; fixing that belongs with the exchange
-    /// areas rather than this gate.
+    /// behind this gate and not behind <see cref="IsEnabled"/> does reach the exchange.
+    ///
+    /// What keeps that out of an ordinary run is not this gate but the block it belongs to: those tests
+    /// carry <see cref="TestBlock.Read"/>, so <c>just test</c> does not select them at all. The gate still
+    /// decides whether they can run when the read block is asked for; the block decides whether anyone asks.
     /// </remarks>
     public static bool HasCredentials => TestEnv.IsAvailable;
 }
