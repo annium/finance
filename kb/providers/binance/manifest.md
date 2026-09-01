@@ -94,7 +94,7 @@ below, because a summary that reads as an annotation is the failure this model e
 
 | category | documentation | verification |
 |---|---|---|
-| 1 endpoints | `confirmed`, except the futures websocket bases, which are **wrong** — see the drift entries | `gated`. **Except the user-stream URI — the drift entry itself — which is `none`:** no test anywhere opens the user-data websocket, so nothing watches it even with the gate open |
+| 1 endpoints | `confirmed` | `gated`, except the futures websocket routes, now **`pinned`**: `EndpointsTests` asserts the *composed* URL for both the market and user streams, which is where the mistake hides — `new Uri(base, path)` drops a route held in the base |
 | 2 request parameters | `confirmed` at tier 1 from the official Postman collections | futures order shapes are **`pinned`** offline, per order type, both init and modify, with `reduceOnly` branching asserted both ways. The signing scaffolding is `gated` as a whole; `recvWindow`'s value is `none` |
 | 3 response fields | spot `confirmed` at **tier 1** from `rest-api.md`; futures account / query-order / trade `confirmed` at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | `pinned` per converter, every one having its own test with real fixtures. Negative branches are `none`: a non-GUID cancel id, a non-`TRADING` status, a missing `SPOT` permission, an absent filter dropping the instrument |
 | 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned`, including the lot-size merge arithmetic — but entirely piggybacked on the exchange-info fixture; there is no filter test of its own |
@@ -104,6 +104,12 @@ below, because a summary that reads as an annotation is the failure this model e
 | 8 auth and signing | `confirmed` | `gated`, and **`vacuous`** for the percent-encoding rule. What is signed, the exclusion of `signature` itself, and the use of synced rather than local time are each `none` |
 | 9 timing and lifecycle | `confirmed` | candle interval and page size `gated` against a real count. The order and trade paging windows are **`vacuous`** — see below. Sync cadence `none` |
 | 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | `none` throughout, but for `"BTCUSDT"` liveness and the kline page size, which are `gated` |
+
+**One route decision worth keeping visible.** The futures route lives in the *path*, never in the base.
+Both call sites compose with `new Uri(base, path)`, which discards the base's path whenever the path
+starts with a slash — so a route moved into the base is silently dropped and the legacy URL comes back
+from configuration that reads as correct. A mutation doing exactly that is killed by
+`MarketStream_ConnectsToThePublicRoute`.
 
 **Two `vacuous` entries, and both are the same shape: the input chosen cannot exercise the property.**
 
@@ -219,7 +225,7 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 | Spot HTTP `https://api.binance.com` | `Spot/Internal/Shared/Endpoints.cs:11` |
 | Spot WS `wss://stream.binance.com` | `Spot/Internal/Shared/Endpoints.cs:14` |
 | Futures HTTP `https://fapi.binance.com` | `UsdFutures/Internal/Shared/Endpoints.cs:11` |
-| Futures WS `wss://fstream.binance.com` — **[DRIFT] legacy, decommissioned 2026-04-23.** Now split: `/public` (high-frequency public, incl. `@bookTicker`), `/market` (regular market data), `/private` (user data) | `UsdFutures/Internal/Shared/Endpoints.cs:14` |
+| Futures WS `wss://fstream.binance.com`, unrouted, with the route in the path: `/public/stream` for market, `/private/ws/` for user data. `/market` carries the regular feeds and this provider subscribes to none of them | `UsdFutures/Internal/Shared/Endpoints.cs:26,29,32` |
 
 Sandbox base URLs are gone: all testing is against the live exchange, so the environment concept was
 removed from the code entirely rather than kept and corrected. The futures sandbox had moved to
@@ -252,9 +258,9 @@ recorded here only so a future reader knows the omission is deliberate.
 
 | Fact | Where |
 |---|---|
-| Combined stream path `/stream` | `Spot/Internal/Market/Profiles/MarketConfigProfile.cs:29`, `UsdFutures/.../MarketConfigProfile.cs:38` |
+| Combined stream path — `/stream` on spot, `/public/stream` on futures **[DIVERGES]** | `Spot/Internal/Market/Profiles/MarketConfigProfile.cs:29`, `UsdFutures/.../MarketConfigProfile.cs:38` |
 | Book ticker topic `{symbol}@bookTicker`, symbol lowercased | `Base/Internal/Market/Services/BookTickerService.cs:75` |
-| User stream URI is `{WsApi}/ws/{listenKey}` — **[DRIFT]** the base must now be `wss://fstream.binance.com/private`, so the full URI is `/private/ws/<listenKey>` | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:37`, `UsdFutures/.../UserConfigProfile.cs:47` |
+| User stream URI is `{WsApi}{ListenKeyUriPath}{listenKey}` — `/ws/` on spot, `/private/ws/` on futures **[DIVERGES]** | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:37`, `UsdFutures/.../UserConfigProfile.cs:47` |
 
 ---
 
