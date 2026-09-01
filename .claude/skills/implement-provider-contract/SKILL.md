@@ -75,6 +75,13 @@ external:
 - **Every entry still corresponds to live code.** An entry for something deleted becomes `[DEAD]` or
   goes.
 
+**Record the verification state as you go.** This step reads the code, so it is the step that can see
+what tests exist. For each fact: `pinned` (an offline test fails if it changes), `gated` (covered only
+by a provider-facing suite that is skipped by default, so it proves nothing on an ordinary run),
+`vacuous` (a test names it and cannot fail), or `none`. Look for `vacuous` deliberately — an assertion
+over a possibly-empty collection, a wait that swallows its own timeout, a negative check with no
+positive control. It is worse than `none`, because the effort looks spent.
+
 On a greenfield provider the derivation is **empty**, and saying so explicitly is the result: an empty
 derivation and an unasked question look identical a month later.
 
@@ -82,8 +89,10 @@ Delegate this to a fresh subagent given the manifest and the tree. A reviewer wh
 will read what it meant to say.
 
 **→ GATE.** Present the derived state and stop. The user confirms it describes the implementation
-before it is compared against anything external. Everything in it is `[UNVERIFIED]` — it is what we
-believe, not what is true, and the distinction is the whole point of deriving it separately.
+before it is compared against anything external. Every fact is `unchecked` on the documentation axis —
+it is what we believe, not what is true, and the distinction is the whole point of deriving it
+separately. Present the verification census with it: how many facts nothing tests, and how many are
+`gated` or `vacuous`, which look tested and are not.
 
 ## Step 2 — collect the provider's facts, and compute the drift
 
@@ -164,6 +173,7 @@ Walk the manifest in order. Every entry gets exactly one outcome:
 | **deprecated** | still works, announced for removal at a date **still in the future** |
 | **new** | the exchange added something we do not use and arguably should — a filter, an order type, a field carrying information we currently derive |
 | **undocumented** | we depend on something the documentation does not state |
+| **contested** | two sources disagree — record both readings and what would settle it, and pick neither |
 
 **Every date in the documentation is read against today's date.** An announced removal is only
 `deprecated` while its date is ahead of us. Once that date has passed the entry is `changed`, and
@@ -171,6 +181,9 @@ almost certainly blocking: the thing was withdrawn and we did not move. The firs
 WebSocket migration deadline four months in the past, still described in the notice in the future
 tense, because the notice was written before it. Documentation states dates; only the reader supplies
 the present.
+
+Each outcome sets the fact's **documentation** state. Do not touch its verification state here: this
+step compares us against the provider, and nothing it learns changes what our tests defend.
 
 **The undocumented ones are the finding, not the footnote.** They were inferred from observed
 behaviour, they can change with no changelog entry, and no future drift check will catch them in

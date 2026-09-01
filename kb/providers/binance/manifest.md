@@ -70,6 +70,114 @@ Known quirks, both learned the hard way:
 Snapshots of what was fetched live beside each run's report, so a report can be checked against the
 text it was written from rather than against a page that has since moved.
 
+## How to read an entry
+
+Every fact carries **two independent states**. They answer different questions and are moved by
+different steps, and a fact can be strong on one and worthless on the other.
+
+**Documentation** — what Binance says: `confirmed` · `unchecked` · `undocumented` · `contested` ·
+`unretrievable`.
+
+**Verification** — what of ours would notice if it stopped being true: `pinned` (an offline test
+fails) · `live` (seen in a real response, dated) · `gated` (covered only by the exchange suite, which
+is skipped by default, so it proves nothing on an ordinary run) · `none` · `vacuous` (a test names it
+and cannot fail — worse than `none`, because the effort looks spent).
+
+Neither is a boolean; both take a note. Only exceptions are written out — where a category shares a
+state it is stated once at its head.
+
+### Where this manifest stands, as of 2026-09-01
+
+| category | documentation | verification |
+|---|---|---|
+| 1 endpoints | `confirmed`, except the futures websocket bases, which are **wrong** — see the drift entries | `gated` — reachable only through the exchange suite |
+| 2 request parameters | `confirmed` at tier 1 from the official Postman collections | `gated`; the futures query processor's shapes are `pinned` by offline unit tests |
+| 3 response fields | `confirmed` for account, query-order and trade at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | converters are `pinned` offline; what the exchange actually sends is `gated` |
+| 4 filters | `confirmed` | `pinned` |
+| 5 enumerations | `confirmed` — every futures value checked against the documented list | `pinned` |
+| 6 error and status codes | `confirmed` | `pinned` for the HTTP mapping; the two Binance codes are `none` — no test in `Base.Tests`, which is why the drifted third copy went unnoticed |
+| 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | `pinned` for the limiter's own behaviour, `none` for whether our ceilings match Binance's |
+| 8 auth and signing | `confirmed` | `pinned` — but the golden value's query has no character needing percent-encoding, so the 2026-01-15 encoding rule is **`vacuous`** |
+| 9 timing and lifecycle | `confirmed` | `none` for the documented caps; `pinned` for our own paging |
+| 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | `none` |
+
+**Counts worth watching, and where they should go.** One `vacuous` (§8, the signing test). Two facts
+`undocumented` and untested at once: the futures asset-precision heuristic and the settlement-currency
+assumption, both §10. Everything the exchange suite alone would catch is `gated`, and stays that way
+until the live stages run.
+
+**Not yet done at entry granularity.** The table above is a category-level statement; annotating each
+of the ~200 entries individually is step 1's work on the next run. Recorded here rather than implied,
+because a category-level claim reads as an entry-level one to anyone who does not know it was written
+this way.
+
+Structural markers stay separate from both axes: **[DIVERGES]** between spot and futures,
+**[DUPLICATED]** across files, **[DEAD]** for code unreachable in production, **[DRIFT]** where what we
+have no longer matches what Binance documents.
+
+# Contract manifest — binance
+
+> **Living. Changes when Binance changes.** Our own progress lives in `status.md`, deliberately apart:
+> keeping them in one file would mean every reconcile run edits this document for two unrelated
+> reasons, and `git log -p manifest.md` would stop answering "what did the exchange change".
+
+Every entry is a fact owned by Binance, not by us, that this module depends on, anchored to
+`file:line`. Paths are relative to the repository root; `Base`, `Spot` and `UsdFutures` abbreviate
+`providers/crypto/binance/src/Annium.Finance.Providers.Crypto.Binance.<name>/`.
+
+**`checked_against: 2026-09-01
+docs_revision_spot: a0057759f1cbcab812af44b75309d72866a57561`** — derived from our code, never yet compared against Binance's
+documentation. An inventory, not a baseline. `/implement-provider binance --only-layer=1` is what
+changes that.
+
+## Where the documentation comes from
+
+Binance publishes spot and USDⓈ-M futures separately, and they must be fetched separately: a rename on
+one venue and not the other produces a failure that looks venue-specific and therefore looks like ours.
+
+| venue | source | tier | how |
+|---|---|---|---|
+| spot | `github.com/binance/binance-spot-api-docs` | 1 — upstream git | `curl -sSL https://raw.githubusercontent.com/binance/binance-spot-api-docs/master/<path>`; pin the commit SHA |
+| usd-futures | `developers.binance.com` | 2 — site, markdown | `curl -sSL "https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/<page>.md"` |
+
+**Appending `.md` to a developers.binance.com page returns its markdown source.** Fetching the page
+itself gets an empty `202` — it is a protected single-page app — so the `.md` suffix is not a
+convenience, it is the only way to retrieve that documentation faithfully.
+
+### Page paths that work
+
+Discovering these cost most of the first run. Spot, under
+`raw.githubusercontent.com/binance/binance-spot-api-docs/<sha>/`: `CHANGELOG.md`, `enums.md`,
+`errors.md`, `filters.md`, `rest-api.md`, `user-data-stream.md`, `web-socket-streams.md`.
+
+Futures, under `developers.binance.com/en/docs/products/derivatives-trading-usds-futures/`, with `.md`
+appended: `change-log`, `general-info`, `error-code`, `user-data-streams`, and
+`websocket-market-streams/Important-WebSocket-Change-Notice`.
+
+**Not found, still a gap.** The per-endpoint futures reference pages — exchange information, klines,
+new / modify / cancel order, account, trade list. Every path tried returned the site's HTML shell.
+Until they are located, futures request and response schemas are verified only against `general-info`
+and the change log, never against their own pages. Tried and rejected:
+`market-data-endpoints/…`, `trade-endpoints/…`, `account-endpoints/…`,
+`user-data-streams-endpoints/…`, and `catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/…`.
+
+Known quirks, both learned the hard way:
+
+- The derivatives change log **is truncated** when read through a summarising fetch — it returned only
+  two months. Retrieve the `.md` and read it whole.
+- **An unknown path returns the HTML shell with a `200`**, body exactly 65475 bytes. Five endpoint
+  paths returned byte-identical responses before this was noticed. Reject anything beginning
+  `<!doctype html>`, and compare sizes across a batch.
+- **The change log is not the documentation.** The WebSocket migration notice — the largest finding of
+  the first run — is not a change-log entry; it sits on its own page, reachable only through a link
+  inside the change log. Follow the links out.
+- A search result claimed a 2026-04-23 WebSocket decommissioning and the change log did not contain
+  it. Held as **unresolved** rather than reported, and the separate notice settled it: the search was
+  right and the change log incomplete. Two sources disagreeing stay unresolved until a third decides.
+
+Snapshots of what was fetched live beside each run's report, so a report can be checked against the
+text it was written from rather than against a page that has since moved.
+
 ## How to read the markers
 
 Only exceptions are marked. A fact confirmed at the last check needs nothing — `checked_against`

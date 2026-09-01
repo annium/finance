@@ -39,29 +39,71 @@ one another, a shared misreading would look like agreement.
 When the exchange changes something, step 1 re-converges **first**, and the drift propagates outward
 from there. Step 1 is therefore not preamble; it is the thing the rest copy.
 
-## The second target: what a fact is worth
+## Two axes: what the provider says, and what we prove
 
-A contract fact is not just a value. It carries **provenance**, and the provenance decides how much a
-step may rely on it:
+Every fact carries **two independent states**, and squashing them into one marker is the mistake this
+model exists to prevent. They answer different questions, they are changed by different steps, and a
+fact can be strong on one axis and worthless on the other.
 
-| marker | meaning |
+**Documentation** — what the provider says about it:
+
+| state | meaning |
 |---|---|
-| *(unmarked)* | confirmed against documentation at the manifest's `checked_against` date |
-| `[UNVERIFIED]` | derived from our own code or from memory, never checked against the exchange's docs |
-| `[UNDOCUMENTED]` | we depend on it, the documentation does not state it. Inferred from observed behaviour — **changes without a changelog entry**, so no drift check will ever catch it in advance |
-| `[LIVE]` | confirmed by an actual exchange response in a step-6 run, with the date |
-| `[DIVERGES]` | market types (spot / futures / …) assume different things here |
-| `[DUPLICATED]` | encoded in more than one place, so a change must be made more than once |
-| `[DEAD]` | encoded but unreachable from production today |
+| `confirmed` | documented, and checked against that documentation at the manifest's `checked_against` date |
+| `unchecked` | documented as far as we know, but not compared since it was written down |
+| `undocumented` | **we depend on it and the documentation does not state it.** Inferred from observed behaviour, so it changes with no changelog entry and no drift check will catch it in advance |
+| `contested` | two sources disagree. Not a finding and not settled — see the rule below |
+| `unretrievable` | the page exists but no technique available reaches it at a fidelity worth storing |
 
-Only exceptions carry a marker. A fact confirmed at the last check needs none — `checked_against`
-covers it. The reader needs the list of what *cannot* be trusted, not a list of everything.
+**Verification** — what of ours would notice if it stopped being true:
 
-**Provenance is upgraded by steps 4 and 5, not by step 1.** This differs from the usual arrangement and is
-worth stating plainly: our live validation is expensive and staged, so step 1 can only ever produce
-`doc-derived` facts. A fact becomes `[LIVE]` when an exchange run actually exercised it and steps 4 and 5
-writes that back into the manifest. A contract with no `[LIVE]` facts is not wrong — it is unproven, and
-the manifest says which.
+| state | meaning |
+|---|---|
+| `pinned` | an offline test fails if this changes |
+| `live` | observed in an actual provider response, with the date |
+| `gated` | a test covers it, but that test only runs against the provider and is skipped by default — so it proves nothing on an ordinary run |
+| `none` | nothing exercises it |
+| `vacuous` | a test names it and **cannot fail** — an assertion over a collection that may be empty, a wait that swallows its own timeout, a negative check with no positive control. Worse than `none`, because it is counted as coverage |
+
+Neither is a boolean, and both take a note. "Documented, but only in a changelog entry and never in the
+reference" and "documented in full" are both `confirmed` and are not the same thing; the note is where
+that lives.
+
+### Why the pair, and not a single verdict
+
+The combinations are what make it useful:
+
+- **documented + pinned** — solid. Cheap to keep so.
+- **documented + none** — we believe the provider and nothing catches our misreading of it. The most
+  common shape, and the cheapest to fix, because a test can be written from the documentation.
+- **undocumented + pinned** — our test pins behaviour the provider never promised. It will keep passing
+  right up until the behaviour changes, and then it will fail with no explanation available anywhere.
+- **undocumented + none** — pure exposure. These are the entries to count, and a manifest that cannot
+  produce that count is not doing its job.
+- **anything + vacuous** — worse than the same thing with `none`, because the effort looks spent.
+
+### Which step moves which axis
+
+The documentation axis is step 2's, and only step 2's. The verification axis starts in step 1 — which
+records what tests exist today as it derives the facts — and is moved afterwards by steps 3, 4 and 5 as
+they write tests and run live validation. A fact becomes `live` only from an actual response, which is
+why steps 4 and 5 write back into the manifest rather than merely reading it.
+
+### Marking
+
+Only exceptions are written out. Where a whole category shares a state, say it once at the category's
+head and mark what differs — the reader needs the list of what cannot be trusted, not a restatement of
+everything. A category that cannot state a shared position for either axis is a category nobody has
+finished.
+
+Structural properties are orthogonal to both axes and stay as their own markers: `[DIVERGES]` between
+market types, `[DUPLICATED]` across files, `[DEAD]` for code unreachable in production.
+
+### Contested
+
+Two sources disagreeing is a state, not a finding, and not something to resolve by preferring the more
+recent or the more official. Record both readings and what would settle it. A drift check that picks a
+side manufactures drift instead of finding it.
 
 ## Convergence model — assess → remediate → verify → gate
 
@@ -181,12 +223,20 @@ endpoint, parameter, field name, enumeration, code and limit it depends on, each
 `file:line`. On a greenfield provider this is **empty**, and saying so explicitly is the result — an
 empty derivation and an unasked question look identical later.
 
-Everything derived here is `[UNVERIFIED]` by construction. It is what *we* think, not what is true.
+Everything derived here is `unchecked` on the documentation axis by construction: it is what *we*
+think, not what is true.
+
+**Step 1 also sets the verification axis**, because it is the step that reads the code and can see what
+tests exist. For each fact: is it `pinned` by an offline test, `gated` behind a provider-only suite,
+`vacuous` — named by a test that cannot fail — or `none`. That census is cheap here and expensive
+later, and without it the manifest cannot answer the question worth asking: how many facts do we depend
+on that neither the provider documents nor any test of ours defends.
 
 **Done.** Every anchor resolves to the line it claims — line numbers move with every edit, and a
 manifest pointing at the wrong line is worse than none because it will be trusted. Every assumption in
 the code has an entry; a converter that gained a field nobody recorded is outside every future check.
-Every entry still corresponds to live code.
+Every entry still corresponds to live code. Every entry carries a verification state, at category
+granularity with the exceptions written out.
 
 **→ GATE.** Present the derived state. The user confirms it describes the implementation before
 anything is compared against the outside world.
@@ -203,9 +253,14 @@ will ever question it. If a source cannot be retrieved, that is a **gap**, it is
 **it blocks**. Do not proceed on "the important parts were checked" — the parts nobody checked are the
 ones nobody will think to check again.
 
-**Done.** Every entry has an outcome. Every source that was fetched is stored beside the report, with
-its retrieval tier. Every source that could not be fetched is named, with what was tried. Nothing is
-counted as verified that was checked against a document other than its own.
+**Done.** Every entry has an outcome and a documentation state — including the two that are easy to
+skip: `undocumented`, for what we depend on and the provider never promised, and `contested`, where two
+sources disagree. Every source fetched is stored beside the report with its retrieval tier; every
+source that could not be is named, with what was tried. Nothing is counted as `confirmed` that was
+checked against a document other than its own.
+
+Report the counts, because a list nobody totals is a list nobody acts on: how many facts are
+`undocumented`, how many are `undocumented + none`, and how many carry a `vacuous` test.
 
 **→ GATE.** Present the drift and the gaps. The user confirms the picture is complete enough to build
 on — which, given the paragraph above, normally means there are no gaps left.
@@ -219,7 +274,11 @@ The format is not necessarily JSON — a provider may speak protobuf, FIX, SBE, 
 positional text encoding. The step is *serialization*, and the transcription is measured against the
 contract, never against a sibling implementation.
 
-**Done.** Every field in the contract is read; every field read is in the contract — the second
+**Done.** Each fact this step covers moves from `none` to `pinned`, in the manifest as well as in the
+code — a test written and not recorded leaves the manifest understating what we defend, which is the
+same defect as overstating it, pointed the other way.
+
+Every field in the contract is read; every field read is in the contract — the second
 direction is what catches the fields we invented. Enumerations map every documented value in both
 directions. Positional payloads have their indices pinned, because there the index *is* the contract
 and nothing else protects it. Tests green.
@@ -237,7 +296,8 @@ in this one.
 data, then authenticated account reads. Nothing here places an order, which is what makes it the safe
 half of validation — and the reason it comes before step 5 rather than after it.
 
-**Done.** Every endpoint called with exactly the contract's parameters. Paging and windows match the
+**Done.** Facts this step exercises offline become `pinned`; facts a read-only live stage observed
+become `live`, dated. Every endpoint called with exactly the contract's parameters. Paging and windows match the
 documented caps. Failure paths return something the caller can act on rather than an empty success.
 Tests green offline; the read-only live stages pass.
 
@@ -252,17 +312,18 @@ an order, confirm with the user: the account's position mode, that no position e
 symbol which the fixture would close as "cleanup", and sufficient margin. Run the trading suite
 **alone** — nothing else against the same account concurrently.
 
-**Done.** Every stream event handled. Status transitions map to the domain's vocabulary. Errors reach
+**Done.** Facts this step exercises become `pinned`, and those an approved live stage observed become
+`live`, dated — including the ones only a placed order can settle. Every stream event handled. Status transitions map to the domain's vocabulary. Errors reach
 the connector's error channel rather than a log line — a connector that fails silently is
 indistinguishable from one that is merely reconnecting. Tests green; the live stages pass, each
 approved in turn.
 
 ## Provenance, and which step supplies it
 
-A fact is `[UNVERIFIED]` when step 1 derives it, documented when step 2 confirms it, and `[LIVE]` only
-when an actual response from the provider exercised it — which happens in steps 4 and 5, and is
-written back into the manifest there. A contract with no `[LIVE]` facts is not wrong; it is unproven,
-and the manifest says which parts.
+Step 1 derives each fact and records what tests pin it today. Step 2 sets its documentation state.
+Steps 3, 4 and 5 move its verification state as they write tests and observe live responses. A
+contract whose facts are all `documented + none` is not wrong — it is unproven, and the manifest says
+so per fact rather than in aggregate.
 
 ## Orchestration
 
