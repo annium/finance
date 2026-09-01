@@ -1,59 +1,67 @@
 ---
-title: Binance provider ledger
-type: provider-ledger
+title: Binance contract manifest
+type: provider-manifest
 status: living
 created: 2026-09-01
 checked_against: never
 ---
 
-# Provider ledger — binance
+# Contract manifest — binance
 
-> **Living reconcile state, not a dated snapshot.** Every `/implement-provider binance` run updates it
-> in place. Run reports are dated and immutable; this document is always current.
-> See `.claude/skills/implement-provider/SKILL.md`.
+> **Living. Changes when Binance changes.** Our own progress lives in `status.md`, deliberately apart:
+> keeping them in one file would mean every reconcile run edits this document for two unrelated
+> reasons, and `git log -p manifest.md` would stop answering "what did the exchange change".
 
-Paths are relative to the repository root. `Base`, `Spot` and `UsdFutures` abbreviate
+Every entry is a fact owned by Binance, not by us, that this module depends on, anchored to
+`file:line`. Paths are relative to the repository root; `Base`, `Spot` and `UsdFutures` abbreviate
 `providers/crypto/binance/src/Annium.Finance.Providers.Crypto.Binance.<name>/`.
 
-## Meta
+**`checked_against: never`** — derived from our code, never yet compared against Binance's
+documentation. An inventory, not a baseline. `/implement-provider binance --only-layer=1` is what
+changes that.
 
-- provider: `binance`; market types: spot, usd-futures
-- docs source: not yet recorded — the first contract run sets it
-- working branch: `main` where converged
-- last reconciled: never
+## Where the documentation comes from
 
-## Reconcile history
+Binance publishes spot and USDⓈ-M futures separately, and they must be fetched separately: a rename on
+one venue and not the other produces a failure that looks venue-specific and therefore looks like ours.
 
-| date | layer | report | outcome |
+| venue | source | tier | how |
 |---|---|---|---|
-| 2026-09-01 | 1 — contract | *(derived from code, no report)* | manifest inventoried, `checked_against: never` |
+| spot | `github.com/binance/binance-spot-api-docs` | 1 — upstream git | `curl -sSL https://raw.githubusercontent.com/binance/binance-spot-api-docs/master/<path>`; pin the commit SHA |
+| usd-futures | `developers.binance.com` | 2 — site, markdown | `curl -sSL "https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/<page>.md"` |
 
-## Convergence status
+**Appending `.md` to a developers.binance.com page returns its markdown source.** Fetching the page
+itself gets an empty `202` — it is a protected single-page app — so the `.md` suffix is not a
+convenience, it is the only way to retrieve that documentation faithfully.
 
-| layer | state | evidence | outstanding drift |
-|---|---|---|---|
-| 1 — contract | **drift** | manifest below, derived from code | every entry `[UNVERIFIED]`: never compared against Binance's documentation |
-| 2 — contracts and converters | not-started | — | — |
-| 3 — provider | not-started | — | — |
-| 4 — connector | not-started | — | — |
-| 5 — registration and configuration | not-started | — | — |
-| 6 — live validation | not-started | no stage has run; no fact is `[LIVE]` | stages 6a-6d all pending |
+Known quirks, both learned the hard way:
+
+- The derivatives change log **is truncated** when read through a summarising fetch — it returned only
+  two months. Retrieve the `.md` and read it whole.
+- A search result claimed a 2026-04-23 WebSocket decommissioning; the change log does not contain it.
+  Two sources disagreeing is **unresolved**, not a finding, until a third settles it.
+
+Snapshots of what was fetched live beside each run's report, so a report can be checked against the
+text it was written from rather than against a page that has since moved.
 
 ## How to read the markers
 
+Only exceptions are marked. A fact confirmed at the last check needs nothing — `checked_against`
+covers it. The reader needs the list of what cannot be trusted, not a list of everything.
+
 - **[UNVERIFIED]** — derived from our code, never checked against Binance's documentation. Everything
   below is currently this, by construction.
-- **[UNDOCUMENTED]** — we depend on it and the documentation does not state it. Changes with no
-  changelog entry, so no drift check catches it in advance. None identified yet — the first
-  documentation pass is what separates these from the merely unverified.
+- **[UNDOCUMENTED]** — we depend on it and the documentation does not state it. Inferred from observed
+  behaviour, so it changes with no changelog entry and **no drift check will catch it in advance**.
+  None identified yet: separating these from the merely unverified is what the first documentation
+  pass does.
 - **[LIVE]** — confirmed by an actual exchange response, with the date. Upgraded only by layer 6.
-- **[DIVERGES]** — spot and futures assume different things here. A Binance change to one breaks only
-  that venue, silently.
+- **[DIVERGES]** — spot and futures assume different things here.
 - **[DUPLICATED]** — encoded in more than one place, so a change must be made more than once.
 - **[DEAD]** — encoded but unreachable from production. Recorded anyway: reviving the path revives the
   assumption.
 
-# Contract manifest
+---
 
 ## 1. Endpoints
 
