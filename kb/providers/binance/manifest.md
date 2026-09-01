@@ -355,6 +355,7 @@ when only one failed — `Spot/.../ModifyOrderFailureResponseConverter.cs:60-129
 | Futures order: same core plus `positionSide`, `reduceOnly`, and `avgPrice` used **directly** — **[DIVERGES]** | `UsdFutures/.../GetOrderResponseConverter.cs:87-135` |
 | Spot init-order uses `workingTime` for created and `transactTime` for updated — **[DIVERGES]** from its own get-order, which uses `time`/`updateTime` | `Spot/.../InitOrderResponseConverter.cs:115-120` |
 | Futures init-order has **no creation timestamp**; `updateTime` serves as both | `UsdFutures/.../InitOrderResponseConverter.cs:126-128` |
+| **[CONTESTED]** the same converter reads `avgPrice`; the catalog lists that field on the query-order response and **not** on the new-order response. If the listing is right, a placed order returns an executed price of zero. The reading is tier 3 and cannot settle it — the first live order will | `UsdFutures/.../InitOrderResponseConverter.cs:123` |
 | Trade: `id`, `orderId`, `symbol`, `qty`, `price`, `commission`, `commissionAsset`, `time` | both `GetTradeResponseConverter.cs` |
 | Maker flag is `isMaker` on spot, `maker` on futures — **[DIVERGES]** | `Spot/.../GetTradeResponseConverter.cs:91`, `UsdFutures/.../GetTradeResponseConverter.cs:97` |
 | Cancel response `clientOrderId` is parsed **as a GUID**; a non-GUID id makes the whole response read as missing | `Spot/.../CancelOrderResponseConverter.cs:50-55`, `UsdFutures/.../CancelOrderResponseConverter.cs:54-59` |
