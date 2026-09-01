@@ -96,8 +96,39 @@ that whichever tier filled it.
 Where a vendor publishes separately per market type, fetch each. A rename on one venue and not the
 other produces a failure that looks venue-specific, and therefore looks like ours.
 
+Record the page paths that worked, and the ones that did not, in the manifest's documentation section.
+Locating a vendor's real page paths is a substantial part of a first run's cost and there is no reason
+to pay it twice.
+
 Scope the snapshot to what the manifest references, plus changelogs. A full documentation set is mostly
 about things we do not use, and volume nobody diffs is volume that hides the diff.
+
+#### Verify what you actually fetched
+
+**A `200` with a body is not proof you got the page you asked for.** A documentation site backed by a
+single-page app answers an unknown path with its HTML shell, status `200`, and a plausible-looking
+body. On the first run against Binance's futures docs, five different endpoint paths returned
+**byte-identical** responses of exactly 65475 bytes before anyone noticed.
+
+Two checks, both cheap, and neither optional:
+
+- Reject any response whose body begins `<!doctype html>`. A markdown source never does.
+- Compare sizes across the batch. Identical byte counts for pages that should differ means you
+  collected the same fallback several times over.
+
+Whatever fails these is **a gap, not coverage**. Record it in `SOURCES.md` — which pages could not be
+retrieved and what was tried — and say so in the report. A category checked against the wrong document
+is worse than one openly skipped, because it will be counted as verified.
+
+#### Follow the links out of the changelog
+
+**The changelog is not the documentation.** On the first Binance run, the single most consequential
+finding — a WebSocket migration whose deadline had already passed — was not a changelog entry at all.
+It lived on its own page, reachable only through one link inside the changelog.
+
+So: read the changelog, then extract its internal links and fetch those too. A vendor announcing
+something large tends to write it up separately and link to it, which is exactly the shape a
+changelog-only check misses.
 
 Write `SOURCES.md` beside the files: for each, the URL, the tier, the fetch date, the size, and the
 pinned revision where there is one. Then diff against the previous run's snapshot directory and read
@@ -112,9 +143,16 @@ Walk the manifest in order. Every entry gets exactly one outcome:
 |---|---|
 | **unchanged** | still as recorded. Say so — knowing what held is half the value |
 | **changed** | record the old assumption, the new documented fact, and every `file:line` carrying the old one |
-| **deprecated** | still works, announced for removal. Record the date if given |
+| **deprecated** | still works, announced for removal at a date **still in the future** |
 | **new** | the exchange added something we do not use and arguably should — a filter, an order type, a field carrying information we currently derive |
 | **undocumented** | we depend on something the documentation does not state |
+
+**Every date in the documentation is read against today's date.** An announced removal is only
+`deprecated` while its date is ahead of us. Once that date has passed the entry is `changed`, and
+almost certainly blocking: the thing was withdrawn and we did not move. The first Binance run found a
+WebSocket migration deadline four months in the past, still described in the notice in the future
+tense, because the notice was written before it. Documentation states dates; only the reader supplies
+the present.
 
 **The undocumented ones are the finding, not the footnote.** They were inferred from observed
 behaviour, they can change with no changelog entry, and no future drift check will catch them in

@@ -36,12 +36,36 @@ one venue and not the other produces a failure that looks venue-specific and the
 itself gets an empty `202` — it is a protected single-page app — so the `.md` suffix is not a
 convenience, it is the only way to retrieve that documentation faithfully.
 
+### Page paths that work
+
+Discovering these cost most of the first run. Spot, under
+`raw.githubusercontent.com/binance/binance-spot-api-docs/<sha>/`: `CHANGELOG.md`, `enums.md`,
+`errors.md`, `filters.md`, `rest-api.md`, `user-data-stream.md`, `web-socket-streams.md`.
+
+Futures, under `developers.binance.com/en/docs/products/derivatives-trading-usds-futures/`, with `.md`
+appended: `change-log`, `general-info`, `error-code`, `user-data-streams`, and
+`websocket-market-streams/Important-WebSocket-Change-Notice`.
+
+**Not found, still a gap.** The per-endpoint futures reference pages — exchange information, klines,
+new / modify / cancel order, account, trade list. Every path tried returned the site's HTML shell.
+Until they are located, futures request and response schemas are verified only against `general-info`
+and the change log, never against their own pages. Tried and rejected:
+`market-data-endpoints/…`, `trade-endpoints/…`, `account-endpoints/…`,
+`user-data-streams-endpoints/…`, and `catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/…`.
+
 Known quirks, both learned the hard way:
 
 - The derivatives change log **is truncated** when read through a summarising fetch — it returned only
   two months. Retrieve the `.md` and read it whole.
-- A search result claimed a 2026-04-23 WebSocket decommissioning; the change log does not contain it.
-  Two sources disagreeing is **unresolved**, not a finding, until a third settles it.
+- **An unknown path returns the HTML shell with a `200`**, body exactly 65475 bytes. Five endpoint
+  paths returned byte-identical responses before this was noticed. Reject anything beginning
+  `<!doctype html>`, and compare sizes across a batch.
+- **The change log is not the documentation.** The WebSocket migration notice — the largest finding of
+  the first run — is not a change-log entry; it sits on its own page, reachable only through a link
+  inside the change log. Follow the links out.
+- A search result claimed a 2026-04-23 WebSocket decommissioning and the change log did not contain
+  it. Held as **unresolved** rather than reported, and the separate notice settled it: the search was
+  right and the change log incomplete. Two sources disagreeing stay unresolved until a third decides.
 
 Snapshots of what was fetched live beside each run's report, so a report can be checked against the
 text it was written from rather than against a page that has since moved.
