@@ -52,29 +52,6 @@ Named here rather than left implied, with the reason each is not being done now.
 - **The read-side enumeration gaps** — most order-type and order-status wire strings are never parsed
   by any test, only written. Work for the step that owns serialization.
 
-## How the tests are run
-
-Three blocks, selected by an xunit trait on a test class or a base of it:
-
-| recipe | block | what it touches |
-|---|---|---|
-| `just test` → `test-offline` | unmarked | nothing outside the process |
-| `just test-read` | `block=read` | real exchanges and real accounts, mutating nothing |
-| `just test-write` | `block=write` | places and cancels real orders, opens and closes positions |
-
-342 offline, 20 read, 8 write.
-
-**The trait decides selection; the `SkipUnless` gate decides safety.** They are independent on purpose: a
-mislabelled test lands in the wrong block at worst and still cannot reach the exchange, whereas one
-mechanism serving both would make a typo in a trait name enough to place an order. Absence of the trait
-means offline — the safe default in the direction that matters, since a test nobody marked joins the
-block that always runs rather than the one that never does.
-
-Splitting them also settled something recorded here as a doc correction: the two signature tests are
-gated on credentials rather than on the exchange switch, so they ran on every ordinary run and reached
-the network through a server time source that starts polling from its constructor. They are in the read
-block now, so `just test` does not select them. **An ordinary run no longer touches the network at all.**
-
 ## Reconcile history
 
 One line per run. The report holds the findings; the snapshot beside it holds the documentation those
