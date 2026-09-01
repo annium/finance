@@ -44,7 +44,7 @@ internal class UserConfigProfile : Profile
             Secret = settings.Secret,
             HttpApi = httpApi,
             WsApi = wsApi,
-            ListenKeyUriPath = "/ws/",
+            ListenKeyUriPath = Endpoints.UserWsUriPath,
             ListenKey = providerConfig.ListenKey,
             ReloadContext = providerConfig.ReloadContext,
             ReloadOrders = providerConfig.ReloadOrders,
