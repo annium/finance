@@ -89,11 +89,20 @@ internal class ServerTimeSource : IServerTimeSource, IDisposable, ILogSubject
         this.Trace("start");
 
         _watch.Stop();
-        _timer.Dispose();
+
+        // cancel before draining the timer, not after: disposing it waits for an in-flight refresh, and
+        // the cancellation is what lets that refresh end quickly. The other way round, the wait runs its
+        // full budget before the load is even told to stop
         _cts.Cancel();
+        _timer.Dispose();
         _cts.Dispose();
 
         _statusReporter.Disconnected();
+
+        // and stop counting: a disposed component is gone, not disconnected. Left registered, it sits
+        // in the monitor as a disconnected target beside the live ones, and the connector can never
+        // report itself connected again for as long as it lives
+        _statusReporter.Unbind();
 
         this.Trace("done");
     }
@@ -109,8 +118,20 @@ internal class ServerTimeSource : IServerTimeSource, IDisposable, ILogSubject
     {
         this.Trace("start");
 
+        // the source this refresh runs under, held for the call: disposal cancels it and then unbinds the
+        // reporter, so a refresh that outlives the drain budget must not report against a reporter that is
+        // no longer bound - that throws, into a background callback that swallows it
+        var cts = _cts;
+
         this.Trace("load server time");
-        var result = await _provider.LoadAsync(_cts.Token);
+        var result = await _provider.LoadAsync(cts.Token);
+
+        if (cts.IsCancellationRequested)
+        {
+            this.Trace("already canceled");
+
+            return;
+        }
 
         if (!result.IsSuccess)
         {

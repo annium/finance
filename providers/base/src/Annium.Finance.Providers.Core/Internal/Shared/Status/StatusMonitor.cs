@@ -108,6 +108,11 @@ internal class StatusMonitor : IStatusMonitor, ILogSubject
     public void Error(string target, ConnectorError error)
     {
         this.Trace("{target} - {error}", target, error);
+
+        // this is the only path an error takes from a provider to a consumer: the connector base
+        // subscribes here and re-raises it as its own OnError. Tracing it and stopping meant every
+        // connector error was recorded where nobody reads it, and IConnectorBase.OnError never fired
+        OnError(error);
     }
 
     /// <summary>

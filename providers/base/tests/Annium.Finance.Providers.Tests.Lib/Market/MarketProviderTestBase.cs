@@ -85,8 +85,10 @@ public abstract class MarketProviderTestBase : ProvidersTestBase
         firstCandle.High.IsNotDefault();
         firstCandle.Low.IsNotDefault();
         firstCandle.Close.IsNotDefault();
-        var lastCandle = candles[0];
-        lastCandle.Moment.Is(start.ToUnixTimeMilliseconds());
+        // the last one, not candles[0] again: reading the first twice left the whole tail of the series
+        // - every candle the paging loop fetched after the opening chunk - asserted by nothing at all
+        var lastCandle = candles[^1];
+        lastCandle.Moment.Is((end - Duration.FromMinutes(1)).ToUnixTimeMilliseconds());
         lastCandle.Open.IsNotDefault();
         lastCandle.High.IsNotDefault();
         lastCandle.Low.IsNotDefault();

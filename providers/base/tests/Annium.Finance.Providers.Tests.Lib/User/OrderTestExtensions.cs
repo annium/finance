@@ -18,6 +18,12 @@ public static class OrderTestExtensions
     {
         var result = order.AsResult().ValidateStatus(OrderStatus.New).ValidateCanProcess();
 
+        // an order that failed validation was never placed, so it must not be booked against the
+        // position either. Registering it anyway rolled its quantity into the position's totals and
+        // left every later assertion measuring against an order the exchange would have refused
+        if (result.HasErrors)
+            return result;
+
         order.Position.AddOrder(order.Id, order.Side, order.TotalQty, order.CreatedAt, result);
 
         return result;

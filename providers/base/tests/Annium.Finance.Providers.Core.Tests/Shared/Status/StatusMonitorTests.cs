@@ -73,6 +73,30 @@ public class StatusMonitorTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// An error a target reports reaches whoever is listening. The monitor is the only path an error takes
+    /// from a provider to a consumer: the connector base subscribes here and re-raises it as its own
+    /// OnError, and that is what a caller - or a test collecting failures - is watching.
+    /// </summary>
+    [Fact]
+    public void ReportedError_ReachesListeners()
+    {
+        // arrange
+        var errors = new ConcurrentQueue<ConnectorError>();
+        var monitor = Get<IStatusMonitor>();
+        monitor.OnError += errors.Enqueue;
+        var reporter = Get<IStatusReporter>();
+        reporter.Bind(new A());
+
+        // act
+        var error = new ConnectorError("something went wrong");
+
+        reporter.Error(error);
+
+        // assert
+        errors.IsEqual(new[] { error });
+    }
+
+    /// <summary>
     /// Verifies that with two reporters bound to distinct targets, the monitor's overall status is connected only
     /// once both report connected, drops back to connecting the moment either target disconnects, and treats an
     /// unbind the same as that target going away.

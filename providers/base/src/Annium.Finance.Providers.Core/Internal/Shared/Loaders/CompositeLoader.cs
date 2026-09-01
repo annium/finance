@@ -92,6 +92,11 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
     {
         this.Trace("start");
 
+        // flag and unhook under the lock, drain outside it. Disposing a timer waits for an in-flight
+        // callback to finish, and both callbacks take this same lock as their first act - so draining while
+        // holding it left the callback waiting on the disposing thread and the disposing thread waiting on
+        // the callback, until the drain budget ran out and leaked the wait handle. Bounded, but seconds per
+        // timer, and KeyedLoader disposes its entries one after another
         lock (_locker)
         {
             if (_state is State.Disposed)
@@ -103,16 +108,18 @@ internal class CompositeLoader<T> : ICompositeLoader<T>, ILogSubject
             this.Trace("set is disposed");
             _state = State.Disposed;
 
-            this.Trace("dispose loader");
+            this.Trace("unhook loader data");
             _loader.OnData -= HandleData;
-            _loader.Dispose();
-
-            this.Trace("dispose interval timer");
-            _intervalTimer.Dispose();
-
-            this.Trace("dispose debounce timer");
-            _debounceTimer.Dispose();
         }
+
+        this.Trace("dispose loader");
+        _loader.Dispose();
+
+        this.Trace("dispose interval timer");
+        _intervalTimer.Dispose();
+
+        this.Trace("dispose debounce timer");
+        _debounceTimer.Dispose();
 
         this.Trace("done");
     }

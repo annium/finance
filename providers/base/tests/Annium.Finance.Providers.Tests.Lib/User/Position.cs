@@ -107,8 +107,12 @@ public sealed record Position(
     /// <summary>Gets the identifiers of the orders currently tracked against this position.</summary>
     public IReadOnlyCollection<Guid> Orders => _orders;
 
-    /// <summary>The fraction of the position's opened-minus-closed quantity that is borrowed, given its leverage.</summary>
-    private readonly decimal _borrowedPart = 1m - 1m / Leverage;
+    /// <summary>
+    /// The fraction of the position's opened-minus-closed quantity that is borrowed, given its leverage.
+    /// Recomputed whenever the leverage changes - held as a field rather than derived on each read so that
+    /// an impossible leverage is rejected where it is set, not later from inside a bookkeeping update.
+    /// </summary>
+    private decimal _borrowedPart = 1m - 1m / Leverage;
 
     /// <summary>The identifiers of the orders currently tracked against this position.</summary>
     private readonly List<Guid> _orders = new();
@@ -216,7 +220,7 @@ public sealed record Position(
     /// <param name="totalQty">The order's total quantity.</param>
     /// <param name="potentialQty">The quantity the order could still have filled before cancellation.</param>
     /// <param name="executedQty">The quantity the order had already filled.</param>
-    /// <param name="executedPrice">The order's volume-weighted average fill price.</param>
+    /// <param name="executedSum">The notional value the order actually booked, accumulated fill by fill.</param>
     /// <param name="fee">The fee already charged on the order.</param>
     /// <param name="updatedAt">The moment of the removal, in Unix milliseconds.</param>
     /// <param name="result">The result to report an error to if the order is not tracked.</param>
@@ -226,7 +230,7 @@ public sealed record Position(
         decimal totalQty,
         decimal potentialQty,
         decimal executedQty,
-        decimal executedPrice,
+        decimal executedSum,
         decimal fee,
         long updatedAt,
         IResult<Order> result
@@ -238,19 +242,23 @@ public sealed record Position(
             return;
         }
 
+        // reverse the sum that was booked, not one recomputed from the final price. UpdateOrder adds each
+        // fill at the price that fill happened at, so for an order filled 5@100 then 5@110 it booked
+        // 1050 - while 10 times the last price is 1100, and removing that left the position 50 richer
+        // than it ever was
         if (IsOpenOrder(side))
         {
             TotalQty -= totalQty;
             OpeningQty -= potentialQty - executedQty;
             OpenedQty -= executedQty;
-            OpenedSum -= executedQty * executedPrice;
+            OpenedSum -= executedSum;
             OpenedFee -= fee;
         }
         else
         {
             ClosingQty -= potentialQty - executedQty;
             ClosedQty -= executedQty;
-            ClosedSum -= executedQty * executedPrice;
+            ClosedSum -= executedSum;
             ClosedFee -= fee;
         }
 
@@ -260,7 +268,8 @@ public sealed record Position(
     }
 
     /// <summary>
-    /// Updates the position's margin type and leverage.
+    /// Updates the position's margin type and leverage, and rebalances how much of it is borrowed at the
+    /// new leverage.
     /// </summary>
     /// <param name="marginType">The new margin type (cross or isolated).</param>
     /// <param name="leverage">The new leverage multiplier.</param>
@@ -269,6 +278,12 @@ public sealed record Position(
     {
         MarginType = marginType;
         Leverage = leverage;
+
+        // the borrowed part is a function of the leverage, so it has to move with it. Left at the value
+        // it was constructed with, every later update went on borrowing at a leverage the position no
+        // longer had
+        _borrowedPart = 1m - 1m / Leverage;
+        SyncState(UpdatedAt);
 
         return this;
     }

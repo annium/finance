@@ -126,16 +126,32 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
         monitor.OnError += HandleError;
         Disposable += () => monitor.OnError -= HandleError;
 
+        // and only then stop counting. Binding registers this connector as a target of the monitor, and
+        // nothing else removes it - left registered, a disposed connector sits there at whatever status it
+        // last held and the monitor goes on resolving an overall status from a component that is gone.
+        //
+        // Registered last, so it runs last: the box drains its synchronous disposals in the order they were
+        // added, and unregistering a target recomputes the aggregate status, which can raise OnStatusChanged
+        // synchronously. Unbinding while still subscribed delivers that to a connector already being torn
+        // down - and on a transition to connected, straight into scheduling a fresh resync on an executor
+        // this phase has not reached yet
+        Disposable += () => _reporter.Unbind();
+
         // tickers
         _tickers = new ChannelPair<InstrumentTicker>(logger);
         Tickers = _tickers.Observable;
         Disposable += Tickers.Subscribe();
 
         // executor
-        Disposable += _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
+        // the executor and the sync cycle's subscriptions are disposed by DisposeAsync in a fixed
+        // order, not dropped into the box: the box drains its asynchronous entries concurrently, and
+        // a cycle still running during that drain disposes-and-RESETS the subscriptions box, which
+        // clears its disposed flag - so a box the teardown had already passed over came back to life
+        // and collected subscriptions nothing would ever dispose again
+        _executor = Executor.Sequential<MarketConnectorBase>(logger).Start();
 
         // source subscriptions
-        Disposable += _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
+        _sourceSubscriptions = Annium.Disposable.AsyncBox(logger);
     }
 
     /// <summary>
@@ -145,6 +161,11 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
     public async ValueTask DisposeAsync()
     {
         this.Trace<string>("{id} start", Id);
+
+        // drain the executor first: that runs any in-flight sync cycle to completion, so nothing can be
+        // touching the subscriptions box by the time it is disposed below. Only then is its disposal final
+        await _executor.DisposeAsync();
+        await _sourceSubscriptions.DisposeAsync();
 
         await Disposable.DisposeAsync();
 
@@ -200,7 +221,22 @@ public abstract class MarketConnectorBase : IAsyncDisposable, ILogSubject
             await UnsubscribeReadersAsync();
 
             this.Trace<string>("{id} sync start", Id);
-            await OnSync(_settings, Resources, Instruments);
+            try
+            {
+                await OnSync(_settings, Resources, Instruments);
+            }
+            catch (Exception e)
+            {
+                // the executor running this catches and logs, so without this the failure ends in a log
+                // line: the readers stay unsubscribed from the step above, the status never completes, and
+                // nothing tells the caller why the connector went quiet
+                this.Error(e);
+                OnError(new ConnectorError($"sync failed: {e.Message}"));
+                CompleteStatusChange(ConnectorStatus.Connecting);
+
+                return;
+            }
+
             this.Trace<string>("{id} sync done", Id);
 
             this.Trace<string>("{id} subscribe readers", Id);

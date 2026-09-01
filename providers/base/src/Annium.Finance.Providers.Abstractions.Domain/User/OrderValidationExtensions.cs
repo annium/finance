@@ -306,7 +306,7 @@ public static class OrderValidationExtensions
         return result;
     }
 
-    /// <summary>Validates the candidate executed quantity and price for an order transitioning into the PartiallyFilled status: quantity must have grown but stay below the total, and price must be positive.</summary>
+    /// <summary>Validates the candidate executed quantity and price for an order transitioning into the PartiallyFilled status: quantity must not have shrunk and must stay below the total, and price must be positive.</summary>
     /// <typeparam name="TOrder">The order type.</typeparam>
     /// <param name="result">The result carrying the order to validate.</param>
     /// <param name="executedQty">The candidate executed quantity to validate.</param>

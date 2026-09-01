@@ -46,18 +46,15 @@ public class HttpRequestUserResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// A request against a server that closed before responding maps to <see cref="UserOperationStatus.NetworkError"/>.
+    /// A request to a port nothing is listening on - refused outright - maps to <see cref="UserOperationStatus.NetworkError"/>.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task NetworkError()
     {
         // arrange
-        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
-        await server.DisposeAsync();
-
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsUserResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequestToClosedPort().Get("/").AsUserResultAsync<ServerTime>();
 
         // assert
         result.Status.Is(UserOperationStatus.NetworkError);

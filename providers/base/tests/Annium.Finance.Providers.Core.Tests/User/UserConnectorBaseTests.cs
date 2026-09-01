@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Annium.Data.Tables;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Connectors.User;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.User;
@@ -128,18 +130,94 @@ public class UserConnectorBaseTests : ProvidersTestBase
 
         // assert (data messages)
         this.Trace("await for all events");
-        await Wait.UntilAsync(() =>
-            assetsLog.Count == dataSize
-            && positionsLog.Count == dataSize
-            && ordersLog.Count == dataSize
-            && tradesLog.Count == dataSize
-        );
+        // Expect, not Wait: Wait.UntilAsync swallows its cancellation and returns silently, so bounding it
+        // turns a run that never delivers from a hang into a pass - VerifyLog below walks the log it was
+        // given and an empty one satisfies it vacuously. Expect re-runs the check after the wait and throws
+        await Expect.ToAsync(() =>
+        {
+            assetsLog.Count.Is(dataSize);
+            positionsLog.Count.Is(dataSize);
+            ordersLog.Count.Is(dataSize);
+            tradesLog.Count.Is(dataSize);
+        });
 
         this.Trace("examine event logs");
         VerifyLog("assets", assetsLog);
         VerifyLog("positions", positionsLog);
         VerifyLog("orders", ordersLog);
         VerifyLog("trades", tradesLog);
+
+        // and the cycle ends by saying so. Its failing counterpart asserts the connector must not claim to be
+        // connected when the handler throws; nothing asserted that it does when the handler returns, so a
+        // cycle that completed and left the connector reading as still connecting looked correct
+        user.Status.Is(ConnectorStatus.Connected, "a completed sync leaves the connector connected");
+    }
+
+    /// <summary>
+    /// Verifies that a sync handler which throws is surfaced through <see cref="Abstractions.Connectors.Shared.IConnectorBase.OnError"/>
+    /// and does not leave the connector claiming to be connected. The cycle unsubscribes its readers before
+    /// calling the handler, so a throw that goes unreported strands the connector with no subscriptions, no
+    /// status change, and nothing said to the caller.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task SyncHandlerThrows_IsReportedAndNotClaimedConnected()
+    {
+        // arrange
+        var settings = new UserSettings
+        {
+            Provider = "fake",
+            Environment = ProviderEnvironment.Test,
+            Key = "some_key",
+            Secret = "some_secret",
+        };
+        await using var user = CreateConnector(settings, new FakeUserProvider());
+        var errors = new ConcurrentQueue<ConnectorError>();
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        user.OnError += errors.Enqueue;
+        user.OnStatusChanged += statuses.Enqueue;
+
+        user.OnSync += (_, _) => throw new InvalidOperationException("sync failed");
+
+        // act
+        user.Sync();
+
+        // assert - the failure reaches the caller, and the connector does not call itself connected
+        await Expect.ToAsync(() => errors.Count.IsGreaterOrEqual(1));
+        statuses.Contains(ConnectorStatus.Connected).IsFalse("a failed sync must not report connected");
+    }
+
+    /// <summary>
+    /// An error a component reports through its status reporter reaches the connector's own listeners — the
+    /// far half of the relay whose near end the campaign already repaired in the status monitor. The other
+    /// route into <c>OnError</c>, a sync handler that throws, is tested above and does not touch this one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ErrorReportedByAnotherComponent_ReachesTheConnector()
+    {
+        // arrange - a second component bound to the same monitor, as a provider's services are
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Connected);
+
+        var settings = new UserSettings
+        {
+            Provider = "fake",
+            Environment = ProviderEnvironment.Test,
+            Key = "some_key",
+            Secret = "some_secret",
+        };
+        await using var user = CreateConnector(settings, new FakeUserProvider());
+        var errors = new ConcurrentQueue<ConnectorError>();
+        user.OnError += errors.Enqueue;
+
+        // act
+        other.Error(new ConnectorError("listen key expired"));
+
+        // assert
+        await Expect.ToAsync(() => errors.Count.Is(1));
+        errors.TryPeek(out var error).IsTrue();
+        error.NotNull().Message.Is("listen key expired", "the error must arrive intact, not merely as a signal");
     }
 
     /// <summary>
@@ -193,13 +271,16 @@ public class UserConnectorBaseTests : ProvidersTestBase
         var entries = log.ToArray();
         try
         {
-            for (var i = 1; i < entries.Length - 1; i++)
+            // to entries.Length, not one short of it: stopping early left the final value asserted
+            // by nothing. The count is gated separately, so a plain drop was caught - but a last
+            // entry that arrived duplicated or out of order passed, and order is what this proves
+            for (var i = 1; i < entries.Length; i++)
                 entries[i].Is(entries[i - 1] + 1);
         }
         catch
         {
             this.Error<string>("{type} log is not as expected:", type);
-            for (var i = 0; i < entries.Length - 1; i++)
+            for (var i = 0; i < entries.Length; i++)
                 this.Trace("{entry}", entries[i]);
             throw;
         }

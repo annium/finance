@@ -13,6 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Mark
 /// and live prices come through. Read-only, but it does open a real connection to Binance, so it runs only
 /// when <see cref="Exchange.IsEnabled"/> is set.
 /// </summary>
+[Collection(ExchangeCollection.Name)]
 public class MarketConnectorTests : MarketConnectorTestBase
 {
     /// <summary>

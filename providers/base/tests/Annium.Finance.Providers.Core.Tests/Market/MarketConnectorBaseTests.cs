@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Market;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.Market.Operations;
 using Annium.Finance.Providers.Abstractions.Domain.Shared;
@@ -105,12 +107,185 @@ public class MarketConnectorBaseTests : ProvidersTestBase
 
         // assert
         this.Trace("await for all events");
-        await Wait.UntilAsync(() => tickerLog.Count == dataSize);
+        // Expect, not Wait: Wait.UntilAsync swallows its cancellation and returns silently, so bounding it
+        // turns a run that never delivers from a hang into a pass - VerifyLog below walks the log it was
+        // given and an empty one satisfies it vacuously. Expect re-runs the check after the wait and throws
+        await Expect.ToAsync(() => tickerLog.Count.Is(dataSize));
 
         this.Trace("verify tickers log");
         VerifyLog("tickers", tickerLog);
         market.Resources.SequenceEqual(resources).IsTrue();
         market.Instruments.SequenceEqual(instruments).IsTrue();
+
+        // and the cycle ends by saying so. Its failing counterpart asserts the connector must not claim to be
+        // connected when the handler throws; nothing asserted that it does when the handler returns, so a
+        // cycle that completed and left the connector reading as still connecting looked correct
+        market.Status.Is(ConnectorStatus.Connected, "a completed sync leaves the connector connected");
+    }
+
+    /// <summary>
+    /// A sync handler that throws is reported, and does not leave the connector claiming to be connected.
+    /// The sync cycle unsubscribes the readers before calling the handler and resubscribes after it, so a
+    /// handler that throws part-way leaves the connector with no subscriptions at all - and the executor
+    /// running it swallows the failure into a log line, which is the last place a caller looks.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SyncHandlerThrows_IsReportedAndNotClaimedConnected()
+    {
+        // arrange
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        await using var market = CreateConnector(settings);
+        var errors = new ConcurrentQueue<ConnectorError>();
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        market.OnError += errors.Enqueue;
+        market.OnStatusChanged += statuses.Enqueue;
+
+        market.OnSync += (_, _, _) => throw new InvalidOperationException("sync failed");
+
+        // act
+        market.Sync([], []);
+
+        // assert - the failure reaches the caller, and the connector does not call itself connected
+        await Expect.ToAsync(() => errors.Count.IsGreaterOrEqual(1));
+        statuses.Contains(ConnectorStatus.Connected).IsFalse("a failed sync must not report connected");
+    }
+
+    /// <summary>
+    /// An error a component reports through its status reporter reaches the connector's own listeners. This
+    /// is the far half of a relay the campaign already repaired at its near end: the monitor was raising
+    /// nothing at all, and now that it does, the connector still has to pass it on. The other route into
+    /// <c>OnError</c> — a sync handler that throws — is tested above and does not touch this one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ErrorReportedByAnotherComponent_ReachesTheConnector()
+    {
+        // arrange - a second component bound to the same monitor, as a provider's loaders are
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Connected);
+
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        await using var market = CreateConnector(settings);
+        var errors = new ConcurrentQueue<ConnectorError>();
+        market.OnError += errors.Enqueue;
+
+        // act
+        other.Error(new ConnectorError("websocket dropped"));
+
+        // assert
+        await Expect.ToAsync(() => errors.Count.Is(1));
+        errors.TryPeek(out var error).IsTrue();
+        error.NotNull().Message.Is("websocket dropped", "the error must arrive intact, not merely as a signal");
+    }
+
+    /// <summary>
+    /// A connector disposed while a sync cycle is still running leaves nothing flowing behind it. The cycle
+    /// disposes and <em>resets</em> the box holding its subscriptions on every pass, and a reset clears that
+    /// box's disposed flag — so while the executor and that box were unordered siblings in one disposable
+    /// box, a cycle finishing during the drain could revive a box the teardown had already passed over and
+    /// fill it with subscriptions nothing would dispose again.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposalDuringSync_LeavesNothingSubscribed()
+    {
+        // arrange - a sync cycle held open until this test lets it finish
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        var tickers = new ConcurrentQueue<InstrumentTicker>();
+        market.Tickers.Subscribe(tickers.Enqueue);
+
+        var syncing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        market.OnSync += async (_, _, _) =>
+        {
+            syncing.TrySetResult();
+#pragma warning disable VSTHRD003
+            await release.Task;
+#pragma warning restore VSTHRD003
+        };
+
+        market.Sync([], []);
+        await syncing.Task;
+
+        // act - tear down with the cycle still in flight, then let it run to its end
+        var disposal = market.DisposeAsync();
+        release.TrySetResult();
+        await disposal;
+
+        // assert - whatever the cycle did on its way out, the connector forwards nothing now
+        tickers.Clear();
+        market.Ticker(new InstrumentTicker("BTCUSDT", 1m, 1m));
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        tickers.IsEmpty("a disposed connector must not still be piping tickers to its subscribers");
+    }
+
+    /// <summary>
+    /// A disposed connector stops counting as one of its monitor's targets. Binding registers it, nothing
+    /// else removes it, and disposal reports no status — so left registered it sits there at whatever status
+    /// it last held, and the monitor keeps resolving an overall status from a component that no longer
+    /// exists. Each factory hands a connector its own scope today, which is what keeps this out of the way;
+    /// the contract should not depend on that.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposedConnector_StopsCountingTowardsItsMonitor()
+    {
+        // arrange
+        var monitor = Get<IStatusMonitor>();
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        monitor.Status.Is(ConnectorStatus.Connected, "the connector registers itself as a connected target");
+
+        // act
+        await market.DisposeAsync();
+
+        // assert - no targets left at all, which is what an empty monitor resolves to
+        monitor.Status.Is(
+            ConnectorStatus.Disconnected,
+            "a disposed connector must unregister, not linger at its last status"
+        );
+    }
+
+    /// <summary>
+    /// A connector stops listening to its monitor before it stops counting towards it. Unregistering a target
+    /// recomputes the aggregate status, which can raise the monitor's event synchronously — so unbinding while
+    /// still subscribed delivers a status change to a connector already being torn down. On a transition to
+    /// connected that lands in <c>HandleSync</c>, scheduling a fresh resync on an executor the disposal has not
+    /// reached yet, against resources it is about to release.
+    /// </summary>
+    /// <remarks>
+    /// The sibling test above registers the connector as the monitor's only target, and with one target
+    /// unregistering always resolves to disconnected — the path where the aggregate changes into something the
+    /// connector acts on is unreachable from that setup. This one keeps a second component bound so removing
+    /// the connector's own target actually moves the aggregate.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposingConnector_StopsListeningBeforeItUnbinds()
+    {
+        // arrange - a second component on the same monitor, sitting at disconnected
+        var monitor = Get<IStatusMonitor>();
+        var other = Get<IStatusReporter>();
+        other.Bind("other", ConnectorStatus.Disconnected);
+
+        var settings = new MarketSettings { Provider = "fake", Environment = ProviderEnvironment.Test };
+        var market = CreateConnector(settings);
+        monitor.Status.Is(
+            ConnectorStatus.Connecting,
+            "one connected and one disconnected target resolve to connecting"
+        );
+
+        var statuses = new ConcurrentQueue<ConnectorStatus>();
+        market.OnStatusChanged += statuses.Enqueue;
+
+        // act - disposal removes this connector's target, leaving only the disconnected one
+        await market.DisposeAsync();
+
+        // assert - the aggregate did move, and none of it reached the connector
+        monitor.Status.Is(ConnectorStatus.Disconnected);
+        statuses.IsEmpty("a connector being disposed must not still be handling its monitor's events");
     }
 
     /// <summary>
@@ -163,13 +338,16 @@ public class MarketConnectorBaseTests : ProvidersTestBase
         var entries = log.ToArray();
         try
         {
-            for (var i = 1; i < entries.Length - 1; i++)
+            // to entries.Length, not one short of it: stopping early left the final value asserted
+            // by nothing. The count is gated separately, so a plain drop was caught - but a last
+            // entry that arrived duplicated or out of order passed, and order is what this proves
+            for (var i = 1; i < entries.Length; i++)
                 entries[i].Is(entries[i - 1] + 1);
         }
         catch
         {
             this.Error<string>("{type} log is not as expected:", type);
-            for (var i = 0; i < entries.Length - 1; i++)
+            for (var i = 0; i < entries.Length; i++)
                 this.Trace("{entry}", entries[i]);
             throw;
         }

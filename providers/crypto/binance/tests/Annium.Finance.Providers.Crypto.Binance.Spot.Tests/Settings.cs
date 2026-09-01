@@ -18,15 +18,24 @@ internal static class Settings
         Environment = ProviderEnvironment.Real,
     };
 
-    /// <summary>The user settings, including the API key/secret read from <c>test.env</c>, used to resolve the live user provider.</summary>
-    public static readonly UserSettings User = new()
-    {
-        Provider = Constants.Provider,
-        Environment = ProviderEnvironment.Real,
-        Key = TestEnv.GetVariable("TEST_KEY"),
-        Secret = TestEnv.GetVariable("TEST_SECRET"),
-    };
+    /// <summary>
+    /// Gets the user settings, including the API key/secret read from <c>test.env</c>, used to resolve the
+    /// live user provider. Read on first use rather than in a field initializer: a static field is run by
+    /// the type initializer, so touching <see cref="Market"/> alone - which the market tests do, and which
+    /// needs no credentials at all - would go looking for them and fail where none are configured.
+    /// </summary>
+    public static UserSettings User =>
+        field ??= new UserSettings
+        {
+            Provider = Constants.Provider,
+            Environment = ProviderEnvironment.Real,
+            Key = TestEnv.GetVariable("TEST_KEY"),
+            Secret = TestEnv.GetVariable("TEST_SECRET"),
+        };
 
-    /// <summary>The expected HMAC signature for the fixed request used by <c>SignatureServiceTests</c>, read from <c>test.env</c>.</summary>
-    public static readonly string ExpectedSignature = TestEnv.GetVariable("TEST_EXPECTED_SIGNATURE");
+    /// <summary>
+    /// Gets the expected HMAC signature for the fixed request used by <c>SignatureServiceTests</c>, read from
+    /// <c>test.env</c> on first use, for the same reason as <see cref="User"/>.
+    /// </summary>
+    public static string ExpectedSignature => field ??= TestEnv.GetVariable("TEST_EXPECTED_SIGNATURE");
 }

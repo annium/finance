@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Finance.Providers.Abstractions.Connectors.Shared;
@@ -79,7 +80,88 @@ public class SnapshotLoaderTests : TestBase
 
         await Expect.ToAsync(() => log.Has(1));
         log.At(0).Is(10);
+
+        // wait on the statuses before asserting them. The successful fetch hands the data to OnData a line
+        // before it reports connected, so a poll on the log alone can pass while the status has not been
+        // reported yet - the same mistake as three other tests in this suite once had
+        await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
         _statuses.IsEqual(new[] { Connecting, Connected });
+    }
+
+    /// <summary>
+    /// The loader backs off to the slow interval once it has made as many failed attempts as its fast-request
+    /// limit allows — on that attempt, not one after it. Every extra attempt at the fast interval is a request
+    /// against the exchange's rate limit that the configuration said not to make.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task FastRequestLimitReached_SwitchesToTheSlowInterval()
+    {
+        // arrange - fast retries far apart relative to the fetch, so each tick lands on an idle loader.
+        // At a 1ms interval with a slower fetch the timer keeps firing while the callback runs; those ticks
+        // are dropped, but one queued between the last drop and the switch taking effect still runs, and the
+        // attempt count is then nondeterministic by one for a reason that has nothing to do with the
+        // boundary under test. Spacing the ticks removes that, rather than widening the assertion to admit it
+        var cfg = new SnapshotLoaderConfig(50, 2, 2000);
+        var attempts = 0;
+        using var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                Interlocked.Increment(ref attempts);
+                await Task.Delay(5, CancellationToken.None);
+
+                return MarketResult.New(MarketOperationStatus.NotFound, 0, "no");
+            }
+        );
+
+        // act - two fast attempts are due by 50ms; wait well past that and well short of the slow interval
+        loader.Start(true);
+        await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
+        await Task.Delay(400, TestContext.Current.CancellationToken);
+
+        // assert - exactly the two the limit allows. A boundary off by one shows up as a third attempt at
+        // 100ms, comfortably inside the window above
+        Volatile
+            .Read(ref attempts)
+            .Is(2, "the loader must back off on the attempt that reaches its limit, not the one after it");
+    }
+
+    /// <summary>
+    /// Disposal does not wait on a callback that is waiting on disposal. Disposing the timer drains whatever
+    /// callback is running, and that callback takes the loader's lock — so draining while holding that lock
+    /// leaves each waiting for the other until the drain budget runs out, several seconds later, and leaks
+    /// the wait handle it gave up on. The same shape the rate limiter's disposal was already written around.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task Dispose_DoesNotBlockOnItsOwnCallback()
+    {
+        // arrange - retry every millisecond with a fetch slow enough that one is always in flight
+        var cfg = new SnapshotLoaderConfig(1, 100, 1);
+        var attempts = 0;
+        var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                Interlocked.Increment(ref attempts);
+                await Task.Delay(30, CancellationToken.None);
+
+                return MarketResult.New(MarketOperationStatus.NotFound, 0, "no");
+            }
+        );
+
+        loader.Start(true);
+        await Expect.ToAsync(() => Volatile.Read(ref attempts).IsGreaterOrEqual(2));
+
+        // act
+        var watch = Stopwatch.StartNew();
+        await loader.DisposeAsync();
+        watch.Stop();
+
+        // assert - the drain budget is seconds; the callback and the disposal not blocking each other
+        // means this returns in a fraction of it
+        (watch.ElapsedMilliseconds < 2000).IsTrue($"disposal took {watch.ElapsedMilliseconds}ms");
     }
 
     /// <summary>
@@ -120,6 +202,86 @@ public class SnapshotLoaderTests : TestBase
         await loader.DisposeAsync();
         await Expect.ToAsync(() => _statuses.Count.IsGreaterOrEqual(2));
         _statuses.ToArray().IsEqual(new[] { Connecting, Disconnected });
+    }
+
+    /// <summary>
+    /// A fetch left over from a stopped cycle does not speak for the cycle that replaced it. Stopping and
+    /// starting again gives the loader a fresh cancellation source, and the old fetch - issued under the
+    /// previous one - must be discarded when it finally returns, not delivered as though it answered the
+    /// new cycle's question.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task StaleFetch_FromAStoppedCycle_IsDiscarded()
+    {
+        // arrange - the first fetch is held open; the second answers at once, with a different value
+        var cfg = new SnapshotLoaderConfig(1, 2, 5);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<MarketResult<int>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        var log = Get<TestLog<int>>();
+        var loader = Provider.CreateSnapshotLoader<int>(
+            cfg,
+            async _ =>
+            {
+                if (Interlocked.Increment(ref calls) == 1)
+                {
+                    first.TrySetResult();
+#pragma warning disable VSTHRD003
+                    return await gate.Task;
+#pragma warning restore VSTHRD003
+                }
+
+                return MarketResult.Ok(999);
+            }
+        );
+        loader.OnData += log.Add;
+
+        // act - stop while the first fetch is in flight, start again, then let the stale one return
+        loader.Start(true);
+        await first.Task;
+        loader.Stop();
+        loader.Start(true);
+
+        // the stale answer lands after the restart. The timer is sequential, so the second cycle cannot
+        // begin until this call returns - which is exactly why the stale result must not be acted upon
+        gate.TrySetResult(MarketResult.Ok(1));
+        await Expect.ToAsync(() => log.Count.IsGreaterOrEqual(1));
+
+        // assert
+        log.IsEqual(new[] { 999 });
+
+        await loader.DisposeAsync();
+    }
+
+    /// <summary>
+    /// A loader that has been disposed stops counting towards the connector's status. It reports itself
+    /// disconnected on the way out, which is a transition worth seeing - but if it also stays registered,
+    /// the monitor holds a disconnected target next to the live ones forever, and the connector can never
+    /// report itself connected again for as long as it lives.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DisposedLoader_StopsHoldingTheStatusDown()
+    {
+        // arrange - a second target that stays connected, so the monitor has something to be connected about
+        var monitor = Get<IStatusMonitor>();
+        var survivor = Get<IStatusReporter>();
+        survivor.Bind(this);
+        survivor.Connected();
+
+        var loader = Provider.CreateSnapshotLoader<int>(
+            new SnapshotLoaderConfig(1, 2, 5),
+            _ => Task.FromResult<IBaseResult<int>>(MarketResult.Ok(1))
+        );
+        loader.Start(true);
+        await Expect.ToAsync(() => monitor.Status.Is(Connected));
+
+        // act
+        await loader.DisposeAsync();
+
+        // assert
+        await Expect.ToAsync(() => monitor.Status.Is(Connected));
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Annium.Finance.Providers.Abstractions.Connectors.Shared;
 using Annium.Finance.Providers.Core.Shared.Status;
 using Annium.Finance.Providers.Crypto.Binance.Base.Market;
 using Annium.Linq;
@@ -42,6 +43,10 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
         _socket.OnConnected += HandleConnected;
         _socket.OnDisconnected += HandleDisconnected;
         _socket.OnTextReceived += HandleData;
+        // the user stream reports its socket's faults and this half never did, so a market connector that
+        // kept failing looked no different from one merely reconnecting - and OnError is the only channel
+        // a connector has for saying otherwise
+        _socket.OnError += HandleError;
 
         _statusReporter = statusReporter;
         _statusReporter.Bind(this);
@@ -55,8 +60,22 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
     {
         this.Trace("start");
 
+        // stop listening before unbinding, not after: a close or an error already in flight lands on
+        // these handlers, and reporting against a reporter that has been unbound throws. Handlers left
+        // attached across the unbind turned an ordinary teardown into an error in the log
+        this.Trace("unhook socket handlers");
+        _socket.OnConnected -= HandleConnected;
+        _socket.OnDisconnected -= HandleDisconnected;
+        _socket.OnTextReceived -= HandleData;
+        _socket.OnError -= HandleError;
+
         this.Trace("signal disconnected");
         _statusReporter.Disconnected();
+
+        // and stop counting: a disposed component is gone, not disconnected. Left registered, it sits
+        // in the monitor as a disconnected target beside the live ones, and the connector can never
+        // report itself connected again for as long as it lives
+        _statusReporter.Unbind();
 
         this.Trace("dispose socket");
         _socket.Dispose();
@@ -135,7 +154,22 @@ internal abstract class WebSocketService : IDisposable, ILogSubject
     {
         this.Trace("start");
 
+        // no error reported here even when the status carries one: the socket raises OnError alongside
+        // every error-carrying close, always with the exception attached, so HandleError has already said
+        // it - and better, with the reason rather than a fixed string
         this.Trace("signal disconnected: {status}", status);
+        _statusReporter.Connecting();
+
+        this.Trace("done");
+    }
+
+    /// <summary>Reports a WebSocket error and switches the connector back to reconnecting.</summary>
+    /// <param name="error">The exception raised by the WebSocket.</param>
+    private void HandleError(Exception error)
+    {
+        this.Trace("start");
+
+        _statusReporter.Error(new ConnectorError(error.ToString()));
         _statusReporter.Connecting();
 
         this.Trace("done");

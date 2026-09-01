@@ -87,7 +87,7 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
@@ -102,7 +102,7 @@ public static class MarketResultTestExtensions
         var result = await task;
 #pragma warning restore VSTHRD003
 
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
@@ -113,7 +113,7 @@ public static class MarketResultTestExtensions
     /// <param name="result">The market result.</param>
     public static void EnsureFailed<T>(this MarketResult<T> result)
     {
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 
@@ -123,7 +123,7 @@ public static class MarketResultTestExtensions
     /// <param name="result">The market result.</param>
     public static void EnsureFailed(this MarketResult result)
     {
-        result.Message.IsNot(string.Empty);
+        result.Message.IsNullOrWhiteSpace().IsFalse();
         result.Status.IsNot(MarketOperationStatus.Ok);
     }
 }

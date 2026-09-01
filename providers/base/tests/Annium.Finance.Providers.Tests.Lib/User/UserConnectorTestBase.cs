@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Core.Mapper;
@@ -28,6 +29,13 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// position on it, and on teardown it cancels open orders again and market-sells off any remaining position,
 /// so tests start and leave the account flat. Gate real runs behind <see cref="Exchange.IsEnabled"/>.
 /// </summary>
+/// <remarks>
+/// One provider derives from this: the Binance USD-M futures suite. Spot has no user-connector tests at all -
+/// only provider ones - so nothing exercises a spot user connector, gated or otherwise. Two commented-out
+/// bases used to stand in for that coverage, one of them carrying a position-closing filter that skipped
+/// short positions, which is a defect already fixed here; they were removed rather than left as something to
+/// revive. The coverage they implied still does not exist.
+/// </remarks>
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     /// <summary>Gets the instrument metadata resolved for <see cref="Symbol"/> from the market connector.</summary>
@@ -68,6 +76,9 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 
     /// <summary>Collects the connector and its subscriptions so they can be disposed together.</summary>
     private AsyncDisposableBox _disposable = null!;
+
+    /// <summary>Whether the user connector was built, so teardown has something to reach the account with.</summary>
+    private bool _connectorBuilt;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserConnectorTestBase"/> class.
@@ -128,15 +139,31 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("get user connector for {settings}", _settings);
         _disposable += Connector = userFactory.Create(_settings);
 
+        // from here on the account is reachable, and initialization itself places closing orders before it
+        // is done - so teardown must attempt its cleanup even if what follows throws
+        _connectorBuilt = true;
+
+        // every queue takes the initial snapshot AND the updates that follow it. Keeping only the Init
+        // event, as assets and positions used to, froze both queues at the account's opening state:
+        // GetBalance and GetPosition then answered with the same snapshot for the rest of the test, so
+        // the Ensure*Increased/Decreased checks below were comparing a value against itself
         this.Trace("subscribe to connector data");
-        _disposable += Connector
-            .Assets.Where(x => x.Type is ChangeEventType.Init)
-            .SelectMany(x => x.Items)
-            .Subscribe(_assets.Enqueue);
-        _disposable += Connector
-            .Positions.Where(x => x.Type is ChangeEventType.Init)
-            .SelectMany(x => x.Items)
-            .Subscribe(_positions.Enqueue);
+        _disposable += Connector.Assets.Subscribe(x =>
+        {
+            if (x.Type is ChangeEventType.Init)
+                foreach (var item in x.Items)
+                    _assets.Enqueue(item);
+            else
+                _assets.Enqueue(x.Item);
+        });
+        _disposable += Connector.Positions.Subscribe(x =>
+        {
+            if (x.Type is ChangeEventType.Init)
+                foreach (var item in x.Items)
+                    _positions.Enqueue(item);
+            else
+                _positions.Enqueue(x.Item);
+        });
         _disposable += Connector.Orders.Subscribe(x =>
         {
             if (x.Type is ChangeEventType.Init)
@@ -162,6 +189,10 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
         this.Trace("await for positions and leverages (before closing)");
         await AwaitForInitialPositionsAndLeverages();
 
+        // before anything is placed, and before the first thing that reads a position: the whole suite
+        // assumes a one-way account, and nothing else here would say so plainly
+        EnsureOneWayPositionMode();
+
         this.Trace("close active positions");
         await CloseActivePositions();
 
@@ -179,30 +210,111 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        this.Trace("cancel open orders");
-        await CancelOpenOrders();
+        // cleanup and disposal are separate obligations, and neither may cancel the other. Cleanup used to
+        // run first and unguarded, so a throw in it - and it starts by talking to the exchange - ended the
+        // method with the connector still connected and the container never released. Disposal alone is not
+        // enough either: what cleanup does is leave a real account flat, and a failure there is the thing
+        // worth reporting, so it must survive a disposal that fails on its way out
+        Exception? cleanupError = null;
+        Exception? disposeError = null;
 
-        this.Trace("try close position if any");
-        var amount = GetPositionAmount();
-        if (amount > 0)
+        try
         {
-            this.Trace("close position amount: {amount}", amount);
-            await InitValidOrder(
-                InitMarketOrder(ClientOrderId(), Range(), Symbol, OrderSide.Sell, amount),
-                OrderStatus.Filled
-            );
-            await EnsureBalanceIsIncreased();
-            await EnsurePositionIsDecreased();
+            await CleanUpAccountAsync();
+        }
+        catch (Exception e)
+        {
+            cleanupError = e;
         }
 
-        EnsureNoErrors();
+        try
+        {
+            this.Trace("dispose disposables");
+            if (_disposable is not null)
+                await _disposable.DisposeAsync();
 
-        this.Trace("dispose disposables");
-        await _disposable.DisposeAsync();
+            // the connector and its subscriptions are gone; the container that built them is the base's to
+            // release. InitializeAsync calls up to the base, and this has to match it or the provider - and
+            // every singleton in it - outlives every test class that ever ran
+            await base.DisposeAsync();
+        }
+        catch (Exception e)
+        {
+            disposeError = e;
+        }
+
+        if (cleanupError is not null && disposeError is not null)
+            throw new AggregateException(
+                "account cleanup and disposal both failed; the account may not be flat",
+                cleanupError,
+                disposeError
+            );
+
+        if (cleanupError is not null)
+            ExceptionDispatchInfo.Capture(cleanupError).Throw();
+
+        if (disposeError is not null)
+            ExceptionDispatchInfo.Capture(disposeError).Throw();
 
         EnsureNoErrors();
 
         this.Trace("done");
+    }
+
+    /// <summary>
+    /// Leaves the account as this fixture found it: every open order on <see cref="Symbol"/> cancelled and
+    /// any remaining position flattened. Does as much of that as the fixture got far enough to allow.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task CleanUpAccountAsync()
+    {
+        // nothing to clean with, and nothing placed either: the connector is what talks to the account
+        if (!_connectorBuilt)
+        {
+            this.Trace("skip account cleanup, the connector was never built");
+
+            return;
+        }
+
+        this.Trace("cancel open orders");
+        await CancelOpenOrders();
+
+        // the opening position snapshot arrives after the connector connects, and initialization can fail
+        // between the two - it places real closing orders of its own before it is done. Cancelling above
+        // needs none of that and is worth doing regardless; flattening has nothing to measure without it
+        if (!_positions.Any(x => x.OrientationRange is OrientationRange.Both && x.Symbol == Symbol))
+        {
+            this.Trace("skip closing, no position snapshot arrived");
+
+            return;
+        }
+
+        this.Trace("try close position if any");
+        var amount = GetPositionAmount();
+        if (amount != 0)
+        {
+            this.Trace("close position amount: {amount}", amount);
+            // close in whichever direction flattens it: selling off a short would deepen it
+            await InitValidOrder(
+                InitMarketOrder(
+                    ClientOrderId(),
+                    Range(),
+                    Symbol,
+                    amount < 0 ? OrderSide.Buy : OrderSide.Sell,
+                    Math.Abs(amount)
+                ),
+                OrderStatus.Filled
+            );
+            await EnsureBalanceIsIncreased();
+            // flattening moves the amount towards zero, which is downwards for a long and upwards for
+            // a short - asserting "decreased" either way would fail on every short that ever closed
+            if (amount < 0)
+                await EnsurePositionIsIncreased();
+            else
+                await EnsurePositionIsDecreased();
+        }
+
+        EnsureNoErrors();
     }
 
     /// <summary>
@@ -236,9 +348,12 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("start");
 
+        // a short position is a negative amount, and filtering for `> 0` skipped every one of them -
+        // which also left the `Amount < 0` branch below unreachable. A short left open here is a real
+        // open position on a real account, carried into whatever test runs next
         var activePositions = _positions
             .DistinctBy(x => new { x.Symbol, x.OrientationRange })
-            .Where(x => x.Amount > 0)
+            .Where(x => x.Amount != 0)
             .ToArray();
 
         if (activePositions.Length == 0)
@@ -446,6 +561,34 @@ public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
     {
         this.Trace("await for positions");
         return Expect.ToAsync(() => _positions.IsNotEmpty());
+    }
+
+    /// <summary>
+    /// Asserts the account reports its positions the way every order this suite places assumes.
+    /// </summary>
+    /// <remarks>
+    /// A hedge-mode account reports a position per side, as <see cref="OrientationRange.Long"/> or
+    /// <see cref="OrientationRange.Short"/>, and never as <see cref="OrientationRange.Both"/>. Every order
+    /// here carries <see cref="OrientationRange.Both"/>, which such an account rejects outright. Without
+    /// this check the mismatch surfaces twice over and late in both cases: <see cref="GetPosition"/> looks
+    /// for a range that never arrives and throws for want of a match, and any order that got past it comes
+    /// back rejected by the exchange with a code and no explanation.
+    /// </remarks>
+    private void EnsureOneWayPositionMode()
+    {
+        this.Trace("check position mode");
+
+        if (_positions.Any(x => x.OrientationRange is OrientationRange.Both))
+            return;
+
+        var ranges = _positions.Select(x => x.OrientationRange.ToString()).Distinct().ToArray();
+
+        throw new InvalidOperationException(
+            $"the account reports positions as [{string.Join(", ", ranges)}] and never as {OrientationRange.Both}, which is how "
+                + "a hedge-mode account reports them. Every order this suite places carries "
+                + $"{OrientationRange.Both} and the exchange rejects those outright in hedge mode - set the "
+                + "account to one-way position mode before running this suite"
+        );
     }
 
     /// <summary>

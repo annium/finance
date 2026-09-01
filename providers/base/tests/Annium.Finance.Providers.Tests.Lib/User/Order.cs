@@ -50,6 +50,14 @@ public sealed record Order(
     /// <summary>Gets the volume-weighted average price the order has been filled at so far.</summary>
     public decimal ExecutedPrice { get; private set; } = ExecutedPrice;
 
+    /// <summary>
+    /// Gets the notional value filled so far, accumulated one fill at a time at the price each was filled
+    /// at. Kept rather than recomputed from <see cref="ExecutedQty"/> and <see cref="ExecutedPrice"/>,
+    /// because across fills at different prices those two no longer multiply out to what was actually
+    /// booked - and it is what was booked that has to be reversed if the order is dropped.
+    /// </summary>
+    public decimal ExecutedSum { get; private set; } = ExecutedQty * ExecutedPrice;
+
     /// <summary>Gets the fee charged on the order so far.</summary>
     public decimal Fee { get; private set; } = Fee;
 
@@ -80,15 +88,25 @@ public sealed record Order(
             executedQty,
             executedPrice,
             status is OrderStatus.Canceled ? TotalQty - executedQty : 0,
-            Fee,
+            // the new fee and the one being replaced, in that order. Passing the old value for both made
+            // the position's `fee - prevFee` identically zero, so its opened/closed fee totals stayed at
+            // zero however much an order was charged, and anything comparing them to a real one matched
+            fee,
             ExecutedQty,
             Fee,
-            UpdatedAt,
+            // the moment of this update, not the one before it. This is the third argument in this same
+            // call to have been given the field instead of the parameter beside it - the position was told
+            // the order's previous timestamp every time, so its own moment trailed one update behind for
+            // as long as it lived, and every existing test passed zero and never saw it
+            now,
             result
         );
 
         if (result.HasErrors)
             return result;
+
+        // the same increment the position booked, valued at the same price
+        ExecutedSum += (executedQty - ExecutedQty) * executedPrice;
 
         Status = status;
         ExecutedQty = executedQty;

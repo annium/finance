@@ -1,4 +1,5 @@
 using Annium.Finance.Providers.Abstractions.Domain.Market;
+using Annium.Finance.Providers.Abstractions.Domain.Shared;
 using Annium.Finance.Providers.Tests.Lib.Market;
 using Annium.Testing;
 using Xunit;
@@ -13,6 +14,26 @@ public class InstrumentExtensionsTests
 {
     /// <summary>An instrument with default tick and lot sizes, used by every test that doesn't need bespoke bounds.</summary>
     private readonly IInstrument _instrument = InstrumentHelper.DefaultInstrument;
+
+    /// <summary>
+    /// Pins the limits the fake instrument derives from its lot and tick size. Every boundary case in this
+    /// file is written against those limits by name — <c>ToValidQty(0.05m).Is(_instrument.MinQty)</c> and the
+    /// like — so a change to how they are derived would move every one of those boundaries and keep them all
+    /// agreeing with each other. Stating the numbers once is what stops the rest of the file from being
+    /// self-referential.
+    /// </summary>
+    [Fact]
+    public void DefaultInstrument_HasTheLimitsEverythingElseIsMeasuredAgainst()
+    {
+        // assert - lot 0.1 and tick 0.01
+        _instrument.LotSize.Is(0.1m);
+        _instrument.TickSize.Is(0.01m);
+        _instrument.MinQty.Is(1m);
+        _instrument.MaxQty.Is(10m);
+        _instrument.MinPrice.Is(0.01m);
+        _instrument.MaxPrice.Is(10_000m);
+        _instrument.MinSum.Is(1m);
+    }
 
     /// <summary>
     /// Verifies that <see cref="InstrumentExtensions.TickPrecision{TInstrument}"/> counts the decimal digits of the
@@ -91,5 +112,99 @@ public class InstrumentExtensionsTests
     {
         // arrange
         _instrument.ToLotSize(0.12m).Is(0.1m);
+    }
+
+    /// <summary>
+    /// Verifies that a negative quantity - the way a sell or short size is expressed - is rounded towards
+    /// zero rather than down, so aligning it can only shrink the order, never grow it.
+    /// </summary>
+    [Fact]
+    public void ToLotSize_NegativeQty_RoundsTowardsZero()
+    {
+        // assert
+        _instrument.ToLotSize(-0.12m).Is(-0.1m, "aligning a sell size must not ask for more than was requested");
+        _instrument.ToLotSize(-1.56m).Is(-1.5m);
+        _instrument.ToValidQty(-105m).Is(-_instrument.MaxQty);
+        // a sell smaller than one lot aligns to zero; it must still come back a sell. Reading the side off
+        // the aligned value instead of the request turns it into a buy of the minimum quantity
+        _instrument.ToLotSize(-0.05m).Is(0m);
+        _instrument.ToValidQty(-0.05m).Is(-_instrument.MinQty, "a sell must never come back as a buy");
+    }
+
+    /// <summary>
+    /// Verifies that an instrument reporting no lot or tick step leaves quantities and prices untouched
+    /// instead of dividing by zero.
+    /// </summary>
+    [Fact]
+    public void ZeroLotAndTick_LeaveValuesUntouched()
+    {
+        // arrange
+        var instrument = InstrumentHelper.CreateInstrument("x", "y", 0m, 0m);
+
+        // assert
+        instrument.ToLotSize(0.123m).Is(0.123m);
+        instrument.ToTickSizeDown(0.123m).Is(0.123m);
+        instrument.ToTickSizeRound(0.123m).Is(0.123m);
+        instrument.ToTickSizeUp(0.123m).Is(0.123m);
+    }
+
+    /// <summary>
+    /// Verifies that a price outside the instrument's own price bounds is rejected even when it is tick
+    /// aligned and its notional value is in range - the constraint the exchange reports and would enforce.
+    /// </summary>
+    [Fact]
+    public void IsValidQtyPrice_PriceOutOfBounds_IsRejected()
+    {
+        // arrange - prices allowed in [10, 100], every value below tick aligned and comfortably inside
+        // the quantity and notional bounds, so the price bound is the only thing any case turns on
+        var instrument = new Instrument(
+            "fake",
+            ProviderEnvironment.Test,
+            "XY",
+            1m,
+            1m,
+            1m,
+            100m,
+            10m,
+            100m,
+            1m,
+            decimal.MaxValue,
+            int.MaxValue
+        );
+
+        // assert
+        instrument.IsValidQtyPrice(1m, 9m).IsFalse("a price below the instrument's minimum is not valid");
+        instrument.IsValidQtyPrice(1m, 101m).IsFalse("a price above the instrument's maximum is not valid");
+        instrument.IsValidQtyPrice(1m, 10m).IsTrue("the minimum price itself is valid");
+        instrument.IsValidQtyPrice(1m, 100m).IsTrue("the maximum price itself is valid");
+    }
+
+    /// <summary>
+    /// Verifies that a bound the provider reports as zero is not enforced. Binance's price filter uses zero
+    /// to say it does not bound that side, exactly as its lot and tick sizes do, so reading it as a literal
+    /// limit would reject every price on such a symbol.
+    /// </summary>
+    [Fact]
+    public void IsValidQtyPrice_UnboundedPrice_IsNotEnforced()
+    {
+        // arrange - neither bound is set, as an exchange reports for a symbol it does not limit
+        var instrument = new Instrument(
+            "fake",
+            ProviderEnvironment.Test,
+            "XY",
+            1m,
+            1m,
+            1m,
+            100m,
+            0m,
+            0m,
+            1m,
+            decimal.MaxValue,
+            int.MaxValue
+        );
+
+        // assert
+        instrument.IsValidQtyPrice(1m, 1m).IsTrue("an unset minimum must not reject a low price");
+        instrument.IsValidQtyPrice(1m, 1_000_000m).IsTrue("an unset maximum must not reject a high price");
     }
 }

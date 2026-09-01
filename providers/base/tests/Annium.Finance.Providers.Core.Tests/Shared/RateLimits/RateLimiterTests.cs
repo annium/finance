@@ -52,6 +52,29 @@ public class RateLimiterTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// A limit narrowed after construction takes effect. An exchange reports its rate limits in the
+    /// responses it sends, so the limit a provider starts with is a guess it is expected to correct - and
+    /// a correction that changes nothing leaves the limiter permitting requests the exchange will refuse.
+    /// </summary>
+    [Fact]
+    public void UpdateLimit_AfterConstruction_MovesTheWaterMark()
+    {
+        using var limiter = CreateLimiter();
+
+        // a weight the original limit allows
+        limiter.UsedWeight(50);
+        limiter.CanExecute().IsTrue();
+
+        // the same weight, against a limit half as generous
+        limiter.UpdateLimit(50);
+        limiter.CanExecute().IsFalse("a narrowed limit must refuse a weight the wider one allowed");
+
+        // and widening again lets it through
+        limiter.UpdateLimit(100);
+        limiter.CanExecute().IsTrue("a widened limit must allow what it covers");
+    }
+
+    /// <summary>
     /// Verifies that used weight reported above the water mark eventually decays back below it on its own,
     /// without any further calls, letting <see cref="IRateLimiter.CanExecute"/> allow requests again.
     /// </summary>
@@ -69,6 +92,26 @@ public class RateLimiterTests : ProvidersTestBase
         await Expect.ToAsync(() => limiter.CanExecute().IsTrue());
 
         this.Trace("done");
+    }
+
+    /// <summary>
+    /// A weight report arriving after disposal is accepted quietly instead of re-arming a timer that is
+    /// already gone. Requests do not stop the instant a connector shuts down: the last responses of its life
+    /// land after its limiter has been disposed, and every one of them reports the weight it used.
+    /// </summary>
+    [Fact]
+    public void UsedWeight_AfterDispose_DoesNotRearmTheTimer()
+    {
+        // arrange
+        var limiter = CreateLimiter();
+
+        // act
+        limiter.Dispose();
+
+        // assert - a weight this far above the water mark is exactly what would arm the decay timer, so
+        // reaching the next line at all is the assertion: rearming a disposed timer throws
+        limiter.UsedWeight(10_000);
+        limiter.CanExecute().IsFalse("a disposed limiter still answers from the weight it was given");
     }
 
     /// <summary>Creates a rate limiter with a limit of 100 (80 water mark), decaying used weight by 10 every 10ms once above it.</summary>

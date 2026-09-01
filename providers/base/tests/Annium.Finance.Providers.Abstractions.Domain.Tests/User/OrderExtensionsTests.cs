@@ -1,3 +1,4 @@
+using System;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Tests.Lib.User;
 using Annium.Finance.Providers.Tests.Lib.User.Operations;
@@ -12,6 +13,47 @@ namespace Annium.Finance.Providers.Abstractions.Domain.Tests.User;
 /// </summary>
 public class OrderExtensionsTests
 {
+    /// <summary>
+    /// Verifies that an order's target price is its limit price where its type carries one, its trigger price
+    /// where it waits on one, and zero for a plain market order — the same rule the request side applies
+    /// before the order exists. Nothing asserted this: it reaches tests only through
+    /// <see cref="Order.ToString"/>, which they match on unrelated substrings.
+    /// </summary>
+    /// <param name="type">The order type under test.</param>
+    /// <param name="expected">The price the order is aimed at.</param>
+    [Theory]
+    [InlineData(OrderType.Limit, 10)]
+    [InlineData(OrderType.Market, 0)]
+    [InlineData(OrderType.StopLossMarket, 9)]
+    [InlineData(OrderType.TakeProfitMarket, 9)]
+    [InlineData(OrderType.StopLossLimit, 10)]
+    [InlineData(OrderType.TakeProfitLimit, 10)]
+    public void TargetPrice_IsThePriceTheTypeAimsAt(OrderType type, int expected)
+    {
+        // arrange - a limit price of 10 and a trigger of 9, so the two can never be mistaken for each other
+        var position = PositionHelper.CreatePosition(1);
+        var isLimitPriced = type is OrderType.Limit or OrderType.StopLossLimit or OrderType.TakeProfitLimit;
+        var isLeveled = type is not (OrderType.Limit or OrderType.Market);
+        var order = new Annium.Finance.Providers.Tests.Lib.User.Order(
+            Guid.NewGuid(),
+            position,
+            OrderSide.Buy,
+            type,
+            1m,
+            isLimitPriced ? 10m : 0m,
+            isLeveled ? 9m : 0m,
+            0L,
+            OrderStatus.New,
+            0m,
+            0m,
+            0m,
+            0L
+        );
+
+        // assert
+        order.TargetPrice().Is(expected);
+    }
+
     /// <summary>Verifies that <see cref="OrderExtensions.IsActive{TOrder}"/> is true for new and partially filled orders, false once filled or canceled.</summary>
     [Fact]
     public void IsActive()
@@ -54,8 +96,10 @@ public class OrderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies leveled/immediate classification via <see cref="OrderExtensions.IsLimit{TOrder}"/> as a stand-in
-    /// check: a limit order is not leveled, while stop-loss and take-profit market orders are.
+    /// An order is leveled when it waits for a trigger price: stop-loss and take-profit orders are, a plain
+    /// limit order is not. This is not the same question as <see cref="OrderExtensions.IsLimit{TOrder}"/>
+    /// asks - the stop-loss and take-profit limit types answer yes to both - which is why this test used to
+    /// assert nothing about its own subject: it called IsLimit on all three cases instead.
     /// </summary>
     [Fact]
     public void IsLeveled()
@@ -64,9 +108,9 @@ public class OrderExtensionsTests
         var position = PositionHelper.CreatePosition(1);
 
         // assert
-        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLimit().IsTrue();
-        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLimit().IsFalse();
-        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLimit().IsFalse();
+        position.AddLimitBuyOrder(2, 1).Fill().Data.IsLeveled().IsFalse();
+        position.AddStopLossMarketSellOrder(1, 0.5m).Data.IsLeveled().IsTrue();
+        position.AddTakeProfitMarketSellOrder(1, 1.5m).Data.IsLeveled().IsTrue();
     }
 
     /// <summary>Verifies that <see cref="OrderExtensions.IsLimit{TOrder}"/> is true only for a limit order, false for stop-loss and take-profit market orders.</summary>

@@ -308,7 +308,7 @@ public static class PositionTestExtensions
             order.TotalQty,
             order.Status is OrderStatus.Canceled ? order.ExecutedQty : order.TotalQty,
             order.ExecutedQty,
-            order.ExecutedPrice,
+            order.ExecutedSum,
             order.Fee,
             order.UpdatedAt,
             result

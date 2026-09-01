@@ -46,18 +46,15 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// A request against a server that closed before responding maps to <see cref="MarketOperationStatus.NetworkError"/>.
+    /// A request to a port nothing is listening on - refused outright - maps to <see cref="MarketOperationStatus.NetworkError"/>.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task NetworkError()
     {
         // arrange
-        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
-        await server.DisposeAsync();
-
         // act
-        var result = await this.CreateHttpRequest(server).Get("/").AsMarketResultAsync<ServerTime>();
+        var result = await this.CreateHttpRequestToClosedPort().Get("/").AsMarketResultAsync<ServerTime>();
 
         // assert
         result.Status.Is(MarketOperationStatus.NetworkError);

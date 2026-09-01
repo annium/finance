@@ -11,8 +11,8 @@ public static class InstrumentHelper
     public static readonly Instrument DefaultInstrument = CreateInstrument("BTC", "USDT", 0.1m, 0.01m);
 
     /// <summary>
-    /// Creates a fake instrument for the given resource/currency pair, deriving its quantity and notional
-    /// limits from the lot and tick size.
+    /// Creates a fake instrument for the given resource/currency pair, deriving its quantity, price and
+    /// notional limits from the lot and tick size.
     /// </summary>
     /// <param name="resource">The base asset code (e.g. "BTC").</param>
     /// <param name="currency">The quote asset code (e.g. "USDT").</param>
@@ -28,6 +28,8 @@ public static class InstrumentHelper
             tickSize,
             lotSize * 10,
             lotSize * 100,
+            tickSize,
+            tickSize * 1_000_000,
             lotSize * tickSize * 1000,
             decimal.MaxValue,
             int.MaxValue

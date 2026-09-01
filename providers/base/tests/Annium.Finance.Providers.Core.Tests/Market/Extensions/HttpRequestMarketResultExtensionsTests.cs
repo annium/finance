@@ -32,19 +32,15 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// Verifies that a request sent against a server that never responds (connection torn down before the
-    /// response arrives) maps to <see cref="MarketOperationStatus.NetworkError"/> with no data or message.
+    /// Verifies that a request to a port nothing is listening on - refused outright - maps to <see cref="MarketOperationStatus.NetworkError"/> with no data or message.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task NetworkError()
     {
         // arrange
-        var server = this.RunHttpServer((_, _) => Task.CompletedTask);
-        await server.DisposeAsync();
-
         // act
-        var result = await this.CreateHttpRequest(server)
+        var result = await this.CreateHttpRequestToClosedPort()
             .Get("/")
             .AsMarketResultAsync<Response, MarketError>(GetFailure, MapResponse);
 
@@ -101,13 +97,21 @@ public class HttpRequestMarketResultExtensionsTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// Verifies that a 400 Bad Request response whose body parses as a <see cref="MarketError"/> surfaces that
-    /// error's own status (here <see cref="MarketOperationStatus.TooManyRequests"/>) rather than a generic bad
-    /// request status, while dropping its message.
+    /// A body shaped like an error, on a response that also deserializes into the success type, is handled as
+    /// data: the union resolves to its success side whenever the payload parses into it at all, so the result
+    /// is classified by the HTTP status code and the body's own message is dropped.
     /// </summary>
+    /// <remarks>
+    /// The name this test carried until now - and the summary above it - said it verified the opposite, that
+    /// the error's own status came through. It never did, and could not: <c>Response</c> is a class the
+    /// serializer will build from any JSON object, so the success parse succeeds and the error side is never
+    /// reached. Discriminating the two needs a success type the body cannot fill, which is how the Binance
+    /// providers get their own error codes through - see their <c>OperationResultResponse</c>, which does pin
+    /// the branch this one only appeared to.
+    /// </remarks>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
-    public async Task ParsedErrorResponse()
+    public async Task ErrorShapedBodyThatStillParsesAsData_IsClassifiedByItsStatusCode()
     {
         // arrange
         await using var server = this.RunHttpServerWithJsonResponse(
