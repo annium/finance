@@ -100,10 +100,10 @@ below, because a summary that reads as an annotation is the failure this model e
 | 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned`, including the lot-size merge arithmetic — but entirely piggybacked on the exchange-info fixture; there is no filter test of its own |
 | 5 enumerations | `confirmed` on both venues against their documented lists | **not `pinned` as a category — corrected.** Only values that happen to appear in a fixture are covered. Sides and position sides are `pinned`; on the **read** side `MARKET`, `STOP_LOSS`/`STOP_MARKET`, `STOP_LOSS_LIMIT`/`STOP`, spot's `LIMIT_MAKER` fold, and every order status but `NEW` and `PARTIALLY_FILLED` are `none` |
 | 6 error and status codes | `confirmed` | HTTP mapping `pinned` in all three copies. The two Binance codes are `pinned` in Spot and UsdFutures and `none` in `Base` — the drifted copy is exactly the untested one |
-| 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | the mechanism is `pinned` — header casing, missing and malformed values, water mark, decay, post-dispose. The production ceilings, the decay constants, the water-mark fraction and the runtime `REQUEST_WEIGHT` overwrite are all `none` |
+| 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | the mechanism is `pinned` — header casing, missing and malformed values, water mark, decay, post-dispose — and so is the **runtime `REQUEST_WEIGHT` overwrite**, now that a read-path test drives it. The production ceilings, the decay constants and the water-mark fraction remain `none` |
 | 8 auth and signing | `confirmed` | `gated`, and **`vacuous`** for the percent-encoding rule. What is signed, the exclusion of `signature` itself, and the use of synced rather than local time are each `none` |
-| 9 timing and lifecycle | `confirmed` | candle interval and page size `gated` against a real count. The order and trade paging windows are **`vacuous`** — see below. Sync cadence `none` |
-| 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | `none` throughout, but for `"BTCUSDT"` liveness and the kline page size, which are `gated` |
+| 9 timing and lifecycle | `confirmed` | candle interval and page size `gated` against a real count. The order history window is **`pinned`**: an offline test drives twenty days through three chunks and the boundaries are observable. Trade history follows the same code and is `none` until driven. Sync cadence `none` |
+| 10 hard-coded facts | mixed — `confirmed` where they mirror a documented limit, `undocumented` where they are heuristics | mostly `none`. `"BTCUSDT"` liveness and the kline page size are `gated`; the futures asset-precision heuristic is now `pinned`, which matters because it is `undocumented` — the exchange promises nothing about it, so a test is the only thing that can notice it changing |
 
 **One route decision worth keeping visible.** The futures route lives in the *path*, never in the base.
 Both call sites compose with `new Uri(base, path)`, which discards the base's path whenever the path
@@ -116,10 +116,9 @@ from configuration that reads as correct. A mutation doing exactly that is kille
 1. **The signing golden value** (§8). Its query — `symbol=LTCBTC&side=BUY&…` — contains no character
    requiring percent-encoding, so it passes identically whether or not the implementation encodes
    before signing, which Binance has required since 2026-01-15.
-2. **The history paging windows** (§9). `LoadHistoryOrdersBaseAsync` and `LoadHistoryTradesBaseAsync`
-   request **one day** of history while claiming to protect a seven-day chunking window and a
-   three-month cap. Even with the exchange gate open the fixture cannot reach either boundary; it can
-   only confirm the call did not error.
+2. ~~The history paging windows~~ — **closed**. The gated fixture still asks for one day and still
+   proves nothing, but an offline test now drives twenty days through three windows and asserts the
+   boundaries, so the fact is `pinned` regardless of what the gated one does.
 
 **Five components have no test file at all:** `WebSocketService`, `ListenKeyResolver`,
 `HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first two
@@ -127,8 +126,8 @@ carry the connection lifecycle for every stream this module runs.
 
 **Where the exposure is.** The `none` bucket is the largest by a wide margin, and its centre of mass is
 not where anyone would guess: not the exotic paths, but the constants. Production rate-limit ceilings,
-`recvWindow`, the water mark, the precision heuristics — the values most likely to be copied wrong and
-least likely to be noticed.
+`recvWindow`, the water mark — the values most likely to be copied wrong and least likely to be
+noticed. The precision heuristic has since been pinned; the rest have not.
 
 Structural markers stay separate from both axes: **[DIVERGES]** between spot and futures,
 **[DUPLICATED]** across files, **[DEAD]** for code unreachable in production, **[DRIFT]** where what we
