@@ -292,6 +292,18 @@ Registration, endpoints and configuration for everything this step touches are d
 built. A read path whose endpoint is configured in a later step is a read path that cannot be tested
 in this one.
 
+**Fix what the census says nothing watches, and pin it in the same change.** A fact at `none` that turns
+out to be wrong was found by review, and review is not repeatable. Repairing it without a test returns
+it to the state it was found in — the next drift is invisible again, and the repair is the only reason
+anyone believes otherwise.
+
+**Assert the composed value, not the configured parts.** Configuration that reads as correct can compose
+into something else: on this provider the websocket route had to live in the path rather than the base,
+because `new Uri(base, path)` discards the base's path whenever the path begins with a slash — so a
+route held in the base is dropped at composition and the decommissioned URL comes back from settings
+that look right. A test on the parts passes; a test on the composed URL catches it. Where a value is
+assembled before use, the assembled value is the fact.
+
 **Live validation belongs to this step too, and it reads only.** Signing, server time, public market
 data, then authenticated account reads. Nothing here places an order, which is what makes it the safe
 half of validation — and the reason it comes before step 5 rather than after it.

@@ -25,8 +25,8 @@ created: 2026-09-01
 | 1 — derive existing state | **converged** | ~70 anchors verified and re-anchored after the environment removal; four missing entries added; both axes censused entry by entry against the test suites | none |
 | 2 — collect facts, compute drift | **converged, with two accepted gaps** | all 13 futures pages and 7 spot files snapshotted; request side closed at tier 1 from the official Postman collections; every category given a documentation outcome | **accepted, not open**: the nested user-data-stream payloads (~20 short field names) are `unretrievable` — no available technique reaches them, so waiting changes nothing; and the `avgPrice` question is `contested`, settleable only by a live order. Both are recorded against their entries rather than left as unfinished work |
 | 3 — wire types and serialization | not-started | — | — |
-| 4 — provider, read paths (+ registration, config, read-only live validation) | not-started | — | **the futures WebSocket base URLs are legacy, decommissioned 2026-04-23** — market to `/public`, user data to `/private` |
-| 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | blocked on the same URL drift: a user stream on a dead URL delivers nothing |
+| 4 — provider, read paths (+ registration, config, read-only live validation) | **partial** | the futures websocket routes are fixed and `pinned` by `EndpointsTests`; the read paths themselves are untouched | read paths, their tests, and the read-only live stages |
+| 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | unblocked: the user stream now addresses `/private`. Still needs its own tests — `WebSocketService` and `ListenKeyResolver` have no test file at all |
 
 ## Queued work
 
