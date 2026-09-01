@@ -3,7 +3,8 @@ title: Binance contract manifest
 type: provider-manifest
 status: living
 created: 2026-09-01
-checked_against: never
+checked_against: 2026-09-01
+docs_revision_spot: a0057759f1cbcab812af44b75309d72866a57561
 ---
 
 # Contract manifest — binance
@@ -16,7 +17,8 @@ Every entry is a fact owned by Binance, not by us, that this module depends on, 
 `file:line`. Paths are relative to the repository root; `Base`, `Spot` and `UsdFutures` abbreviate
 `providers/crypto/binance/src/Annium.Finance.Providers.Crypto.Binance.<name>/`.
 
-**`checked_against: never`** — derived from our code, never yet compared against Binance's
+**`checked_against: 2026-09-01
+docs_revision_spot: a0057759f1cbcab812af44b75309d72866a57561`** — derived from our code, never yet compared against Binance's
 documentation. An inventory, not a baseline. `/implement-provider binance --only-layer=1` is what
 changes that.
 
@@ -72,7 +74,7 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 | Spot HTTP `https://api.binance.com`, test `https://testnet.binance.vision` | `Spot/Internal/Shared/Endpoints.cs:15-16` |
 | Spot WS `wss://stream.binance.com`, test `wss://testnet.binance.vision` | `Spot/Internal/Shared/Endpoints.cs:26-27` |
 | Futures HTTP `https://fapi.binance.com`, test `https://testnet.binancefuture.com` | `UsdFutures/Internal/Shared/Endpoints.cs:19-20` |
-| Futures WS `wss://fstream.binance.com`, test `wss://stream.binancefuture.com` | `UsdFutures/Internal/Shared/Endpoints.cs:32-33` |
+| Futures WS `wss://fstream.binance.com`, test `wss://stream.binancefuture.com` — **[DRIFT] legacy, decommissioned 2026-04-23.** Now split: `/public` (high-frequency public, incl. `@bookTicker`), `/market` (regular market data), `/private` (user data) | `UsdFutures/Internal/Shared/Endpoints.cs:32-33` |
 
 ### REST paths
 
@@ -102,7 +104,7 @@ covers it. The reader needs the list of what cannot be trusted, not a list of ev
 |---|---|
 | Combined stream path `/stream` | `Spot/Internal/Market/Profiles/MarketConfigProfile.cs:30`, `UsdFutures/.../MarketConfigProfile.cs:39` |
 | Book ticker topic `{symbol}@bookTicker`, symbol lowercased | `Base/Internal/Market/Services/BookTickerService.cs:75` |
-| User stream URI is `{WsApi}/ws/{listenKey}` | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:38`, `UsdFutures/.../UserConfigProfile.cs:48` |
+| User stream URI is `{WsApi}/ws/{listenKey}` — **[DRIFT]** the base must now be `wss://fstream.binance.com/private`, so the full URI is `/private/ws/<listenKey>` | `Base/Internal/User/Services/UserStream.cs:112`; path from `Spot/.../UserConfigProfile.cs:38`, `UsdFutures/.../UserConfigProfile.cs:48` |
 
 ---
 
@@ -302,17 +304,16 @@ the campaign report.
 
 | Fact | Where |
 |---|---|
-| HMAC-SHA256 over the raw query string, hex, lowercase | `Base/Internal/User/Services/SignatureService.cs:49-54` |
+| HMAC-SHA256 over the query string, hex, lowercase. Since 2026-01-15 the payload must be **percent-encoded before signing** or the request is rejected `-1022`. We sign `Uri.Query`, which is already encoded — compliant, but by construction rather than by intent, and **nothing pins it**: the golden-value test's query contains no character needing encoding | `Base/Internal/User/Services/SignatureService.cs:49-54` |
 | Signed content is the full query string built so far, excluding `signature` | `Base/Shared/HttpExtensions/HttpRequestSignatureExtensions.cs:31-44` |
 | `timestamp` is the **synced server time**, not the local clock | same, 35 |
-| Listen key fetch and keep-alive both issue **`POST`** | `Base/Internal/User/Services/ListenKeyResolver.cs:130` |
+| Listen key fetch and keep-alive both issue **`POST`** — correct: a `POST` on an account with an active key returns it and extends validity 60 minutes. The class doc comment claiming "periodic PUT" is what is wrong | `Base/Internal/User/Services/ListenKeyResolver.cs:130` |
 
-**[UNVERIFIED] — first thing the drift check should settle.** The class doc says the resolver switches
-to "periodic PUT (keep-alive) confirmations"; the code only ever POSTs. For USD-M futures this is
-believed harmless — `POST /fapi/v1/listenKey` is documented to return the existing key and extend its
-validity — so the doc comment is wrong rather than the code. Confirm that, and confirm the same for
-spot before the spot user path is ever revived, where `PUT /api/v3/userDataStream` is the keep-alive
-and `POST` may mint a new key instead of extending the old one.
+**Settled 2026-09-01.** The futures documentation states that a `POST` on an account with an active
+`listenKey` returns that key and extends its validity for 60 minutes. Our POST-only resolver is
+correct; the class doc comment promising "periodic PUT keep-alive confirmations" is the error, and a
+prior review reporting this as a defect was wrong. Still open for **spot**, where `PUT` is the
+keep-alive and `POST` may mint a new key — relevant only if the spot user path is ever revived.
 
 Keep-alive cadence is `60_000`ms with a `5_000`ms fetch retry — `Spot/ProviderConfiguration.cs:11`,
 `UsdFutures/ProviderConfiguration.cs:16`.
@@ -324,7 +325,7 @@ Keep-alive cadence is `60_000`ms with a `5_000`ms fetch retry — `Spot/Provider
 | Fact | Where |
 |---|---|
 | Candle interval is always `"1m"`; page size `1000` | both `MarketProvider.cs` |
-| Order and trade history paged at `1000`, in 7-day windows **[UNVERIFIED]** — assumes Binance's window cap | `UsdFutures/Internal/User/UserProvider.cs:44-53` |
+| Order and trade history paged at `1000`, in 7-day windows. Reach is capped by Binance at **3 months** for `userTrades` (reduced from 6 on 2026-08-26); `allOrders`' `symbol` became optional 2026-08-25, though we always send it | `UsdFutures/Internal/User/UserProvider.cs:44-53` |
 | Server time synced at `2_000`ms until first success, `5_000`ms after | `Spot/ProviderConfiguration.cs:14`, `UsdFutures/...:19` |
 
 **[DEAD] — the whole spot user path.** `Spot/Internal/User/UserConnectorFactory.cs:14-31` builds a
