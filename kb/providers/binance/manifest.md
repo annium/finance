@@ -92,9 +92,9 @@ state it is stated once at its head.
 |---|---|---|
 | 1 endpoints | `confirmed`, except the futures websocket bases, which are **wrong** — see the drift entries | `gated` — reachable only through the exchange suite |
 | 2 request parameters | `confirmed` at tier 1 from the official Postman collections | `gated`; the futures query processor's shapes are `pinned` by offline unit tests |
-| 3 response fields | `confirmed` for account, query-order and trade at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | converters are `pinned` offline; what the exchange actually sends is `gated` |
-| 4 filters | `confirmed` | `pinned` |
-| 5 enumerations | `confirmed` — every futures value checked against the documented list | `pinned` |
+| 3 response fields | spot `confirmed` at **tier 1** from `rest-api.md` — every field our converters read is present, `cummulativeQuoteQty` typo and all. Futures account / query-order / trade `confirmed` at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | converters are `pinned` offline; what the exchange actually sends is `gated` |
+| 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned` |
+| 5 enumerations | `confirmed` on both venues against their documented lists. Three gaps found, all recorded below | `pinned` |
 | 6 error and status codes | `confirmed` | `pinned` for the HTTP mapping; the two Binance codes are `none` — no test in `Base.Tests`, which is why the drifted third copy went unnoticed |
 | 7 rate limiting | `confirmed` for the header; the decay arithmetic is `unchecked` | `pinned` for the limiter's own behaviour, `none` for whether our ceilings match Binance's |
 | 8 auth and signing | `confirmed` | `pinned` — but the golden value's query has no character needing percent-encoding, so the 2026-01-15 encoding rule is **`vacuous`** |
@@ -270,7 +270,7 @@ recorded here only so a future reader knows the omission is deliberate.
 | Stop/take-profit market add `quantity`, `stopPrice` | 52-59 |
 | Stop/take-profit limit add `timeInForce="GTC"`, `quantity`, `price`, `stopPrice` | 62-74 |
 | `reduceOnly="true"` sent **only** in one-way mode — Binance rejects it alongside an explicit `positionSide` in hedge mode | 79-83 |
-| Modify supports `Limit` only; sends `origClientOrderId`, `symbol`, `side`, `quantity`, `price` | 96-107 |
+| Modify supports `Limit` only; sends `origClientOrderId`, `symbol`, `side`, `quantity`, `price`. Binance also accepts optional `priceMatch` and `modifyId`, which we do not send | 96-107 |
 | Cancel sends `orderId` and/or `origClientOrderId` + `newClientOrderId`, `symbol` | 119-137 |
 | `leverage` floored to int32 | `UsdFutures/Internal/User/UserConnector.cs:181-182` |
 
@@ -384,6 +384,20 @@ folds `PENDING_CANCEL` → `Canceled` and `EXPIRED_IN_MATCH` → `Rejected`
 (`Spot/.../OrderStatuses.cs:38,41`); futures folds only `EXPIRED_IN_MATCH` **[DIVERGES]**
 (`UsdFutures/.../OrderStatuses.cs:40`) — confirmed against the documented futures status list, which has no
 `PENDING_CANCEL`.
+
+**[DRIFT] Spot documents `PENDING_NEW` and we do not map it** — an order in an order list waits in that
+state until its working order fills. Our lookup would find nothing for it. `[DEAD]` in practice, since
+the spot user path throws before any of this runs, but it is a hole in the mapping rather than a
+deliberate omission. Binance also notes `PENDING_CANCEL` is "currently unused", so our folding of it
+costs nothing and proves nothing.
+
+**Symbol status is not a two-value question.** Spot documents `TRADING`, `END_OF_DAY`, `HALT`, `BREAK`
+and `CANCEL_ONLY`; futures documents `PENDING_TRADING`, `TRADING`, `PRE_DELIVERING`, `DELIVERING`,
+`DELIVERED`, `PRE_SETTLE`, `SETTLING`, `CLOSE`, `TRADING_HALT` and `TRADING_CANCEL_ONLY`. Our
+converters admit `TRADING` alone, so **every other state drops the instrument entirely** — a halted
+symbol becomes indistinguishable from one the exchange never listed. Defensible for opening a
+position; wrong for a connector holding one, which will see the instrument vanish rather than learn it
+was halted.
 
 **Order type — [DIVERGES], entirely different naming schemes:**
 
