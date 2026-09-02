@@ -86,22 +86,48 @@ public class MarketProviderReadPathTests : ProvidersTestBase
     }
 
     /// <summary>
-    /// A symbol without spot trading permission is dropped, however tradable it looks otherwise. This has no
-    /// futures counterpart at all — there, the equivalent question is the contract type.
+    /// A symbol whose <c>isSpotTradingAllowed</c> flag is false is dropped, even while its permissions still
+    /// list <c>SPOT</c>.
     /// </summary>
+    /// <remarks>
+    /// The two are separate checks and are varied separately here, which was not true of the first version
+    /// of this fixture: it turned both off at once, so removing either check left the other catching the
+    /// case and neither was individually pinned. A mutation dropping the flag check survived, which is what
+    /// exposed it. Two mechanisms enforcing one contract need two fixtures, or they cover for each other.
+    /// </remarks>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
-    public async Task LoadContext_DropsASymbolWithoutSpotPermission()
+    public async Task LoadContext_DropsASymbolWithSpotTradingDisallowed()
     {
         // arrange
-        await using var server = ServeJson(ExchangeInfo(spotAllowed: false));
+        await using var server = ServeJson(ExchangeInfo(spotAllowed: false, permission: "SPOT"));
         var provider = CreateProvider(server);
 
         // act
         var context = (await provider.LoadContextAsync()).Data.NotNull();
 
         // assert
-        context.Instruments.IsEmpty("a symbol that cannot be spot-traded must not be offered");
+        context.Instruments.IsEmpty("a symbol with spot trading disallowed must not be offered");
+    }
+
+    /// <summary>
+    /// A symbol whose permissions do not include <c>SPOT</c> is dropped, even while its
+    /// <c>isSpotTradingAllowed</c> flag is true. This has no futures counterpart at all — there, the
+    /// equivalent question is the contract type.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_DropsASymbolWithoutSpotPermission()
+    {
+        // arrange
+        await using var server = ServeJson(ExchangeInfo(permission: "MARGIN"));
+        var provider = CreateProvider(server);
+
+        // act
+        var context = (await provider.LoadContextAsync()).Data.NotNull();
+
+        // assert
+        context.Instruments.IsEmpty("a symbol without the SPOT permission must not be offered");
     }
 
     /// <summary>
@@ -175,11 +201,17 @@ public class MarketProviderReadPathTests : ProvidersTestBase
     /// </summary>
     /// <param name="weightLimit">The request-weight limit the response reports.</param>
     /// <param name="status">The symbol's status.</param>
-    /// <param name="spotAllowed">Whether the symbol permits spot trading.</param>
+    /// <param name="spotAllowed">The symbol's <c>isSpotTradingAllowed</c> flag.</param>
+    /// <param name="permission">The single permission the symbol carries.</param>
     /// <returns>The payload, as JSON.</returns>
-    private static string ExchangeInfo(int weightLimit = 6000, string status = "TRADING", bool spotAllowed = true)
+    private static string ExchangeInfo(
+        int weightLimit = 6000,
+        string status = "TRADING",
+        bool spotAllowed = true,
+        string permission = "SPOT"
+    )
     {
-        var permissions = spotAllowed ? @"[ ""SPOT"" ]" : @"[ ""MARGIN"" ]";
+        var permissions = $@"[ ""{permission}"" ]";
 
         return $@"{{
             ""rateLimits"": [ {{ ""rateLimitType"": ""REQUEST_WEIGHT"", ""interval"": ""MINUTE"", ""intervalNum"": 1, ""limit"": {weightLimit} }} ],
