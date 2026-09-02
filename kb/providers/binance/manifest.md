@@ -94,7 +94,7 @@ below, because a summary that reads as an annotation is the failure this model e
 
 | category | documentation | verification |
 |---|---|---|
-| 1 endpoints | `confirmed` | `gated`, except the futures websocket routes, now **`pinned`**: `EndpointsTests` asserts the *composed* URL for both the market and user streams, which is where the mistake hides — `new Uri(base, path)` drops a route held in the base |
+| 1 endpoints | `confirmed`, and this time **path by path** rather than as a set — the earlier pass checked base URLs and path shapes, which is how a wrong `v1` survived it | `pinned` for the websocket routes and both server time paths, `EndpointsTests` on each venue asserting the *composed* URL. The rest `gated` |
 | 2 request parameters | `confirmed` at tier 1 from the official Postman collections | futures order shapes are **`pinned`** offline, per order type, both init and modify, with `reduceOnly` branching asserted both ways. The signing scaffolding is `gated` as a whole; `recvWindow`'s value is `none` |
 | 3 response fields | spot `confirmed` at **tier 1** from `rest-api.md`; futures account / query-order / trade `confirmed` at **tier 3** (a reading, not the page); the user-data-stream nested payloads are `unretrievable` | `pinned` per converter, every one having its own test with real fixtures. Negative branches are `none`: a non-GUID cancel id, a non-`TRADING` status, a missing `SPOT` permission, an absent filter dropping the instrument |
 | 4 filters | `confirmed` — every type name and field on both venues, including that spot documents **both** `MIN_NOTIONAL` and `NOTIONAL` while futures documents only `MIN_NOTIONAL` | `pinned`, including the lot-size merge arithmetic — but entirely piggybacked on the exchange-info fixture; there is no filter test of its own |
@@ -123,6 +123,11 @@ from configuration that reads as correct. A mutation doing exactly that is kille
 **Five components have no test file at all:** `WebSocketService`, `ListenKeyResolver`,
 `HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first two
 carry the connection lifecycle for every stream this module runs.
+
+**One lesson from the first live run, kept where the next reader meets it.** A `[DIVERGES]` marker is a
+note that something looks odd. It is not a check, and after a while it reads like one. Spot's server
+time path carried that marker for the whole contract pass and was simply wrong; the run that found it
+was the first thing to actually call the endpoint. Markers record; only a comparison confirms.
 
 **Where the exposure is.** The `none` bucket is the largest by a wide margin, and its centre of mass is
 not where anyone would guess: not the exotic paths, but the constants. Production rate-limit ceilings,
@@ -237,10 +242,10 @@ recorded here only so a future reader knows the omission is deliberate.
 |---|---|---|
 | `GET api/v3/exchangeInfo` | spot | `Spot/Internal/Market/MarketProvider.cs:48` |
 | `GET api/v3/klines` | spot | `Spot/Internal/Market/MarketProvider.cs:91` |
-| `GET /api/v1/time` **[DIVERGES]** — `v1` while the rest of spot's surface is `v3` | spot | `Spot/ProviderRegistrationContextExtensions.cs:98` |
+| `GET /api/v3/time` — **[DRIFT, fixed 2026-09-02]** we called `/api/v1/time` and the first live read run failed on it. The manifest had recorded the version oddity as a divergence and never checked it against the documented endpoint list; a curiosity stood in for a verified fact | spot | `Spot/Internal/Shared/Endpoints.cs:22` |
 | `GET fapi/v1/exchangeInfo` | futures | `UsdFutures/Internal/Market/MarketProvider.cs:51` |
 | `GET fapi/v1/klines` | futures | `UsdFutures/Internal/Market/MarketProvider.cs:100` |
-| `GET /fapi/v1/time` | futures | `UsdFutures/ProviderRegistrationContextExtensions.cs:107` |
+| `GET /fapi/v1/time` **[DIVERGES]** — `v1` here is correct, unlike spot | futures | `UsdFutures/Internal/Shared/Endpoints.cs:35` |
 | `GET /fapi/v2/account` — note `v2` | futures | `UsdFutures/Internal/User/UserProvider.cs:68` |
 | `GET /fapi/v1/openOrders` | futures | `UsdFutures/Internal/User/UserProvider.cs:103` |
 | `GET /fapi/v1/allOrders` | futures | `UsdFutures/Internal/User/UserProvider.cs:163,207,245` |
