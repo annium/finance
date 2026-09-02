@@ -210,6 +210,114 @@ public class UserProviderReadPathTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// Open orders are asked for across every symbol at once — no symbol, no window. Its own request rather
+    /// than a degenerate history one, and the only read path that carries no bounds of any kind.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadOpenOrders_AsksAcrossAllSymbolsAtOnce()
+    {
+        // arrange
+        var paths = new List<string>();
+        var bounded = 0;
+        var symbolScoped = 0;
+        await using var server = this.RunHttpServer(
+            async (request, response) =>
+            {
+                paths.Add(request.Url?.AbsolutePath ?? string.Empty);
+                if (request.QueryString["startTime"] is not null)
+                    bounded++;
+                if (request.QueryString["symbol"] is not null)
+                    symbolScoped++;
+
+                await WriteJsonAsync(response, "[]");
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadOpenOrdersAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.Ok);
+        paths.IsEqual(new[] { "/fapi/v1/openOrders" });
+        bounded.Is(0, "open orders are a snapshot, not a range");
+        symbolScoped.Is(0, "open orders are asked for across every symbol, not one at a time");
+    }
+
+    /// <summary>
+    /// A refused request is handed back as a failure, not as an empty success — the caller can tell "no open
+    /// orders" from "we never found out".
+    /// </summary>
+    /// <remarks>
+    /// The status is <c>ParseError</c>, and that is worth knowing rather than smoothing over: Binance said
+    /// <c>-2015 Invalid API-key</c> and we report that we could not read the answer. The union parses the
+    /// success type first, and when that throws — as it does whenever the success type is a collection and
+    /// the body is an error object — the branch that would have read the exchange's own code never runs
+    /// (<c>Annium.Net.Http</c>, <c>AsResponseExtensions</c>). Every read endpoint returning a list is
+    /// affected, so no failure on any of them can say why.
+    ///
+    /// Pinned as it behaves, not as it should: the fix is in another repository, and a test asserting the
+    /// better answer would fail on correct code today and hide the loss meanwhile.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadOpenOrders_ThatIsRefused_IsAFailureAndNotAnEmptyList()
+    {
+        // arrange
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(@"{ ""code"": -2015, ""msg"": ""Invalid API-key."" }");
+                response.StatusCode(HttpStatusCode.Unauthorized);
+                response.ContentType = MediaTypeNames.Application.Json;
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadOpenOrdersAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.ParseError, "a refusal must not read as success");
+        result.Data.IsDefault("a failed load must carry no data, so it cannot be mistaken for an empty one");
+    }
+
+    /// <summary>
+    /// The same for the account context, where the exchange's reason does survive: the success type is an
+    /// object, so it parses from an error body into a defaulted instance rather than throwing, and the code
+    /// is read. The contrast with the open-orders case above is the whole shape of the defect noted there.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_ThatIsRefused_IsAFailureAndNotAnEmptyAccount()
+    {
+        // arrange
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(
+                    @"{ ""code"": -1021, ""msg"": ""Timestamp outside recvWindow."" }"
+                );
+                response.StatusCode(HttpStatusCode.BadRequest);
+                response.ContentType = MediaTypeNames.Application.Json;
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadContextAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.BadRequest, "a timestamp rejection is a bad request, and says so");
+        result.Data.IsDefault("an account that could not be read is not an account with no balances");
+    }
+
+    /// <summary>
     /// Builds a user provider pointed at the given local server.
     /// </summary>
     /// <param name="server">The local server standing in for the exchange.</param>

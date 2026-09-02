@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Mime;
@@ -15,6 +16,7 @@ using Annium.Finance.Providers.Tests.Lib.Infrastructure;
 using Annium.Net.Http;
 using Annium.Net.Servers.Web;
 using Annium.Testing;
+using NodaTime;
 using Xunit;
 
 namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Market;
@@ -149,6 +151,83 @@ public class MarketProviderReadPathTests : ProvidersTestBase
         var instrument = context.Instruments.Single();
         instrument.MinSum.Is(5m);
         instrument.MaxSum.Is(9_000_000m, "spot reports a maximum notional and it must not be discarded");
+    }
+
+    /// <summary>
+    /// Candle loading pages: each request asks from the minute after the last candle received. Spot runs the
+    /// same base implementation as futures, but the request it builds around it is its own.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadCandles_AsksFromWhereTheLastPageEnded()
+    {
+        // arrange - one candle per response, so every page boundary is a request we can observe
+        var start = Instant.FromUnixTimeMilliseconds(1_700_000_000_000);
+        var minute = Duration.FromMinutes(1);
+        var requested = new List<long>();
+
+        await using var server = this.RunHttpServer(
+            async (request, response) =>
+            {
+                var from = long.Parse(request.QueryString["startTime"]!, CultureInfo.InvariantCulture);
+                requested.Add(from);
+                await WriteJsonAsync(response, $"[[{from},\"1\",\"2\",\"0.5\",\"1.5\",\"10\"]]");
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var batches = new List<int>();
+        await foreach (
+            var batch in provider.LoadCandlesAsync(
+                "BTCUSDT",
+                start,
+                start + minute * 3,
+                TestContext.Current.CancellationToken
+            )
+        )
+            batches.Add(batch.Data.NotNull().Count);
+
+        // assert
+        requested.IsEqual(
+            new[]
+            {
+                start.ToUnixTimeMilliseconds(),
+                (start + minute).ToUnixTimeMilliseconds(),
+                (start + minute * 2).ToUnixTimeMilliseconds(),
+            }
+        );
+        batches.Count.Is(3);
+    }
+
+    /// <summary>
+    /// Exchange info that comes back refused is a failure, not an exchange with no instruments on it. The
+    /// distinction matters more here than elsewhere: an empty instrument set is a state a connector can reach
+    /// legitimately, so a silent failure would be indistinguishable from a venue that had listed nothing.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_ThatIsRefused_IsAFailureAndNotAnEmptyExchange()
+    {
+        // arrange
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(@"{ ""code"": -1003, ""msg"": ""Too many requests."" }");
+                response.StatusCode(HttpStatusCode.TooManyRequests);
+                response.ContentType = MediaTypeNames.Application.Json;
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadContextAsync();
+
+        // assert
+        result.Status.IsNot(MarketOperationStatus.Ok, "a refused exchange info load must not read as success");
+        result.Data.IsDefault("an exchange that could not be read is not an exchange with no instruments");
     }
 
     /// <summary>
