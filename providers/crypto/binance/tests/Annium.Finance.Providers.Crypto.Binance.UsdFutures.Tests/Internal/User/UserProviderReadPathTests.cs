@@ -250,15 +250,16 @@ public class UserProviderReadPathTests : ProvidersTestBase
     /// orders" from "we never found out".
     /// </summary>
     /// <remarks>
-    /// The status is <c>ParseError</c>, and that is worth knowing rather than smoothing over: Binance said
-    /// <c>-2015 Invalid API-key</c> and we report that we could not read the answer. The union parses the
-    /// success type first, and when that throws — as it does whenever the success type is a collection and
-    /// the body is an error object — the branch that would have read the exchange's own code never runs
-    /// (<c>Annium.Net.Http</c>, <c>AsResponseExtensions</c>). Every read endpoint returning a list is
-    /// affected, so no failure on any of them can say why.
+    /// The exchange's own reason survives, and this test exists because for a while it did not. The union
+    /// parsed the success type first, and when that threw — as it does whenever the success type is a
+    /// collection and the body is an error object — the branch reading Binance's code never ran, so every
+    /// read endpoint returning a list reported <c>ParseError</c> and no failure on any of them could say
+    /// why. Fixed upstream in <c>Annium.Net.Http</c> 1.1.49 (<c>AsResponseExtensions</c>, which now tries
+    /// the failure shape after the success shape throws); this asserts the reason we depend on.
     ///
-    /// Pinned as it behaves, not as it should: the fix is in another repository, and a test asserting the
-    /// better answer would fail on correct code today and hide the loss meanwhile.
+    /// The status is <c>BadRequest</c> rather than <c>Forbidden</c> because the code wins over the HTTP
+    /// status: every negative Binance code maps to <c>BadRequest</c>, auth codes included. Recorded as it
+    /// is — the mapping is a separate question from whether the reason arrives at all.
     /// </remarks>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
@@ -281,14 +282,15 @@ public class UserProviderReadPathTests : ProvidersTestBase
         var result = await provider.LoadOpenOrdersAsync();
 
         // assert
-        result.Status.Is(UserOperationStatus.ParseError, "a refusal must not read as success");
+        result.Status.Is(UserOperationStatus.BadRequest, "a refusal must not read as success");
+        result.Message.Is("Invalid API-key.", "the exchange's own reason is what makes the failure actionable");
         result.Data.IsDefault("a failed load must carry no data, so it cannot be mistaken for an empty one");
     }
 
     /// <summary>
-    /// The same for the account context, where the exchange's reason does survive: the success type is an
-    /// object, so it parses from an error body into a defaulted instance rather than throwing, and the code
-    /// is read. The contrast with the open-orders case above is the whole shape of the defect noted there.
+    /// The same for the account context, reached by the other route: the success type is an object, so it
+    /// parses from an error body into a defaulted instance rather than throwing, and the code is read
+    /// without the failure shape ever being tried. Both routes are covered because only one of them broke.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]

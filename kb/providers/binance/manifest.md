@@ -124,14 +124,20 @@ from configuration that reads as correct. A mutation doing exactly that is kille
 `HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first two
 carry the connection lifecycle for every stream this module runs.
 
-**[DEFECT, upstream] An exchange error is discarded whenever the success type is a collection.**
-`Annium.Net.Http`'s `AsResponseExtensions` parses the success type first; when that throws — as it does
-for any error body against a collection type — control leaves for the catch and the branch that would
-have read Binance's `{code, msg}` never runs. So `-2015 Invalid API-key` reaches the caller as
-`ParseError`. Every read endpoint returning a list is affected: open orders, all orders, user trades,
-klines. The account context is the contrast — an object success type parses into a defaulted instance
-rather than throwing, so its code is read. Both behaviours are pinned in
-`UserProviderReadPathTests`; the fix is in another repository.
+**~~[DEFECT, upstream] An exchange error is discarded whenever the success type is a collection.~~ —
+closed.** `Annium.Net.Http`'s `AsResponseExtensions` parsed the success type first; when that threw — as
+it does for any error body against a collection type — control left for the catch and the branch that
+would have read Binance's `{code, msg}` never ran, so `-2015 Invalid API-key` reached the caller as
+`ParseError`. Every read endpoint returning a list was affected: open orders, all orders, user trades,
+klines. Fixed in `Annium.Net.Http` 1.1.49 (annium/base#68) — the failure shape is now tried after the
+success shape throws — and taken up here with the 1.1.49 package bump. `UserProviderReadPathTests` pins
+both routes: the collection one, which broke, and the object one, which never did because an object
+success type parses an error body into a defaulted instance rather than throwing.
+
+A residue worth naming: the reason now arrives, but the status is coarse. `MapOperationCode` sends every
+negative Binance code to `BadRequest`, so an invalid API key reads the same as a malformed parameter,
+and the HTTP 401 that would have mapped to `Forbidden` never gets a say — the exchange's code wins over
+the status. Queued, not closed.
 
 **One lesson from the first live run, kept where the next reader meets it.** A `[DIVERGES]` marker is a
 note that something looks odd. It is not a check, and after a while it reads like one. Spot's server
