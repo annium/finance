@@ -135,6 +135,191 @@ public class UserProviderReadPathTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// Trade history is chunked by the same window as order history, and by the same code — but a test on
+    /// one says nothing about the other, so both are driven.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadTrades_ChunksHistoryByTheSevenDayWindow()
+    {
+        // arrange
+        var windows = new List<(long Start, long End)>();
+        await using var server = this.RunHttpServer(
+            async (request, response) =>
+            {
+                var start = request.QueryString["startTime"];
+                var end = request.QueryString["endTime"];
+                if (start is not null && end is not null)
+                    windows.Add(
+                        (long.Parse(start, CultureInfo.InvariantCulture), long.Parse(end, CultureInfo.InvariantCulture))
+                    );
+
+                await WriteJsonAsync(response, "[]");
+            }
+        );
+        var provider = CreateProvider(server);
+        var since = SystemClock.Instance.GetCurrentInstant() - Duration.FromDays(20);
+
+        // act
+        var result = await provider.LoadTradesAsync("BTCUSDT", since.ToUnixTimeMilliseconds());
+
+        // assert
+        result.Status.Is(UserOperationStatus.Ok);
+        windows.Count.Is(3);
+        foreach (var (start, end) in windows.Take(windows.Count - 1))
+            (end - start).Is(Window);
+        for (var i = 1; i < windows.Count; i++)
+            windows[i].Start.Is(windows[i - 1].End);
+    }
+
+    /// <summary>
+    /// An asset's locked balance is the initial and maintenance margin added together — arithmetic of ours,
+    /// not a field the exchange sends, so no converter test sees it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_LocksInitialAndMaintenanceMarginTogether()
+    {
+        // arrange - a wallet with 100 available, 3 of initial margin and 2 of maintenance
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+                await WriteJsonAsync(
+                    response,
+                    @"{
+                        ""assets"": [ {
+                            ""asset"": ""USDT"",
+                            ""marginBalance"": ""105"",
+                            ""maxWithdrawAmount"": ""100"",
+                            ""initialMargin"": ""3"",
+                            ""maintMargin"": ""2"",
+                            ""updateTime"": 0
+                        } ],
+                        ""positions"": []
+                    }"
+                )
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var context = (await provider.LoadContextAsync()).Data.NotNull();
+
+        // assert
+        var usdt = context.Assets.Single(x => x.Resource == "USDT");
+        usdt.Free.Is(100m, "the free balance is what can be withdrawn");
+        usdt.Locked.Is(5m, "the locked balance is initial and maintenance margin together, not either alone");
+    }
+
+    /// <summary>
+    /// Open orders are asked for across every symbol at once — no symbol, no window. Its own request rather
+    /// than a degenerate history one, and the only read path that carries no bounds of any kind.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadOpenOrders_AsksAcrossAllSymbolsAtOnce()
+    {
+        // arrange
+        var paths = new List<string>();
+        var bounded = 0;
+        var symbolScoped = 0;
+        await using var server = this.RunHttpServer(
+            async (request, response) =>
+            {
+                paths.Add(request.Url?.AbsolutePath ?? string.Empty);
+                if (request.QueryString["startTime"] is not null)
+                    bounded++;
+                if (request.QueryString["symbol"] is not null)
+                    symbolScoped++;
+
+                await WriteJsonAsync(response, "[]");
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadOpenOrdersAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.Ok);
+        paths.IsEqual(new[] { "/fapi/v1/openOrders" });
+        bounded.Is(0, "open orders are a snapshot, not a range");
+        symbolScoped.Is(0, "open orders are asked for across every symbol, not one at a time");
+    }
+
+    /// <summary>
+    /// A refused request is handed back as a failure, not as an empty success — the caller can tell "no open
+    /// orders" from "we never found out".
+    /// </summary>
+    /// <remarks>
+    /// The exchange's own reason survives, and this test exists because for a while it did not. The union
+    /// parsed the success type first, and when that threw — as it does whenever the success type is a
+    /// collection and the body is an error object — the branch reading Binance's code never ran, so every
+    /// read endpoint returning a list reported <c>ParseError</c> and no failure on any of them could say
+    /// why. Fixed upstream in <c>Annium.Net.Http</c> 1.1.49 (<c>AsResponseExtensions</c>, which now tries
+    /// the failure shape after the success shape throws); this asserts the reason we depend on.
+    ///
+    /// The status is <c>BadRequest</c> rather than <c>Forbidden</c> because the code wins over the HTTP
+    /// status: every negative Binance code maps to <c>BadRequest</c>, auth codes included. Recorded as it
+    /// is — the mapping is a separate question from whether the reason arrives at all.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadOpenOrders_ThatIsRefused_IsAFailureAndNotAnEmptyList()
+    {
+        // arrange
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(@"{ ""code"": -2015, ""msg"": ""Invalid API-key."" }");
+                response.StatusCode(HttpStatusCode.Unauthorized);
+                response.ContentType = MediaTypeNames.Application.Json;
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadOpenOrdersAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.BadRequest, "a refusal must not read as success");
+        result.Message.Is("Invalid API-key.", "the exchange's own reason is what makes the failure actionable");
+        result.Data.IsDefault("a failed load must carry no data, so it cannot be mistaken for an empty one");
+    }
+
+    /// <summary>
+    /// The same for the account context, reached by the other route: the success type is an object, so it
+    /// parses from an error body into a defaulted instance rather than throwing, and the code is read
+    /// without the failure shape ever being tried. Both routes are covered because only one of them broke.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_ThatIsRefused_IsAFailureAndNotAnEmptyAccount()
+    {
+        // arrange
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(
+                    @"{ ""code"": -1021, ""msg"": ""Timestamp outside recvWindow."" }"
+                );
+                response.StatusCode(HttpStatusCode.BadRequest);
+                response.ContentType = MediaTypeNames.Application.Json;
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var result = await provider.LoadContextAsync();
+
+        // assert
+        result.Status.Is(UserOperationStatus.BadRequest, "a timestamp rejection is a bad request, and says so");
+        result.Data.IsDefault("an account that could not be read is not an account with no balances");
+    }
+
+    /// <summary>
     /// Builds a user provider pointed at the given local server.
     /// </summary>
     /// <param name="server">The local server standing in for the exchange.</param>

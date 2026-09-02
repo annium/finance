@@ -65,16 +65,19 @@ test-offline:
     @echo "=== $0 ==="
     dotnet test -c Release --no-build --report-xunit-trx -- --filter-not-trait "block=read" --filter-not-trait "block=write"
 
-# connects to real exchanges and real accounts, and mutates nothing
+# connects to real exchanges and real accounts, and mutates nothing.
+# --ignore-exit-code 8 because most projects hold none of these tests, and a project that matched nothing
+# otherwise fails the whole run with "zero tests ran" - a green run reporting failure. The cost is that a
+# filter matching nothing everywhere also passes; the summary says "total: 0" when that happens
 test-read:
     @echo "=== $0 ==="
-    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=read"
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=read" --ignore-exit-code 8
 
 # places and cancels real orders, opens and closes real positions. Run it alone, on an account whose state
 # you have just looked at, and never alongside anything else touching the same one
 test-write:
     @echo "=== $0 ==="
-    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=write"
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=write" --ignore-exit-code 8
 
 pack:
     #!/usr/bin/env bash

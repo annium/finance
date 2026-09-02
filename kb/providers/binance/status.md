@@ -25,7 +25,7 @@ created: 2026-09-01
 | 1 — derive existing state | **converged** | ~70 anchors verified and re-anchored after the environment removal; four missing entries added; both axes censused entry by entry against the test suites | none |
 | 2 — collect facts, compute drift | **converged, with two accepted gaps** | all 13 futures pages and 7 spot files snapshotted; request side closed at tier 1 from the official Postman collections; every category given a documentation outcome | **accepted, not open**: the nested user-data-stream payloads (~20 short field names) are `unretrievable` — no available technique reaches them, so waiting changes nothing; and the `avgPrice` question is `contested`, settleable only by a live order. Both are recorded against their entries rather than left as unfinished work |
 | 3 — wire types and serialization | not-started | — | — |
-| 4 — provider, read paths (+ registration, config, read-only live validation) | **partial** | the futures websocket routes are fixed and `pinned` by `EndpointsTests`; the read paths themselves are untouched | read paths, their tests, and the read-only live stages |
+| 4 — provider, read paths (+ registration, config, read-only live validation) | **converged** | every read path on both venues driven offline, failure paths included; endpoints pinned; **live read block green: 20 tests, 14 passed, 6 skipped, none failed** | none. The upstream defect found here — an exchange error discarded when the success type is a collection — was fixed in `Annium.Net.Http` 1.1.49 and taken up with the package bump; the test that pinned the loss now pins the reason |
 | 5 — connector, streams and orders (+ registration, config, trading live validation) | not-started | — | unblocked: the user stream now addresses `/private`. Still needs its own tests — `WebSocketService` and `ListenKeyResolver` have no test file at all |
 
 ## Queued work
@@ -51,6 +51,12 @@ Named here rather than left implied, with the reason each is not being done now.
   two carry the connection lifecycle of every stream this module runs.
 - **The read-side enumeration gaps** — most order-type and order-status wire strings are never parsed
   by any test, only written. Work for the step that owns serialization.
+- **Failure statuses are coarser than the exchange's own.** `MapOperationCode` maps every negative
+  Binance code to `BadRequest`, so an invalid API key, an expired timestamp and a malformed parameter
+  are indistinguishable to a caller, and the HTTP status — which would have told `Forbidden` from
+  `BadRequest` — is consulted only on the branch where the error body parsed as success. Not done now
+  because the useful split is by what a caller would do differently (retry, re-sign, stop), and that is
+  a decision about the runtime rather than a mapping table.
 
 ## Reconcile history
 
@@ -61,3 +67,5 @@ findings were read from.
 |---|---|---|---|
 | 2026-09-01 | 1-2 — contract | *(derived from code, no report)* | manifest inventoried; `checked_against: never` |
 | 2026-09-01 | 1-2 — contract | [`2026.09/2026.09.01-contract.md`](2026.09/2026.09.01-contract.md) | **blocking drift**: futures WebSocket URLs decommissioned. Step 1 converged; step 2 complete but for the futures endpoint schemas. One unverified assumption settled in our favour; the sandbox environment removed from the code entirely |
+| 2026-09-02 | 4 — provider | *(no report; the work is in the branch)* | every read path driven offline on both venues, failure paths included; **first live read run**, which failed on spot's server time path — `v1` where the exchange documents `v3`, an oddity the manifest had marked and never checked. Fixed and pinned; the block is green. Step 4 was called converged once before it was, on the strength of the live run alone — the checklist had three items left |
+| 2026-09-02 | 4 — provider | *(no report; the work is in the branch)* | packages bumped to 1.1.49, closing the upstream union-parse defect this step found. The test that pinned the loss now asserts what the exchange actually said. `just update` could not be used: `.xs` points the tool at `api.pkg.annium.com`, which serves a certificate for `*.avito.ru` — versions were bumped by hand instead, and the registry is an infrastructure question outside this work |

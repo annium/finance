@@ -71,7 +71,7 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Sends a limit buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
-    /// real exchange; in the read block.
+    /// real exchange and mutates the account; in the **write** block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -99,7 +99,7 @@ public class UserConnectorTests : UserConnectorTestBase
     /// <summary>
     /// Places a real minimum-size limit buy, asserts the currency balance locks up around it, then cancels
     /// it and asserts the balance is released. Talks to the real exchange and places/cancels a real order;
-    /// in the read block.
+    /// in the **write** block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -133,7 +133,7 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Sends a market buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
-    /// real exchange; in the read block.
+    /// real exchange and mutates the account; in the **write** block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -156,7 +156,7 @@ public class UserConnectorTests : UserConnectorTestBase
     /// take-profit, each market and limit) via <see cref="TestOrder"/> - each rejected first with an
     /// absurd trigger, then placed for real and canceled - before closing the position with a market sell
     /// and asserting balance/position moved as expected throughout. Talks to the real exchange and
-    /// places/cancels/fills several real orders; in the read block.
+    /// places/cancels/fills several real orders; in the **write** block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -273,7 +273,7 @@ public class UserConnectorTests : UserConnectorTestBase
     /// <summary>
     /// Places a real limit order, then sends a modify request with an absurd quantity and asserts the real
     /// exchange rejects it. Talks to the real exchange and places a real order; skipped unless
-    /// the read block is asked for.
+    /// the **write** block is asked for.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -302,7 +302,7 @@ public class UserConnectorTests : UserConnectorTestBase
     /// Places a real limit order, modifies it to a larger quantity and higher price, asserts the currency
     /// balance locks up around the modified order, then cancels it and asserts the balance is released.
     /// Talks to the real exchange and places/modifies/cancels a real order; skipped unless
-    /// the read block is asked for.
+    /// the **write** block is asked for.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
@@ -384,7 +384,7 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Cancels every open order on the account for <see cref="UserConnectorTestBase.Symbol"/>. Talks to the
-    /// real exchange; in the read block.
+    /// real exchange and mutates the account; in the **write** block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact(
