@@ -13,9 +13,10 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.Shar
 /// <summary>
 /// Verifies that the USD-M futures <see cref="IServerTimeSource"/> connects to the live exchange, reports
 /// <see cref="ConnectorStatus.Connected"/>, and starts tracking a synced server time. Read-only, but it does
-/// open a real connection to Binance, so it runs only when <see cref="Exchange.IsEnabled"/> is set.
+/// open a real connection to Binance, so it runs only when the read block is asked for.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
+[Trait(TestBlock.Name, TestBlock.Read)]
 public class ServerTimeProviderTests : ProvidersTestBase
 {
     /// <summary>
@@ -37,10 +38,10 @@ public class ServerTimeProviderTests : ProvidersTestBase
     /// <summary>
     /// Waits for the connector status to reach <see cref="ConnectorStatus.Connected"/> against the live
     /// exchange, then asserts the server time source has picked up a value. Talks to the real exchange;
-    /// skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact]
     public async Task Works()
     {
         // arrange

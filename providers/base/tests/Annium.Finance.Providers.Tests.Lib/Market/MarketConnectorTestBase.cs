@@ -16,6 +16,7 @@ namespace Annium.Finance.Providers.Tests.Lib.Market;
 /// Base for tests that connect to a provider's live market connector and check that the instrument and
 /// ticker stream it reports for a fixed symbol come through correctly. Read-only: it never places orders.
 /// </summary>
+[Trait(TestBlock.Name, TestBlock.Read)]
 public abstract class MarketConnectorTestBase : ProvidersTestBase
 {
     /// <summary>The symbol the derived test drives the market connector scenario for.</summary>

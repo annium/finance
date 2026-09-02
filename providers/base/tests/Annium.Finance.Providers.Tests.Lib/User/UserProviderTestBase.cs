@@ -17,6 +17,7 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// account and check that it can load context, orders and trades. Read-only: it never places orders itself,
 /// though it does authenticate against a real account.
 /// </summary>
+[Trait(TestBlock.Name, TestBlock.Read)]
 public abstract class UserProviderTestBase : ProvidersTestBase
 {
     /// <summary>The account credentials/environment to resolve the user provider for.</summary>

@@ -27,7 +27,8 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// <see cref="UserSettings"/> passed to the constructor, and this base actively manages that account's state
 /// around each test - on setup it cancels every open order on <see cref="Symbol"/> and closes any active
 /// position on it, and on teardown it cancels open orders again and market-sells off any remaining position,
-/// so tests start and leave the account flat. Gate real runs behind <see cref="Exchange.IsEnabled"/>.
+/// so tests start and leave the account flat. Everything derived from this base is in the write block, and
+/// nothing but that block selects it.
 /// </summary>
 /// <remarks>
 /// One provider derives from this: the Binance USD-M futures suite. Spot has no user-connector tests at all -
@@ -36,6 +37,7 @@ namespace Annium.Finance.Providers.Tests.Lib.User;
 /// short positions, which is a defect already fixed here; they were removed rather than left as something to
 /// revive. The coverage they implied still does not exist.
 /// </remarks>
+[Trait(TestBlock.Name, TestBlock.Write)]
 public abstract class UserConnectorTestBase : ProvidersTestBase, IAsyncLifetime
 {
     /// <summary>Gets the instrument metadata resolved for <see cref="Symbol"/> from the market connector.</summary>

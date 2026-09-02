@@ -1,74 +1,100 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working in this repository.
 
-## Development Commands
+## What this repository is
 
-**Essential Commands:**
-- `make setup` - Restore dotnet tools (CSharpier, xs.cli)
-- `make format` - Format code using CSharpier and xs format
-- `make build` - Build solution in Release configuration
-- `make test` - Run all tests with TRX logging
-- `make clean` - Clean solution and remove packages
+`Annium.Finance` — exchange provider integrations. A **provider** is one venue's market type: Binance
+spot and Binance USD-M futures are two providers, not one. Each speaks to a real exchange over REST and
+websockets, and the user half of one places real orders on a real account.
 
-**Documentation Commands:**
-- `make docs-build` - Build documentation using DocFX
-- `make docs-serve` - Build and serve documentation locally at http://localhost:8080
-- `make docs-clean` - Clean documentation artifacts (_site, api, obj)
-- `make docs-watch` - Build and serve documentation with file watching
+Twelve projects, `net10.0`, solution `Annium.Finance.sln`.
 
-**Single Test Execution:**
-```bash
-dotnet test path/to/TestProject.csproj --filter "TestMethodName"
-dotnet test --filter "ClassName.TestMethodName"
+```
+providers/
+  base/
+    src/    Abstractions.Domain · Abstractions.Connectors · Core
+    tests/  the two offline suites, plus Tests.Lib — the shared fixture library
+  crypto/binance/
+    src/    Binance.Base (shared transport, signing, sockets) · Binance.Spot · Binance.UsdFutures
+    tests/  one suite per assembly
+kb/providers/<provider>/   the contract manifest and reconcile status per provider
+.claude/skills/            implement-provider and its contract step
 ```
 
-**Package Management:**
-- `make update` - Update all packages using xs tool
-- `make pack` - Create NuGet packages
-- Uses central package management via `Directory.Packages.props`
+`base/src/Core` holds what every provider shares: the connector and provider base classes, the loaders,
+the rate limiter, the status monitor. `Binance.Base` holds what both Binance venues share. Spot and
+futures **diverge more than they look** — order-type wire strings, filter names, one letter of the trade
+maker flag — so a change to one is not a change to the other. `kb/providers/binance/manifest.md` records
+where.
 
-## Architecture Overview
+## Commands
 
-This is a modular .NET 9.0 framework organized into logical domains:
+`just` is the entry point; `just` alone lists every recipe.
 
-**Core Framework Structure:**
-- `base/Annium/` - Core utilities, extensions, testing framework
-- `base/Core/` - DI, Mediator, Mapper, Runtime fundamentals  
-- `base/Architecture/` - CQRS, HTTP, ViewModel patterns
-- `base/Data/` - Models, Result patterns, Tables
-- `base/Configuration/` - Multi-provider configuration system
-- `base/Net/` - HTTP, Sockets, WebSockets, Mail
-- `base/Serialization/` - JSON, MessagePack, YAML serializers
-- `base/Extensions/` - Jobs, Validation, Workers, Pooling, etc.
-- `integrations/` - Third-party integrations (Graylog, NodaTime, Seq)
+| command | what it does |
+|---|---|
+| `just setup` | restore dotnet tools (CSharpier, doclint, xs) |
+| `just format` | CSharpier + `xs format` |
+| `just build` | build in Release |
+| `just test` | the offline block — see below |
+| `just docs-lint` | XML documentation lint over every `.cs` |
+| `just update` / `just clean` / `just pack` | packages, artifacts, NuGet packages |
 
-## Key Patterns
+`just test` runs with `--no-build`, so **build first** or you will test a stale binary. Running a single
+class:
 
-**Testing Framework:**
-- Custom `TestBase` class with DI and logging setup
-- Fluent assertions: `.Is()`, `.IsTrue()`, `.Has()`, `.IsEmpty()`
-- Exception testing: `Wrap.It().Throws<ExceptionType>()`
-- Test naming: `MethodName_Scenario_ExpectedResult()`
+```
+dotnet test --project <path>.csproj -c Release --no-build -- --filter-class '*SomeTests'
+```
 
-**Result Pattern:**
-All operations return structured results (`IResult<T>`, `IBooleanResult`, `IStatusResult`) instead of throwing exceptions for business logic failures.
+## Tests are in three blocks, and one of them trades
 
-**Service Registration:**
-- Use `ServiceContainer` abstraction over Microsoft.Extensions.DI
-- "Service pack" pattern for modular feature registration
-- Extension methods for fluent configuration APIs
+Sorted by an xunit trait on the class or a base of it — traits inherit, so marking a fixture base
+carries every suite built on it.
 
-**Code Quality:**
-- Warnings as errors with nullable reference types
-- Custom analyzers for exception naming conventions
-- XML documentation required for public APIs
-- CSharpier formatting with .editorconfig rules
+| recipe | block | touches |
+|---|---|---|
+| `just test` → `test-offline` | unmarked | nothing outside the process |
+| `just test-read` | `block=read` | real exchanges and real accounts, mutating nothing |
+| `just test-write` | `block=write` | **places and cancels real orders, opens and closes positions** |
 
-## Project Conventions
+**The trait is the only thing separating a routine run from one that trades.** There is no second gate:
+an environment variable each exchange test was checked against was dropped deliberately, since it
+protected only against a trait being wrong and cost a variable on every legitimate run. A trait being
+wrong is an accepted risk; marking a test is therefore part of writing it, not a later tidy-up.
 
-- Each module has `src/` and `tests/` directories
-- Test projects named `{Module}.Tests`
-- Shared build configuration via `Directory.Build.props` inheritance
-- All projects target .NET 9.0 with latest C# language version
-- Use `Annium.{Module}.{SubModule}` naming convention
+Absence of a trait means offline — the safe default in the direction that matters, since a test nobody
+marked joins the block that always runs rather than the one that never does.
+
+`Exchange.HasCredentials` is not a permission but a condition of possibility: without `test.env` the
+tests needing keys say so instead of failing on a missing one. `test.env` holds real credentials, is
+gitignored, and only `.example` is tracked.
+
+Before `just test-write`: check the account's position mode, that no position exists on the test symbol
+the fixture would close as cleanup, and the available margin. Run it alone.
+
+## Conventions
+
+- Nullable enabled, **warnings as errors** — including IDE analyzers CI enforces and a local
+  `dotnet test` will not surface. `just build` is the check that matters.
+- XML documentation required on every member; `just docs-lint` enforces it. No `inheritdoc`.
+- CSharpier formatting; run `just format` before committing.
+- Central package management via `Directory.Packages.props`.
+- Test naming `MethodName_Scenario_ExpectedResult`; assertions are Annium.Testing's fluent ones
+  (`.Is()`, `.IsTrue()`, `.Has()`, `.IsEmpty()`).
+- **`Expect.ToAsync` is the assertion; `Wait.UntilAsync` is not.** The latter swallows the cancellation
+  its own timeout raises and returns normally, so a wait on it followed by a lenient check passes when
+  the condition never held.
+- Operations return `IResult<T>` / `MarketResult` / `UserResult` rather than throwing for business
+  failures.
+
+## Working on a provider
+
+`/implement-provider <provider>` drives one to a target state in five gated steps: derive what the code
+assumes, collect the provider's actual API facts and the drift between them, then wire types, provider
+and connector, each with its tests and its own live validation. `kb/providers/<provider>/manifest.md` is
+the contract every later step is measured against; `status.md` says how far it got.
+
+Before debugging an exchange failure, ask whether the thing we depend on changed. The manifest exists so
+that question is answerable in minutes rather than by re-reading our own code.

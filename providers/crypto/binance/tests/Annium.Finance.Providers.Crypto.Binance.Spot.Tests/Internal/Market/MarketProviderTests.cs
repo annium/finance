@@ -11,7 +11,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Market;
 /// Runs <see cref="MarketProviderTestBase.MarketProviderBaseAsync"/> against the real Binance Spot market
 /// provider for BTCUSDT: it loads context and two days of one-minute candles and asserts the count and data
 /// look right. Read-only, but it does call the real exchange, so it runs only when
-/// <see cref="Exchange.IsEnabled"/> is set.
+/// the read block is asked for.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
 public class MarketProviderTests : MarketProviderTestBase
@@ -35,10 +35,10 @@ public class MarketProviderTests : MarketProviderTestBase
     /// <summary>
     /// Loads context and two days of one-minute BTCUSDT candles from the live Spot market provider and
     /// asserts the expected candle count. Talks to the real exchange; skipped unless
-    /// <see cref="Exchange.IsEnabled"/> is set.
+    /// the read block is asked for.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact]
     public Task MarketProviderAsync()
     {
         return MarketProviderBaseAsync(Settings.Market.GetProviderKey());

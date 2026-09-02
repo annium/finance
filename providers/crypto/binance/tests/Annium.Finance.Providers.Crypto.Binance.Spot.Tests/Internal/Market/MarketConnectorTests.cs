@@ -11,7 +11,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.Market;
 /// Runs <see cref="MarketConnectorTestBase.MarketConnectorBaseAsync"/> against the real Binance Spot market
 /// connector for BTCUSDT: it connects, subscribes to the ticker stream, and asserts instrument metadata and
 /// live prices come through. Read-only, but it does open a real connection to Binance, so it runs only when
-/// <see cref="Exchange.IsEnabled"/> is set.
+/// the read block is asked for.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
 public class MarketConnectorTests : MarketConnectorTestBase
@@ -34,10 +34,10 @@ public class MarketConnectorTests : MarketConnectorTestBase
 
     /// <summary>
     /// Connects the live Spot market connector and asserts it reports instrument metadata and a ticker for
-    /// BTCUSDT. Talks to the real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// BTCUSDT. Talks to the real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact]
     public Task MarketConnectorAsync()
     {
         return MarketConnectorBaseAsync(Settings.Market.GetProviderKey());

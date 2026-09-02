@@ -13,6 +13,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.Spot.Tests.Internal.User.Servi
 /// rather than against a live account.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
+[Trait(TestBlock.Name, TestBlock.Read)]
 public class SignatureServiceTests : ProvidersTestBase
 {
     /// <summary>

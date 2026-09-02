@@ -53,15 +53,28 @@ build:
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
     dotnet build -c Release --nologo -v q -p:PackageVersion=$packageVersion
 
-test:
-    @echo "=== $0 ==="
-    dotnet test -c Release --no-build --report-xunit-trx
+# the default run: everything that needs neither the exchange nor credentials. Blocks are additive by
+# cost, so the cheap tests stay first and a failure in them is seen before anything expensive starts
+test: test-offline
 
-# the tests that talk to a real exchange are skipped by default - they need credentials in test.env, and
-# the order ones place and cancel actual orders. This runs them, and is deliberate by construction
-test-exchange:
+# a test belongs to a block by an xunit trait on its class or a base of it - see TestBlock. Absence means
+# offline, which is the safe default in the direction that matters: a test nobody marked joins the block
+# that always runs rather than the one that never does. The trait decides selection only; what keeps a
+# trading test from reaching the exchange is its own SkipUnless gate, and that holds however it is marked
+test-offline:
     @echo "=== $0 ==="
-    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-not-trait "block=read" --filter-not-trait "block=write"
+
+# connects to real exchanges and real accounts, and mutates nothing
+test-read:
+    @echo "=== $0 ==="
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=read"
+
+# places and cancels real orders, opens and closes real positions. Run it alone, on an account whose state
+# you have just looked at, and never alongside anything else touching the same one
+test-write:
+    @echo "=== $0 ==="
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=write"
 
 pack:
     #!/usr/bin/env bash
