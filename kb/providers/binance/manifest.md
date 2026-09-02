@@ -124,6 +124,15 @@ from configuration that reads as correct. A mutation doing exactly that is kille
 `HttpRequestSignatureExtensions`, `HttpRequestLogExtensions`, and the filter converters. The first two
 carry the connection lifecycle for every stream this module runs.
 
+**[DEFECT, upstream] An exchange error is discarded whenever the success type is a collection.**
+`Annium.Net.Http`'s `AsResponseExtensions` parses the success type first; when that throws — as it does
+for any error body against a collection type — control leaves for the catch and the branch that would
+have read Binance's `{code, msg}` never runs. So `-2015 Invalid API-key` reaches the caller as
+`ParseError`. Every read endpoint returning a list is affected: open orders, all orders, user trades,
+klines. The account context is the contrast — an object success type parses into a defaulted instance
+rather than throwing, so its code is read. Both behaviours are pinned in
+`UserProviderReadPathTests`; the fix is in another repository.
+
 **One lesson from the first live run, kept where the next reader meets it.** A `[DIVERGES]` marker is a
 note that something looks odd. It is not a check, and after a while it reads like one. Spot's server
 time path carried that marker for the whole contract pass and was simply wrong; the run that found it
