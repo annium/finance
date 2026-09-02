@@ -104,7 +104,7 @@ public static class ProviderRegistrationContextExtensions
     {
         var httpApi = Endpoints.HttpApi;
 
-        return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, "/fapi/v1/time");
+        return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, Endpoints.ServerTimeUriPath);
     }
 
     /// <summary>

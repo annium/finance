@@ -4,6 +4,7 @@ using Annium.Finance.Providers.Abstractions.Domain.Market;
 using Annium.Finance.Providers.Abstractions.Domain.User;
 using Annium.Finance.Providers.Core;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Market;
+using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.Shared;
 using Annium.Finance.Providers.Crypto.Binance.UsdFutures.Internal.User;
 using Annium.Finance.Providers.Tests.Lib;
 using Annium.Testing;
@@ -85,6 +86,21 @@ public class EndpointsTests : ProvidersTestBase
 
         // assert
         uri.ToString().Is("wss://fstream.binance.com/private/ws/SOME_LISTEN_KEY");
+    }
+
+    /// <summary>
+    /// The server time path is the one the exchange documents for this venue. It was wrong on the spot side
+    /// for as long as nobody ran it: the manifest recorded the version oddity as a divergence and never
+    /// checked it against the documented endpoint list, so a curiosity stood in for a verified fact until a
+    /// live run failed on it. Pinned on both venues now, since the two genuinely differ.
+    /// </summary>
+    [Fact]
+    public void ServerTime_IsAskedForAtTheDocumentedPath()
+    {
+        // assert
+        new Uri(Endpoints.HttpApi, Endpoints.ServerTimeUriPath)
+            .ToString()
+            .Is("https://fapi.binance.com/fapi/v1/time");
     }
 
     /// <summary>

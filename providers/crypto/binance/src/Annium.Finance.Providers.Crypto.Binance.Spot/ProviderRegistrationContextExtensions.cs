@@ -95,7 +95,7 @@ public static class ProviderRegistrationContextExtensions
     {
         var httpApi = Endpoints.HttpApi;
 
-        return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, "/api/v1/time");
+        return sp.CreateServerTimeProvider(ServerTimeKey, httpApi, Endpoints.ServerTimeUriPath);
     }
 
     /// <summary>Creates the rate limiter shared across all Binance spot requests, matching Binance's request weight limit.</summary>
