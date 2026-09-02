@@ -135,6 +135,81 @@ public class UserProviderReadPathTests : ProvidersTestBase
     }
 
     /// <summary>
+    /// Trade history is chunked by the same window as order history, and by the same code — but a test on
+    /// one says nothing about the other, so both are driven.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadTrades_ChunksHistoryByTheSevenDayWindow()
+    {
+        // arrange
+        var windows = new List<(long Start, long End)>();
+        await using var server = this.RunHttpServer(
+            async (request, response) =>
+            {
+                var start = request.QueryString["startTime"];
+                var end = request.QueryString["endTime"];
+                if (start is not null && end is not null)
+                    windows.Add(
+                        (long.Parse(start, CultureInfo.InvariantCulture), long.Parse(end, CultureInfo.InvariantCulture))
+                    );
+
+                await WriteJsonAsync(response, "[]");
+            }
+        );
+        var provider = CreateProvider(server);
+        var since = SystemClock.Instance.GetCurrentInstant() - Duration.FromDays(20);
+
+        // act
+        var result = await provider.LoadTradesAsync("BTCUSDT", since.ToUnixTimeMilliseconds());
+
+        // assert
+        result.Status.Is(UserOperationStatus.Ok);
+        windows.Count.Is(3);
+        foreach (var (start, end) in windows.Take(windows.Count - 1))
+            (end - start).Is(Window);
+        for (var i = 1; i < windows.Count; i++)
+            windows[i].Start.Is(windows[i - 1].End);
+    }
+
+    /// <summary>
+    /// An asset's locked balance is the initial and maintenance margin added together — arithmetic of ours,
+    /// not a field the exchange sends, so no converter test sees it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task LoadContext_LocksInitialAndMaintenanceMarginTogether()
+    {
+        // arrange - a wallet with 100 available, 3 of initial margin and 2 of maintenance
+        await using var server = this.RunHttpServer(
+            async (_, response) =>
+                await WriteJsonAsync(
+                    response,
+                    @"{
+                        ""assets"": [ {
+                            ""asset"": ""USDT"",
+                            ""marginBalance"": ""105"",
+                            ""maxWithdrawAmount"": ""100"",
+                            ""initialMargin"": ""3"",
+                            ""maintMargin"": ""2"",
+                            ""updateTime"": 0
+                        } ],
+                        ""positions"": []
+                    }"
+                )
+        );
+        var provider = CreateProvider(server);
+
+        // act
+        var context = (await provider.LoadContextAsync()).Data.NotNull();
+
+        // assert
+        var usdt = context.Assets.Single(x => x.Resource == "USDT");
+        usdt.Free.Is(100m, "the free balance is what can be withdrawn");
+        usdt.Locked.Is(5m, "the locked balance is initial and maintenance margin together, not either alone");
+    }
+
+    /// <summary>
     /// Builds a user provider pointed at the given local server.
     /// </summary>
     /// <param name="server">The local server standing in for the exchange.</param>
