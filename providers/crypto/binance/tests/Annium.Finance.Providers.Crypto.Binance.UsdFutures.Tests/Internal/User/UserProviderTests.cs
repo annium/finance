@@ -11,7 +11,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User
 /// Runs <see cref="UserProviderTestBase"/>'s context/orders/trades checks against the real Binance USD-M
 /// futures user provider for BTCUSDT, authenticating with the account in <see cref="Settings.User"/>.
 /// Read-only, but it does authenticate against a real account, so every case runs only when
-/// <see cref="Exchange.IsEnabled"/> is set.
+/// the read block is asked for.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
 public class UserProviderTests : UserProviderTestBase
@@ -43,49 +43,73 @@ public class UserProviderTests : UserProviderTestBase
 
     /// <summary>
     /// Loads the account's context from the live provider and asserts it reports assets. Talks to the real
-    /// exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadContextAsync() => LoadContextBaseAsync();
 
     /// <summary>
     /// Loads the account's open orders from the live provider and asserts the call succeeds. Talks to the
-    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadOpenOrdersAsync() => LoadOpenOrdersBaseAsync();
 
     /// <summary>
     /// Loads BTCUSDT's most recent orders (no time bound) from the live provider and asserts the call
-    /// succeeds. Talks to the real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// succeeds. Talks to the real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadLatestOrdersAsync() => LoadLatestOrdersBaseAsync();
 
     /// <summary>
     /// Loads BTCUSDT's orders from the last day from the live provider and asserts the call succeeds. Talks
-    /// to the real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// to the real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadHistoryOrdersAsync() => LoadHistoryOrdersBaseAsync();
 
     /// <summary>
     /// Loads BTCUSDT's most recent trades (no time bound) from the live provider and asserts the call
-    /// succeeds. Talks to the real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// succeeds. Talks to the real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadLatestTradesAsync() => LoadLatestTradesBaseAsync();
 
     /// <summary>
     /// Loads BTCUSDT's trades from the last day from the live provider and asserts the call succeeds. Talks
-    /// to the real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// to the real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public Task LoadHistoryTradesAsync() => LoadHistoryTradesBaseAsync();
 }

@@ -68,13 +68,13 @@ test-offline:
 # connects to real exchanges and real accounts, and mutates nothing
 test-read:
     @echo "=== $0 ==="
-    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=read"
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=read"
 
 # places and cancels real orders, opens and closes real positions. Run it alone, on an account whose state
 # you have just looked at, and never alongside anything else touching the same one
 test-write:
     @echo "=== $0 ==="
-    FINANCE_EXCHANGE_TESTS=1 dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=write"
+    dotnet test -c Release --no-build --report-xunit-trx -- --filter-trait "block=write"
 
 pack:
     #!/usr/bin/env bash

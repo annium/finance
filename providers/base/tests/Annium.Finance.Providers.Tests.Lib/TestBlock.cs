@@ -5,11 +5,11 @@ namespace Annium.Finance.Providers.Tests.Lib;
 /// real exchange, or the ones that trade on it.
 /// </summary>
 /// <remarks>
-/// This decides **selection**, never safety. What keeps a trading test from running is its
-/// <c>SkipUnless</c> gate on <see cref="Exchange.IsEnabled"/>, and that gate holds however the class is
-/// marked - so a mislabelled test runs in the wrong block at worst, and cannot reach the exchange by
-/// accident. The two mechanisms are deliberately independent; collapsing them into one would make a typo in
-/// a trait name enough to place an order.
+/// This is the only thing separating a routine run from one that trades, which makes marking a test part
+/// of writing it rather than a later tidy-up. There used to be a second mechanism - an environment
+/// variable each exchange test was gated on - and it was dropped deliberately: it protected against a
+/// trait being wrong, and a trait being wrong is an accepted risk here, while the cost was that every
+/// live run needed a variable set from somewhere the recipe could not see.
 ///
 /// Absence of the trait means <c>offline</c>. That is the safe default in the direction that matters: a new
 /// test nobody marked joins the block that is always run, rather than the block that is never run.

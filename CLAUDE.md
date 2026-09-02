@@ -59,17 +59,20 @@ carries every suite built on it.
 | `just test-read` | `block=read` | real exchanges and real accounts, mutating nothing |
 | `just test-write` | `block=write` | **places and cancels real orders, opens and closes positions** |
 
-**The trait decides selection; `SkipUnless` on `Exchange.IsEnabled` decides safety.** They are
-independent on purpose — one mechanism serving both would make a typo in a trait name enough to place
-an order. Absence of a trait means offline, which is the safe default in the direction that matters.
+**The trait is the only thing separating a routine run from one that trades.** There is no second gate:
+an environment variable each exchange test was checked against was dropped deliberately, since it
+protected only against a trait being wrong and cost a variable on every legitimate run. A trait being
+wrong is an accepted risk; marking a test is therefore part of writing it, not a later tidy-up.
 
-**Never set `FINANCE_EXCHANGE_TESTS` yourself.** `test.env` files hold real credentials, are gitignored,
-and only `.example` is tracked. Before `test-write`, check the account's position mode, that no position
-exists on the test symbol the fixture would close as cleanup, and the available margin — and run it
-alone.
+Absence of a trait means offline — the safe default in the direction that matters, since a test nobody
+marked joins the block that always runs rather than the one that never does.
 
-Marking a test is part of writing it. An unmarked live test lands in the default block, where its gate
-skips it and its absence reads as coverage.
+`Exchange.HasCredentials` is not a permission but a condition of possibility: without `test.env` the
+tests needing keys say so instead of failing on a missing one. `test.env` holds real credentials, is
+gitignored, and only `.example` is tracked.
+
+Before `just test-write`: check the account's position mode, that no position exists on the test symbol
+the fixture would close as cleanup, and the available margin. Run it alone.
 
 ## Conventions
 

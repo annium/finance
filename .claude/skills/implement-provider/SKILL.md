@@ -16,8 +16,9 @@ documentation all converge through the same loop.
 
 Some of what this skill validates places **real orders on a real account**.
 
-- **NEVER set `FINANCE_EXCHANGE_TESTS` on your own.** Steps 4 and 5 carry the live runs and each stage
-  is a human gate. The variable is set by the user, or by you only when the user has approved *that stage*
+- **Never run the read or write block on your own.** Steps 4 and 5 carry the live runs and each stage is
+  a human gate. In this repository nothing but the block's trait stands between a routine run and a
+  trading one, so `just test-write` is the act, not a preliminary to it. The variable is set by the user, or by you only when the user has approved *that stage*
   in *that call*.
 - `test.env` files hold real credentials. Never read them for their values, never print them, never
   commit them.
@@ -35,10 +36,11 @@ marking a fixture base carries every suite built on it:
 | `just test-read` | `block=read` | real providers and real accounts, mutating nothing |
 | `just test-write` | `block=write` | places and cancels real orders, opens and closes positions |
 
-**The trait decides selection; the `SkipUnless` gate decides safety, and they stay independent.** One
-mechanism serving both would make a typo in a trait name enough to place an order. Absence of a trait
-means offline — the safe default in the direction that matters, since a test nobody marked joins the
-block that always runs rather than the one that never does.
+**The trait is the only thing separating a routine run from one that trades.** A second gate — an
+environment variable each exchange test was checked against — was dropped deliberately: it protected
+only against a trait being wrong, and cost a variable on every legitimate run. Absence of a trait means
+offline, the safe default in the direction that matters, since a test nobody marked joins the block that
+always runs rather than the one that never does.
 
 A test written in step 4 belongs to `read` or to no block at all; one written in step 5 that trades
 belongs to `write`. Marking it is part of writing it, not a later tidy-up: an unmarked live test runs

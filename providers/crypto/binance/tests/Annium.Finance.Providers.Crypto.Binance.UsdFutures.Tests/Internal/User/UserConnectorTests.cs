@@ -17,7 +17,7 @@ namespace Annium.Finance.Providers.Crypto.Binance.UsdFutures.Tests.Internal.User
 /// connector for DOTUSDT, under the account in <see cref="Settings.User"/>. These tests place, fill, modify
 /// and cancel real orders on that account - the base class actively manages its state around each test,
 /// canceling open orders and flattening any position on setup and teardown - so they run only when
-/// <see cref="Exchange.IsEnabled"/> is set, and must never point at an account you care about.
+/// the write block is asked for, and must never point at an account you care about.
 /// </summary>
 [Collection(ExchangeCollection.Name)]
 public class UserConnectorTests : UserConnectorTestBase
@@ -71,10 +71,14 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Sends a limit buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
-    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task InitOrder_Limit_Invalid()
     {
         this.Trace("start");
@@ -95,10 +99,14 @@ public class UserConnectorTests : UserConnectorTestBase
     /// <summary>
     /// Places a real minimum-size limit buy, asserts the currency balance locks up around it, then cancels
     /// it and asserts the balance is released. Talks to the real exchange and places/cancels a real order;
-    /// skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task InitOrder_Limit_Valid()
     {
         this.Trace("start");
@@ -125,10 +133,14 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Sends a market buy with an absurd quantity and asserts the real exchange rejects it. Talks to the
-    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task InitOrder_Market_Invalid()
     {
         this.Trace("start");
@@ -144,10 +156,14 @@ public class UserConnectorTests : UserConnectorTestBase
     /// take-profit, each market and limit) via <see cref="TestOrder"/> - each rejected first with an
     /// absurd trigger, then placed for real and canceled - before closing the position with a market sell
     /// and asserting balance/position moved as expected throughout. Talks to the real exchange and
-    /// places/cancels/fills several real orders; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// places/cancels/fills several real orders; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task InitOrder_TakeProfit_StopLoss()
     {
         this.Trace("start");
@@ -257,10 +273,14 @@ public class UserConnectorTests : UserConnectorTestBase
     /// <summary>
     /// Places a real limit order, then sends a modify request with an absurd quantity and asserts the real
     /// exchange rejects it. Talks to the real exchange and places a real order; skipped unless
-    /// <see cref="Exchange.IsEnabled"/> is set.
+    /// the read block is asked for.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task ModifyOrder_Invalid()
     {
         this.Trace("start");
@@ -282,10 +302,14 @@ public class UserConnectorTests : UserConnectorTestBase
     /// Places a real limit order, modifies it to a larger quantity and higher price, asserts the currency
     /// balance locks up around the modified order, then cancels it and asserts the balance is released.
     /// Talks to the real exchange and places/modifies/cancels a real order; skipped unless
-    /// <see cref="Exchange.IsEnabled"/> is set.
+    /// the read block is asked for.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task ModifyOrder_Valid()
     {
         this.Trace("start");
@@ -321,11 +345,15 @@ public class UserConnectorTests : UserConnectorTestBase
     /// <summary>
     /// Places a real limit order, cancels it and asserts the currency balance locks then releases around
     /// the cancellation, then asserts canceling the same (now-canceled) order again is rejected. Talks to
-    /// the real exchange and places/cancels a real order; skipped unless <see cref="Exchange.IsEnabled"/>
+    /// the real exchange and places/cancels a real order; only ever selected by the write block
     /// is set.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task CancelOrder()
     {
         this.Trace("start");
@@ -356,10 +384,14 @@ public class UserConnectorTests : UserConnectorTestBase
 
     /// <summary>
     /// Cancels every open order on the account for <see cref="UserConnectorTestBase.Symbol"/>. Talks to the
-    /// real exchange; skipped unless <see cref="Exchange.IsEnabled"/> is set.
+    /// real exchange; in the read block.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact(Skip = "talks to the live exchange", SkipUnless = nameof(Exchange.IsEnabled), SkipType = typeof(Exchange))]
+    [Fact(
+        Skip = "needs exchange credentials in test.env",
+        SkipUnless = nameof(Exchange.HasCredentials),
+        SkipType = typeof(Exchange)
+    )]
     public async Task CancelAllOrders()
     {
         this.Trace("start");
