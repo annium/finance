@@ -67,9 +67,37 @@ wrong is an accepted risk; marking a test is therefore part of writing it, not a
 Absence of a trait means offline — the safe default in the direction that matters, since a test nobody
 marked joins the block that always runs rather than the one that never does.
 
-`Exchange.HasCredentials` is not a permission but a condition of possibility: without `test.env` the
-tests needing keys say so instead of failing on a missing one. `test.env` holds real credentials, is
-gitignored, and only `.example` is tracked.
+`Exchange.HasCredentials` is not a permission but a condition of possibility: without credentials the
+tests needing them say so instead of failing on a missing key. It asks for `TEST_KEY` and `TEST_SECRET`
+by name — a count of whatever happened to be configured let a half-filled source through, and failed
+deep inside a signed request rather than skipping.
+
+### Where credentials come from
+
+Two sources, in this order:
+
+| Source | Names | Used by |
+|---|---|---|
+| `test.env` in the project directory | `TEST_KEY`, `TEST_SECRET`, `TEST_EXPECTED_SIGNATURE` | local runs |
+| process environment | the same, prefixed by the assembly's scope: `BINANCE_SPOT_TEST_KEY` | CI |
+
+**The file wins where both carry a variable.** Not the usual configuration precedence, but the file is
+what someone configured deliberately, and a forgotten `export BINANCE_SPOT_TEST_KEY=...` in a shell must
+not quietly redirect a trading test at a different account.
+
+`test.env` holds real credentials, is gitignored, and only `.example` is tracked. It is per project on
+purpose: Spot and USD-M futures are separate venues whose credentials may differ, and a further provider
+certainly will. A process environment has no such separation — one job, one set of variables — so each
+test project declares its prefix once:
+
+```csharp
+[assembly: TestEnvScope("BINANCE_SPOT")]
+```
+
+An assembly without that attribute reads no environment variables at all: a project nobody scoped skips
+its gated tests for want of credentials, rather than picking up whichever `TEST_KEY` another provider
+left behind. **Adding a provider means adding its scope**, or its tests will never run outside a machine
+holding its `test.env`.
 
 Before `just test-write`: check the account's position mode, that no position exists on the test symbol
 the fixture would close as cleanup, and the available margin. Run it alone.
